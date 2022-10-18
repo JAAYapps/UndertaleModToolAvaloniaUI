@@ -145,6 +145,10 @@ public class UndertaleTexturePageItem : UndertaleNamedResource, INotifyPropertyC
     /// <param name="disposeImage">Whether to dispose <paramref name="replaceImage"/> afterwards.</param>
     public void ReplaceTexture(Image replaceImage, bool disposeImage = true)
     {
+        if (SourceWidth == 0)
+            SourceWidth = 1;
+        if (SourceHeight == 0)
+            SourceHeight = 1;
         Image finalImage = TextureWorker.ResizeImage(replaceImage, SourceWidth, SourceHeight);
 
         // Apply the image to the TexturePage.
