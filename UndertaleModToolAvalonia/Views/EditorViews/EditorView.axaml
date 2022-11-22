@@ -1,0 +1,291 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:UndertaleModToolAvalonia"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorView"
+        Title="Editor">
+  <Window.Title>
+    <MultiBinding StringFormat="{}{0} - {1} [{2}]">
+      <Binding Path="TitleMain"/>
+      <Binding Path="Data.GeneralInfo" FallbackValue="No game loaded"/>
+      <Binding Path="FilePath"/>
+    </MultiBinding>
+  </Window.Title>
+  <Grid>
+    <DockPanel>
+      <Menu DockPanel.Dock="Top">
+        <MenuItem Header="_File">
+          <MenuItem Header="_New" HotKey="Ctrl+N"/>
+          <MenuItem Header="_Open" HotKey="Ctrl+O"/>
+          <MenuItem Header="_Save" HotKey="Ctrl+S">
+            <MenuItem.Styles>
+              <Style Selector="MenuItem">
+                <Setter Property="IsEnabled" Value="{Binding CanSave}"/>
+              </Style>
+            </MenuItem.Styles>
+          </MenuItem>
+          <Separator/>
+          <MenuItem Header="_Temp run game" HotKey="F5">
+            <!-- TODO: I think I need a custom command for that... -->
+            <MenuItem.Styles>
+              <Style Selector="MenuItem">
+                <Setter Property="IsEnabled" Value="{Binding CanSave}"/>
+              </Style>
+            </MenuItem.Styles>
+          </MenuItem>
+          <MenuItem Header="Run game under _debugger" HotKey="Shift+F5">
+            <MenuItem.Styles>
+              <Style Selector="MenuItem">
+                <Setter Property="IsEnabled" Value="{Binding CanSave}"/>
+              </Style>
+            </MenuItem.Styles>
+          </MenuItem>
+          <MenuItem Header="Run game with other runner" HotKey="Alt+F5">
+            <MenuItem.Styles>
+              <Style Selector="MenuItem">
+                <Setter Property="IsEnabled" Value="{Binding CanSave}"/>
+              </Style>
+            </MenuItem.Styles>
+          </MenuItem>
+          <Separator/>
+          <MenuItem Header="Generate o_ffset map"/>
+          <Separator/>
+          <MenuItem Header="S_ettings"/>
+          <MenuItem Header="_Close" HotKey="Ctrl+Q"/>
+        </MenuItem>
+        <MenuItem Name="RootScriptItem" Header="_Scripts">
+          <MenuItem Header="(...loading...)" IsEnabled="False"/>
+        </MenuItem>
+        <MenuItem Header="_Help">
+          <MenuItem Header="_GitHub" />
+          <MenuItem Header="_About" />
+        </MenuItem>
+      </Menu>
+      <Grid DockPanel.Dock="Bottom">
+        <TextBox x:Name="CommandBox" AcceptsReturn="True" Margin="0,0,35,0"/>
+        <Label Content="None" HorizontalAlignment="Right" VerticalAlignment="Top" VerticalContentAlignment="Top" Name="ObjectLabel"/>
+      </Grid>
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="1*"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="3*"/>
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0" Grid.Row="0" Margin="5,5,5,0">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+          </Grid.RowDefinitions>
+          <StackPanel Grid.Row="0" Margin="0,0,0,5" Orientation="Horizontal">
+            <Button Margin="0,0,2,0" Name="BackButton">
+              
+              <Image Name="BackButtonImage">
+                
+              </Image>
+            </Button>
+            <Button Name="ForwardButton" >
+              <Image Name="ForwardButtonImage" RenderTransformOrigin="0.5,0.5">
+                <Image.RenderTransform>
+                  <ScaleTransform ScaleX="-1" ScaleY="-1"/>
+                </Image.RenderTransform>
+                
+              </Image>
+            </Button>
+          </StackPanel>
+
+          <TextBox Grid.Row="1" Name="SearchBox">
+            <!-- Source - https://stackoverflow.com/a/7433840/12136394 -->
+            
+          </TextBox>
+        </Grid>
+        <TreeView Grid.Column="0" Grid.Row="1" Name="MainTree" Margin="5">
+          <TreeView.Resources>
+            <ContextMenu x:Key="AddMenu">
+              <MenuItem Header="Add" />
+            </ContextMenu>
+            <ContextMenu x:Key="UndertaleResourceMenu">
+              <MenuItem Header="Open in new tab" />
+              <MenuItem Header="Copy name to clipboard" />
+              <MenuItem Header="Delete" />
+            </ContextMenu>
+
+          </TreeView.Resources>
+          <TreeViewItem Header="Data" IsExpanded="True">
+            <TreeViewItem Header="General info" />
+            <TreeViewItem Header="Global init" />
+            <TreeViewItem Header="Game End scripts" />
+            <TreeViewItem Header="Audio groups" >
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Sounds">
+              <TreeViewItem.ItemTemplate>
+               
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Sprites">
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Name="BackgroundsItemsList" Header="Backgrounds &amp; Tile sets">
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Paths" >
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Scripts" >
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Shaders" >
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Fonts">
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Timelines">
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Game objects">
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Rooms">
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Extensions">
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Texture page items">
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Name="CodeItemsList" Header="Code">
+              
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Variables">
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Functions">
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Code locals">
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Strings">
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Embedded textures">
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Embedded audio">
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Texture group information">
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+            <TreeViewItem Header="Embedded images">
+              <TreeViewItem.ItemTemplate>
+                
+              </TreeViewItem.ItemTemplate>
+            </TreeViewItem>
+          </TreeViewItem>
+        </TreeView>
+
+        <GridSplitter Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Center" VerticalAlignment="Stretch" ShowsPreview="True" Width="3"/>
+
+        <Grid Grid.Column="2" Grid.RowSpan="2">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+          </Grid.RowDefinitions>
+
+          <Grid Grid.Row="0" Name="TabsGrid" UseLayoutRounding="True" Margin="0,0,0,3">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <ScrollViewer Grid.Column="0" Name="TabScrollViewer" Height="26"
+                          HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden">
+              <TabControl Name="TabController" Height="22" TabStripPlacement="Top">
+                <TabControl.Resources>
+                  <ContextMenu x:Key="TabMenu">
+                    <MenuItem Header="Close" HotKey="Ctrl+W"/>
+                    <MenuItem Header="Close other tabs" >
+                      
+                    </MenuItem>
+                    <MenuItem Header="Close all tabs" HotKey="Ctrl+Shift+W"/>
+                  </ContextMenu>
+                </TabControl.Resources>
+                <TabControl.ItemTemplate>
+                  
+                </TabControl.ItemTemplate>
+                <TabControl.ContentTemplate>
+                  
+                </TabControl.ContentTemplate>
+              </TabControl>
+            </ScrollViewer>
+            <StackPanel Grid.Column="1" Margin="5" Orientation="Horizontal">
+              <Button Width="16" Height="16" >
+                <Image Source="/Assets/tabs_left_button.png" Stretch="None"/>
+              </Button>
+              <Button Width="16" Height="16" >
+                <Image Source="/Assets/tabs_right_button.png" Stretch="None"/>
+              </Button>
+            </StackPanel>
+          </Grid>
+          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ContentControl Margin="10" Content="{Binding Selected, Mode=OneWay}" Name="DataEditor">
+              <ContentControl.Resources>
+
+              </ContentControl.Resources>
+            </ContentControl>
+          </ScrollViewer>
+        </Grid>
+      </Grid>
+    </DockPanel>
+  </Grid>
+  
+</Window>

@@ -1,8 +1,13 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using UndertaleModToolAvalonia.ViewModels;
+using System.Collections.Generic;
+using UndertaleModToolAvalonia.Models;
+using UndertaleModToolAvalonia.ViewModels.EditorsViewModels;
+using UndertaleModToolAvalonia.ViewModels.MainWindowViewModels;
 using UndertaleModToolAvalonia.Views;
+using UndertaleModToolAvalonia.Views.EditorViews;
 
 namespace UndertaleModToolAvalonia
 {
@@ -17,10 +22,17 @@ namespace UndertaleModToolAvalonia
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                desktop.MainWindow = new MainWindow
-                {
-                    DataContext = new MainWindowViewModel(),
-                };
+                List<DataFileItem> dataFileItems = new List<DataFileItem>();
+                DataFileItem OpenFile = new DataFileItem();
+                OpenFile.Preview = "Open File";
+                OpenFile.Name = "OpenFile";
+                DataFileItem dataFile = new DataFileItem();
+                dataFile.Preview = "Data.wim";
+                dataFileItems.Add(OpenFile);
+                dataFileItems.Add(dataFile);
+                Window main = WindowLoader.createWindow(null,
+                    typeof(MainWindow), typeof(MainWindowViewModel), true, false, dataFileItems);
+                desktop.MainWindow = main;
             }
 
             base.OnFrameworkInitializationCompleted();

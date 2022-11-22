@@ -1,0 +1,40 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:UndertaleModToolAvalonia.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:UndertaleModToolAvalonia"
+        xmlns:undertale="clr-namespace:UndertaleModLib.Models;assembly=UndertaleModLib"
+        xmlns:undertalelib="clr-namespace:UndertaleModLib;assembly=UndertaleModLib"
+        xmlns:MainWindowViews="clr-namespace:UndertaleModToolAvalonia.Views.MainWindowViews"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="UndertaleModToolAvalonia.Views.MainWindow"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="UndertaleModToolAvalonia" WindowStartupLocation="CenterScreen"
+        ExtendClientAreaChromeHints="PreferSystemChrome" 
+        ExtendClientAreaToDecorationsHint="True" Background="Transparent"
+        TransparencyLevelHint="AcrylicBlur" TransparencyBackgroundFallback="White">
+  <Panel>
+    <DockPanel HorizontalAlignment="Stretch" IsHitTestVisible="False" Background="WhiteSmoke">
+      <ExperimentalAcrylicBorder DockPanel.Dock="Left" Width="240">
+        <ExperimentalAcrylicBorder.Material>
+          <ExperimentalAcrylicMaterial TintColor="#ffffff" MaterialOpacity="0" TintOpacity="1"
+                                       BackgroundSource="Digger"/>
+        </ExperimentalAcrylicBorder.Material>
+        <TextBlock Text="Undertale Mod Tool" VerticalAlignment="Top" Margin="23,25,0,0" FontSize="18" />
+      </ExperimentalAcrylicBorder>
+      <Grid>
+
+      </Grid>
+    </DockPanel>
+    <TabControl x:Name="TabControl" Classes="sidebar" Margin="0 20 0 0">
+      <TabItem Header="Test View" FontWeight="Bold">
+        <MainWindowViews:MainPage />
+      </TabItem>
+      <TabItem Header="Settings" FontWeight="Bold">
+        <MainWindowViews:SettingsPage />
+      </TabItem>
+    </TabControl>
+  </Panel>
+
+</Window>

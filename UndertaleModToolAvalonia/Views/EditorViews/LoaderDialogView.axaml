@@ -1,0 +1,20 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:UndertaleModToolAvalonia" mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="130"
+        x:Class="UndertaleModToolAvalonia.Views.EditorViews.LoaderDialogView"
+        Title="{Binding MessageTitle}" Height="130" Width="400" WindowStartupLocation="CenterOwner" CanResize="False"
+        Topmost="True" WindowState="Normal" HasSystemDecorations="True">
+  <Grid Margin="10">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+    <TextBlock Grid.Row="0" VerticalAlignment="Center" Text="{Binding Message}"/>
+    <ProgressBar Grid.Row="1" IsIndeterminate="{Binding IsIndeterminate}" Maximum="{Binding Maximum}"
+                 Minimum="0" Value="{Binding Value}" Name="ProgressBar" Height="40"></ProgressBar>
+    <TextBlock Grid.Row="2" VerticalAlignment="Center" Text="{Binding StatusText}"/>
+  </Grid>
+</Window>

@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
+using UndertaleModToolAvalonia.Views;
 
-namespace UndertaleModTool
+namespace UndertaleModToolAvalonia
 {
     public class Settings
     {
@@ -15,7 +17,7 @@ namespace UndertaleModTool
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "UndertaleModTool");
         public static string ProfilesFolder = Path.Combine(AppDataFolder, "Profiles");
 
-        public string Version { get; set; } = MainWindow.Version;
+        public string Version { get; set; } = Assembly.GetEntryAssembly().GetName().Version.ToString();
         public string GameMakerStudioPath { get; set; } = "%appdata%\\GameMaker-Studio";
         public string GameMakerStudio2RuntimesPath { get; set; } = "%systemdrive%\\ProgramData\\GameMakerStudio2\\Cache\\runtimes"; /* Using %systemdrive% here fixes the runtimes not being found when the system drive is not C:\\ */
         public bool AssetOrderSwappingEnabled { get; set; } = false;
@@ -82,14 +84,14 @@ namespace UndertaleModTool
 
                 // Handle upgrading settings here when needed
                 bool changed = false;
-                if (Instance.Version != MainWindow.Version)
+                if (Instance.Version != Assembly.GetEntryAssembly().GetName().Version.ToString())
                 {
                     changed = true;
                     // TODO when it becomes necessary
                 }
 
                 // Update the version to this version
-                Instance.Version = MainWindow.Version;
+                Instance.Version = Assembly.GetEntryAssembly().GetName().Version.ToString();
                 if (changed)
                     Save();
             } catch (Exception e)
