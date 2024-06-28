@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using UndertaleModLib.Compiler;
 using UndertaleModLib.Decompiler;
+using UndertaleModLib.Util;
 
 namespace UndertaleModLib.Models;
 
@@ -106,10 +107,44 @@ public class UndertaleInstruction : UndertaleObject
             Opcode.Call => InstructionType.CallInstruction,
             Opcode.Break => InstructionType.BreakInstruction,
 
-            _ => throw new IOException("Unknown opcode " + op.ToString().ToUpper()),
+            _ => throw new IOException("Unknown opcode " + op.ToString().ToUpper(CultureInfo.InvariantCulture)),
         };
     }
-
+    private static byte ConvertInstructionKind(byte kind)
+    {
+        kind = kind switch
+        {
+            0x03 => 0x07,
+            0x04 => 0x08,
+            0x05 => 0x09,
+            0x06 => 0x0A,
+            0x07 => 0x0B,
+            0x08 => 0x0C,
+            0x09 => 0x0D,
+            0x0A => 0x0E,
+            0x0B => 0x0F,
+            0x0C => 0x10,
+            0x0D => 0x11,
+            0x0E => 0x12,
+            0x0F => 0x13,
+            0x10 => 0x14,
+            0x11 or 0x12 or 0x13 or 0x14 or 0x16 => 0x15,
+            0xDA => 0xD9,
+            0x41 => 0x45,
+            0x82 => 0x86,
+            0xB7 => 0xB6,
+            0xB8 => 0xB7,
+            0xB9 => 0xB8,
+            0x9D => 0x9C,
+            0x9E => 0x9D,
+            0x9F => 0x9E,
+            0xBB => 0xBA,
+            0xBC => 0xBB,
+            _ => kind
+        };
+        
+        return kind;
+    }
 
     public enum DataType : byte
     {
@@ -175,7 +210,9 @@ public class UndertaleInstruction : UndertaleObject
     public object Value { get; set; }
     public Reference<UndertaleVariable> Destination { get; set; }
     public Reference<UndertaleFunction> Function { get; set; }
-    public int JumpOffset { get; set; }
+    private int _IntegerArgument;
+    public int JumpOffset { get => _IntegerArgument; set => _IntegerArgument = value; }
+    public int IntArgument { get => _IntegerArgument; set => _IntegerArgument = value; }
     public bool JumpOffsetPopenvExitMagic { get; set; }
     public ushort ArgumentsCount { get; set; }
     public byte Extra { get; set; }
@@ -237,7 +274,7 @@ public class UndertaleInstruction : UndertaleObject
         {
             if (typeof(T) == typeof(UndertaleVariable) && Type != VariableType.Normal)
             {
-                return String.Format("[{0}]{1}{2}", Type.ToString().ToLower(), ((Target as UndertaleVariable)?.InstanceType.ToString().ToLower() ?? "null") + ".", Target?.ToString() ?? "(null)");
+                return String.Format("[{0}]{1}{2}", Type.ToString().ToLower(CultureInfo.InvariantCulture), ((Target as UndertaleVariable)?.InstanceType.ToString().ToLower(CultureInfo.InvariantCulture) ?? "null") + ".", Target?.ToString() ?? "(null)");
             }
             else
                 return String.Format("{0}", Target?.ToString() ?? "(null)");
@@ -326,10 +363,18 @@ public class UndertaleInstruction : UndertaleObject
     public Reference<T> GetReference<T>(bool allowResolve = false) where T : class, UndertaleObject, ReferencedObject
     {
         Reference<T> res = (Destination as Reference<T>) ?? (Function as Reference<T>) ?? (Value as Reference<T>);
-        if (allowResolve && res == null && Value is int val)
+        if (allowResolve && res == null)
         {
-            Value = new Reference<T>(val);
-            return (Reference<T>)Value;
+            if (Kind == Opcode.Break && Value is short breakType && breakType == -11 /* pushref */)
+            {
+                Function = new Reference<UndertaleFunction>(IntArgument);
+                return Function as Reference<T>;
+            }
+            if (Value is int val)
+            {
+                Value = new Reference<T>(val);
+                return (Reference<T>)Value;
+            }
         }
         return res;
     }
@@ -526,109 +571,31 @@ public class UndertaleInstruction : UndertaleObject
                 writer.Write((short)Value);
                 writer.Write((byte)Type1);
                 writer.Write((byte)Kind);
+                if (Type1 == DataType.Int32)
+                {
+                    if (Function != null)
+                        writer.WriteUndertaleObject(Function);
+                    else
+                        writer.Write(IntArgument);
+                }
             }
                 break;
 
             default:
-                throw new IOException("Unknown opcode " + Kind.ToString().ToUpper());
+                throw new IOException("Unknown opcode " + Kind.ToString().ToUpper(CultureInfo.InvariantCulture));
         }
     }
 
     /// <inheritdoc />
     public void Unserialize(UndertaleReader reader)
     {
-        uint instructionStartAddress = reader.Position;
+        long instructionStartAddress = reader.Position;
         reader.Position += 3; // skip for now, we'll read them later
         byte kind = reader.ReadByte();
         if (reader.Bytecode14OrLower)
         {
             // Convert opcode to our enum
-            switch (kind)
-            {
-                case 0x03:
-                    kind = 0x07;
-                    break;
-                case 0x04:
-                    kind = 0x08;
-                    break;
-                case 0x05:
-                    kind = 0x09;
-                    break;
-                case 0x06:
-                    kind = 0x0A;
-                    break;
-                case 0x07:
-                    kind = 0x0B;
-                    break;
-                case 0x08:
-                    kind = 0x0C;
-                    break;
-                case 0x09:
-                    kind = 0x0D;
-                    break;
-                case 0x0A:
-                    kind = 0x0E;
-                    break;
-                case 0x0B:
-                    kind = 0x0F;
-                    break;
-                case 0x0C:
-                    kind = 0x10;
-                    break;
-                case 0x0D:
-                    kind = 0x11;
-                    break;
-                case 0x0E:
-                    kind = 0x12;
-                    break;
-                case 0x0F:
-                    kind = 0x13;
-                    break;
-                case 0x10:
-                    kind = 0x14;
-                    break;
-                case 0x11:
-                case 0x12:
-                case 0x13:
-                case 0x14:
-                //  case 0x15:
-                case 0x16:
-                    kind = 0x15;
-                    break;
-                case 0xDA:
-                    kind = 0xD9;
-                    break;
-                case 0x41:
-                    kind = 0x45;
-                    break;
-                case 0x82:
-                    kind = 0x86;
-                    break;
-                case 0xB7:
-                    kind = 0xB6;
-                    break;
-                case 0xB8:
-                    kind = 0xB7;
-                    break;
-                case 0xB9:
-                    kind = 0xB8;
-                    break;
-                case 0x9D:
-                    kind = 0x9C;
-                    break;
-                case 0x9E:
-                    kind = 0x9D;
-                    break;
-                case 0x9F:
-                    kind = 0x9E;
-                    break;
-                case 0xBB:
-                    kind = 0xBA;
-                    break;
-                case 0xBC:
-                    kind = 0xBB;
-                    break;
-            }
+            kind = ConvertInstructionKind(kind);
         }
         Kind = (Opcode)kind;
         reader.Position = instructionStartAddress;
@@ -641,23 +608,23 @@ public class UndertaleInstruction : UndertaleObject
                 Extra = reader.ReadByte();
 #if DEBUG
                 if (Extra != 0 && Kind != Opcode.Dup && Kind != Opcode.CallV)
-                    throw new IOException("Invalid padding in " + Kind.ToString().ToUpper());
+                    throw new IOException("Invalid padding in " + Kind.ToString().ToUpper(CultureInfo.InvariantCulture));
 #endif
                 ComparisonKind = (ComparisonType)reader.ReadByte();
                 //if (!bytecode14 && (Kind == Opcode.Cmp) != ((byte)ComparisonKind != 0))
-                //    throw new IOException("Got unexpected comparison type in " + Kind.ToString().ToUpper() + " (should be only in CMP)");
+                //    throw new IOException("Got unexpected comparison type in " + Kind.ToString().ToUpper(CultureInfo.InvariantCulture) + " (should be only in CMP)");
                 byte TypePair = reader.ReadByte();
                 Type1 = (DataType)(TypePair & 0xf);
                 Type2 = (DataType)(TypePair >> 4);
 #if DEBUG
                 if (GetInstructionType(Kind) == InstructionType.SingleTypeInstruction && Type2 != (byte)0)
-                    throw new IOException("Second type should be 0 in " + Kind.ToString().ToUpper());
+                    throw new IOException("Second type should be 0 in " + Kind.ToString().ToUpper(CultureInfo.InvariantCulture));
 #endif
                 //if(reader.ReadByte() != (byte)Kind) throw new Exception("really shouldn't happen");
                 if (reader.Bytecode14OrLower && Kind == Opcode.Cmp)
                     ComparisonKind = (ComparisonType)(reader.ReadByte() - 0x10);
                 else
-                    reader.ReadByte();
+                    reader.Position++;
 
                 if (Kind == Opcode.And || Kind == Opcode.Or)
                 {
@@ -674,7 +641,7 @@ public class UndertaleInstruction : UndertaleObject
                     JumpOffset = reader.ReadInt24();
                     if (JumpOffset == -1048576) // magic? encoded in little endian as 00 00 F0, which is like below
                         JumpOffsetPopenvExitMagic = true;
-                    reader.ReadByte();
+                    reader.Position++;
                     break;
                 }
 
@@ -696,7 +663,7 @@ public class UndertaleInstruction : UndertaleObject
                 }
 
                 //if(reader.ReadByte() != (byte)Kind) throw new Exception("really shouldn't happen");
-                reader.ReadByte();
+                reader.Position++;
             }
                 break;
 
@@ -707,7 +674,7 @@ public class UndertaleInstruction : UndertaleObject
                 Type1 = (DataType)(TypePair & 0xf);
                 Type2 = (DataType)(TypePair >> 4);
                 //if(reader.ReadByte() != (byte)Kind) throw new Exception("really shouldn't happen");
-                reader.ReadByte();
+                reader.Position++;
                 if (Type1 == DataType.Int16)
                 {
                     // Special scenario - the swap instruction
@@ -749,7 +716,7 @@ public class UndertaleInstruction : UndertaleObject
                     }
                 }
                 //if(reader.ReadByte() != (byte)Kind) throw new Exception("really shouldn't happen");
-                reader.ReadByte();
+                reader.Position++;
                 switch (Type1)
                 {
                     case DataType.Double:
@@ -786,7 +753,7 @@ public class UndertaleInstruction : UndertaleObject
                 ArgumentsCount = reader.ReadUInt16();
                 Type1 = (DataType)reader.ReadByte();
                 //if(reader.ReadByte() != (byte)Kind) throw new Exception("really shouldn't happen");
-                reader.ReadByte();
+                reader.Position++;
                 Function = reader.ReadUndertaleObject<Reference<UndertaleFunction>>();
             }
                 break;
@@ -796,12 +763,107 @@ public class UndertaleInstruction : UndertaleObject
                 Value = reader.ReadInt16();
                 Type1 = (DataType)reader.ReadByte();
                 if (reader.ReadByte() != (byte)Kind) throw new Exception("really shouldn't happen");
+                if (Type1 == DataType.Int32)
+                {
+                    IntArgument = reader.ReadInt32();
+                    if (!reader.undertaleData.IsVersionAtLeast(2023, 8))
+                        reader.undertaleData.SetGMS2Version(2023, 8);
+                }
+                if (reader.undertaleData.IsVersionAtLeast(2, 3))
+                {
+                    if ((short)Value == -10) // chknullish instruction, added in 2.3.7
+                    {
+                        if (!reader.undertaleData.IsVersionAtLeast(2, 3, 7))
+                            reader.undertaleData.SetGMS2Version(2, 3, 7);
+                    }
+                }
             }
                 break;
 
             default:
-                throw new IOException("Unknown opcode " + Kind.ToString().ToUpper());
+                throw new IOException("Unknown opcode " + Kind.ToString().ToUpper(CultureInfo.InvariantCulture));
         }
+    }
+    /// <inheritdoc cref="UndertaleObject.UnserializeChildObjectCount(UndertaleReader)"/>
+    public static uint UnserializeChildObjectCount(UndertaleReader reader)
+    {
+        long instructionStartAddress = reader.Position;
+        reader.Position += 3; // skip for now, we'll read them later
+        byte kind = reader.ReadByte();
+        if (reader.Bytecode14OrLower)
+        {
+            // Convert opcode to our enum
+            kind = ConvertInstructionKind(kind);
+        }
+        Opcode Kind = (Opcode)kind;
+        reader.Position = instructionStartAddress;
+        switch (GetInstructionType(Kind))
+        {
+            case InstructionType.SingleTypeInstruction:
+            case InstructionType.DoubleTypeInstruction:
+            case InstructionType.ComparisonInstruction:
+            case InstructionType.GotoInstruction:
+                reader.Position += 4;
+                break;
+
+            case InstructionType.PopInstruction:
+                reader.Position += 2; // "TypeInst"
+                int type1 = reader.ReadByte() & 0xf;
+                if (type1 != 0x0f)
+                {
+                    reader.Position += 1 + 4;
+                    return 1; // "Destination"
+                }
+                else
+                    reader.Position++;
+                break;
+
+            case InstructionType.PushInstruction:
+                {
+                    reader.Position += 2;
+                    DataType Type1 = (DataType)reader.ReadByte();
+                    reader.Position++;
+                    switch (Type1)
+                    {
+                        case DataType.Double:
+                        case DataType.Int64:
+                            reader.Position += 8;
+                            break;
+
+                        case DataType.Float:
+                        case DataType.Int32:
+                        case DataType.Boolean:
+                            reader.Position += 4;
+                            break;
+
+                        case DataType.Variable:
+                        case DataType.String:
+                            reader.Position += 4;
+                            return 1;
+                    }
+                }
+                break;
+
+            case InstructionType.CallInstruction:
+                reader.Position += 8;
+                return 1; // "Function"
+
+            case InstructionType.BreakInstruction:
+                {
+                    reader.Position += 2;
+                    DataType Type1 = (DataType)reader.ReadByte();
+                    if (Type1 == DataType.Int32)
+                        reader.Position += 5;
+                    else
+                        reader.Position += 1;
+                    break;
+                }
+
+            default:
+                throw new IOException("Unknown opcode " + Kind.ToString().ToUpper(CultureInfo.InvariantCulture));
+        }
+
+        return 0;
     }
 
     /// <inheritdoc />
@@ -809,11 +871,37 @@ public class UndertaleInstruction : UndertaleObject
     {
         return ToString(null);
     }
-
+    
+    /// <summary>
+    /// <inheritdoc cref="ToString()"/>
+    /// </summary>
+    /// <param name="code">The <see cref="UndertaleCode"/> code entry for which these instructions belong to.</param>
+    /// <param name="blocks">A list of block addresses for the code entry for which these instructions belong to.</param>
+    /// <returns></returns>
     public string ToString(UndertaleCode code, List<uint> blocks = null)
     {
         StringBuilder sb = new StringBuilder();
+        ToString(sb, code, blocks);
+        return sb.ToString();
+    }
+    
+    /// <summary>
+    /// Inserts a string representation of this object at a specified index in a <see cref="StringBuilder"/>.
+    /// </summary>
+    /// <param name="stringBuilder">The <see cref="StringBuilder"/> instance on where to insert the string representation.</param>
+    /// <param name="code"><inheritdoc cref="ToString(UndertaleCode, List{uint})"/></param>
+    /// <param name="blocks"><inheritdoc cref="ToString(UndertaleCode, List{uint})"/></param>
+    /// <param name="index">The index on where to insert the string representation. If this is <see langword="null"/>
+    /// it will use <paramref name="stringBuilder.Length"/> as the index instead.</param>
+    /// <remarks>Note that performance of this function can be drastically different, depending on <paramref name="index"/>.
+    /// For best results, it's recommended to leave it at <see langword="null"/>.</remarks>
+    public void ToString(StringBuilder stringBuilder, UndertaleCode code, List<uint> blocks = null, int? index = null)
+    {
+        if (index is null)
+            index = stringBuilder.Length;
 
+        StringBuilderHelper sbh = new StringBuilderHelper(index.Value);
+        
         string kind = Kind.ToString();
         var type = GetInstructionType(Kind);
         bool unknownBreak = false;
@@ -821,114 +909,134 @@ public class UndertaleInstruction : UndertaleObject
         {
             if (!Assembler.BreakIDToName.TryGetValue((short)Value, out kind))
             {
-                kind = kind.ToLower();
+                kind = kind.ToLower(CultureInfo.InvariantCulture);
                 unknownBreak = true;
             }
         }
         else
-            kind = kind.ToLower();
-        sb.Append(kind);
+        {
+            kind = kind.ToLower(CultureInfo.InvariantCulture);
+        }
+
+        sbh.Append(stringBuilder, kind);
 
         switch (GetInstructionType(Kind))
         {
             case InstructionType.SingleTypeInstruction:
-                sb.Append("." + Type1.ToOpcodeParam());
+                sbh.Append(stringBuilder, '.');
+                sbh.Append(stringBuilder, Type1.ToOpcodeParam());
 
                 if (Kind == Opcode.Dup || Kind == Opcode.CallV)
                 {
-                    sb.Append(' ');
-                    sb.Append(Extra.ToString());
+                    sbh.Append(stringBuilder, ' ');
+                    sbh.Append(stringBuilder, Extra);
                     if (Kind == Opcode.Dup)
                     {
                         if ((byte)ComparisonKind != 0)
                         {
                             // Special dup instruction with extra parameters
-                            sb.Append(' ');
-                            sb.Append((byte)ComparisonKind & 0x7F);
-                            sb.Append(" ;;; this is a weird GMS2.3+ swap instruction");
+                            sbh.Append(stringBuilder, ' ');
+                            sbh.Append(stringBuilder, (byte)ComparisonKind & 0x7F);
+                            sbh.Append(stringBuilder, " ;;; this is a weird GMS2.3+ swap instruction");
                         }
                     }
                 }
                 break;
 
             case InstructionType.DoubleTypeInstruction:
-                sb.Append("." + Type1.ToOpcodeParam());
-                sb.Append("." + Type2.ToOpcodeParam());
+                sbh.Append(stringBuilder, '.');
+                sbh.Append(stringBuilder, Type1.ToOpcodeParam());
+                sbh.Append(stringBuilder, '.');
+                sbh.Append(stringBuilder, Type2.ToOpcodeParam());
                 break;
 
             case InstructionType.ComparisonInstruction:
-                sb.Append("." + Type1.ToOpcodeParam());
-                sb.Append("." + Type2.ToOpcodeParam());
-                sb.Append(' ');
-                sb.Append(ComparisonKind.ToString());
+                sbh.Append(stringBuilder, '.');
+                sbh.Append(stringBuilder, Type1.ToOpcodeParam());
+                sbh.Append(stringBuilder, '.');
+                sbh.Append(stringBuilder, Type2.ToOpcodeParam());
+                sbh.Append(stringBuilder, ' ');
+                sbh.Append(stringBuilder, ComparisonKind.ToString());
                 break;
 
             case InstructionType.GotoInstruction:
-                sb.Append(' ');
-                string tgt;
-                if (code != null && Address + JumpOffset == code.Length / 4)
-                    tgt = "[end]";
+                sbh.Append(stringBuilder, ' ');
+                string targetGoto;
+                if (code is not null && Address + JumpOffset == code.Length / 4)
+                    targetGoto = "[end]";
                 else if (JumpOffsetPopenvExitMagic)
-                    tgt = "<drop>";
-                else if (blocks != null)
-                    tgt = "[" + blocks.IndexOf((uint)(Address + JumpOffset)) + "]";
+                    targetGoto = "<drop>";
+                else if (blocks is not null)
+                    targetGoto = $"[{blocks.IndexOf((uint)(Address + JumpOffset))}]";
                 else
-                    tgt = (Address + JumpOffset).ToString("D5");
-                sb.Append(tgt);
+                    targetGoto = (Address + JumpOffset).ToString("D5");
+                sbh.Append(stringBuilder, targetGoto);
                 break;
 
             case InstructionType.PopInstruction:
-                sb.Append("." + Type1.ToOpcodeParam());
-                sb.Append("." + Type2.ToOpcodeParam());
-                sb.Append(' ');
+                sbh.Append(stringBuilder, '.');
+                sbh.Append(stringBuilder, Type1.ToOpcodeParam());
+                sbh.Append(stringBuilder, '.');
+                sbh.Append(stringBuilder, Type2.ToOpcodeParam());
+                sbh.Append(stringBuilder, ' ');
                 if (Type1 == DataType.Int16)
                 {
                     // Special scenario - the swap instruction
                     // TODO: Figure out the proper syntax, see #129
-                    sb.Append(SwapExtra.ToString());
-                    sb.Append(" ;;; this is a weird swap instruction, see #129");
+                    sbh.Append(stringBuilder, SwapExtra);
+                    sbh.Append(stringBuilder, " ;;; this is a weird swap instruction, see #129");
                 }
                 else
                 {
                     if (Type1 == DataType.Variable && TypeInst != InstanceType.Undefined)
                     {
-                        sb.Append(TypeInst.ToString().ToLower());
-                        sb.Append('.');
+                        sbh.Append(stringBuilder, TypeInst.ToString().ToLower(CultureInfo.InvariantCulture));
+                        sbh.Append(stringBuilder, '.');
                     }
-                    sb.Append(Destination);
+                    sbh.Append(stringBuilder, Destination);
                 }
                 break;
 
             case InstructionType.PushInstruction:
-                sb.Append("." + Type1.ToOpcodeParam());
-                sb.Append(' ');
+                sbh.Append(stringBuilder, '.');
+                sbh.Append(stringBuilder, Type1.ToOpcodeParam());
+                sbh.Append(stringBuilder, ' ');
                 if (Type1 == DataType.Variable && TypeInst != InstanceType.Undefined)
                 {
-                    sb.Append(TypeInst.ToString().ToLower());
-                    sb.Append('.');
+                    sbh.Append(stringBuilder, TypeInst.ToString().ToLower(CultureInfo.InvariantCulture));
+                    sbh.Append(stringBuilder, '.');
                 }
-                sb.Append((Value as IFormattable)?.ToString(null, CultureInfo.InvariantCulture) ?? Value.ToString());
+                sbh.Append(stringBuilder, (Value as IFormattable)?.ToString(null, CultureInfo.InvariantCulture) ?? Value.ToString());
                 break;
 
             case InstructionType.CallInstruction:
-                sb.Append("." + Type1.ToOpcodeParam());
-                sb.Append(' ');
-                sb.Append(Function);
-                sb.Append("(argc=");
-                sb.Append(ArgumentsCount.ToString());
-                sb.Append(')');
+                sbh.Append(stringBuilder, '.');
+                sbh.Append(stringBuilder, Type1.ToOpcodeParam());
+                sbh.Append(stringBuilder, ' ');
+                sbh.Append(stringBuilder, Function);
+                sbh.Append(stringBuilder, "(argc=");
+                sbh.Append(stringBuilder, ArgumentsCount);
+                sbh.Append(stringBuilder, ')');
                 break;
 
             case InstructionType.BreakInstruction:
-                sb.Append("." + Type1.ToOpcodeParam());
+                sbh.Append(stringBuilder, '.');
+                sbh.Append(stringBuilder, Type1.ToOpcodeParam());
                 if (unknownBreak)
                 {
-                    sb.Append(" ");
-                    sb.Append(Value);
+                    sbh.Append(stringBuilder, ' ');
+                    sbh.Append(stringBuilder, Value);
+                }
+                if (Type1 == DataType.Int32)
+                {
+                    sbh.Append(stringBuilder, ' ');
+                    if (Function != null)
+                        sbh.Append(stringBuilder, Function);
+                    else
+                        sbh.Append(stringBuilder, IntArgument);
                 }
                 break;
         }
-        return sb.ToString();
     }
 
     public uint CalculateInstructionSize()
@@ -940,6 +1048,8 @@ public class UndertaleInstruction : UndertaleObject
                 return 3;
             else if (Type1 != DataType.Int16)
                 return 2;
+        if (Kind == Opcode.Break && Type1 == DataType.Int32)
+            return 2;
         return 1;
     }
 }
@@ -958,7 +1068,7 @@ public static class UndertaleInstructionUtil
             UndertaleInstruction.DataType.Variable => "v",
             UndertaleInstruction.DataType.String => "s",
             UndertaleInstruction.DataType.Int16 => "e",
-            _ => type.ToString().ToLower(),
+            _ => type.ToString().ToLower(CultureInfo.InvariantCulture),
         };
     }
 
@@ -992,6 +1102,8 @@ public class UndertaleCode : UndertaleNamedResource, UndertaleObjectWithBlobs, I
 
 
     public uint Length { get; set; }
+
+    public static int CurrCodeIndex { get; set; }
 
 
     /// <summary>
@@ -1076,7 +1188,6 @@ public class UndertaleCode : UndertaleNamedResource, UndertaleObjectWithBlobs, I
             writer.Write(BytecodeRelativeAddress);
             writer.Write(Offset);
         }
-
     }
 
     /// <inheritdoc />
@@ -1091,11 +1202,14 @@ public class UndertaleCode : UndertaleNamedResource, UndertaleObjectWithBlobs, I
         else if (reader.Bytecode14OrLower)
         {
             Instructions.Clear();
-            uint here = reader.Position;
-            uint stop = here + Length;
-            while (reader.Position < stop)
+            if (reader.InstructionArraysLengths is not null)
+                Instructions.Capacity = reader.InstructionArraysLengths[CurrCodeIndex];
+
+            long here = reader.AbsPosition;
+            long stop = here + Length;
+            while (reader.AbsPosition < stop)
             {
-                uint a = (reader.Position - here) / 4;
+                uint a = (uint)(reader.AbsPosition - here) / 4;
                 UndertaleInstruction instr = reader.ReadUndertaleObject<UndertaleInstruction>();
                 instr.Address = a;
                 Instructions.Add(instr);
@@ -1112,27 +1226,105 @@ public class UndertaleCode : UndertaleNamedResource, UndertaleObjectWithBlobs, I
                 WeirdLocalFlag = true;
             }
             int BytecodeRelativeAddress = reader.ReadInt32();
-            _bytecodeAbsoluteAddress = (uint)((int)reader.Position - 4 + BytecodeRelativeAddress);
-            uint here = reader.Position;
-            reader.Position = _bytecodeAbsoluteAddress;
-            if (Length > 0 && reader.GMS2_3 && reader.GetOffsetMap().TryGetValue(_bytecodeAbsoluteAddress, out var i))
+            _bytecodeAbsoluteAddress = (uint)((int)reader.AbsPosition - 4 + BytecodeRelativeAddress);
+           
+            if (Length > 0 && reader.undertaleData.IsVersionAtLeast(2, 3) && reader.GetOffsetMap().TryGetValue(_bytecodeAbsoluteAddress, out var i))
             {
                 ParentEntry = (i as UndertaleInstruction).Entry;
                 ParentEntry.ChildEntries.Add(this);
+
+                Offset = reader.ReadUInt32();
+                return;
             }
+
+            long here = reader.AbsPosition;
+            reader.AbsPosition = _bytecodeAbsoluteAddress;
+
             Instructions.Clear();
-            while (reader.Position < _bytecodeAbsoluteAddress + Length)
+            if (reader.InstructionArraysLengths is not null)
+                Instructions.Capacity = reader.InstructionArraysLengths[CurrCodeIndex];
+            while (reader.AbsPosition < _bytecodeAbsoluteAddress + Length)
             {
-                uint a = (reader.Position - _bytecodeAbsoluteAddress) / 4;
+                uint a = (uint)(reader.AbsPosition - _bytecodeAbsoluteAddress) / 4;
                 UndertaleInstruction instr = reader.ReadUndertaleObject<UndertaleInstruction>();
                 instr.Address = a;
                 Instructions.Add(instr);
             }
             if (ParentEntry == null && Instructions.Count != 0)
                 Instructions[0].Entry = this;
-            reader.Position = here;
+
+            reader.AbsPosition = here;
             Offset = reader.ReadUInt32();
         }
+
+        if (reader.InstructionArraysLengths is not null)
+            CurrCodeIndex++;
+    }
+
+    /// <inheritdoc cref="UndertaleObject.UnserializeChildObjectCount(UndertaleReader)"/>
+    public static uint UnserializeChildObjectCount(UndertaleReader reader)
+    {
+        uint count = 0;
+
+        reader.Position += 4; // "Name"
+        uint length = reader.ReadUInt32();
+
+        if (reader.Bytecode14OrLower)
+        {
+            long here = reader.Position;
+            long stop = here + length;
+
+            // Get instructions count
+            uint instrCount = 0;
+            uint instrSubCount = 0;
+            while (reader.Position < stop)
+            {
+                instrCount++;
+                instrSubCount += UndertaleInstruction.UnserializeChildObjectCount(reader);
+            }
+
+            reader.InstructionArraysLengths[CurrCodeIndex] = (int)instrCount;
+
+            count += instrCount + instrSubCount;
+        }
+        else
+        {
+            reader.Position += 4;
+
+            int bytecodeRelativeAddress = reader.ReadInt32();
+            uint bytecodeAbsoluteAddress = (uint)((int)reader.Position - 4 + bytecodeRelativeAddress);
+
+            if (length == 0 || reader.GMS2BytecodeAddresses.Contains(bytecodeAbsoluteAddress))
+            {
+                reader.Position += 4; // "Offset"
+                return count;
+            }
+
+            reader.GMS2BytecodeAddresses.Add(bytecodeAbsoluteAddress);
+
+            long here = reader.Position;
+            reader.Position = bytecodeAbsoluteAddress;
+
+            // Get instructions counts
+            uint instrCount = 0;
+            uint instrSubCount = 0;
+            while (reader.Position < bytecodeAbsoluteAddress + length)
+            {
+                instrCount++;
+                instrSubCount += UndertaleInstruction.UnserializeChildObjectCount(reader);
+            }
+
+            reader.InstructionArraysLengths[CurrCodeIndex] = (int)instrCount;
+
+            reader.Position = here;
+            reader.Position += 4; // "Offset"
+
+            count += instrCount + instrSubCount;
+        }
+
+        CurrCodeIndex++;
+
+        return count;
     }
 
     public void UpdateAddresses()
@@ -1195,6 +1387,9 @@ public class UndertaleCode : UndertaleNamedResource, UndertaleObjectWithBlobs, I
     /// <param name="instructions">The instructions to append.</param>
     public void Append(IList<UndertaleInstruction> instructions)
     {
+        if (ParentEntry is not null)
+            return;
+
         Instructions.AddRange(instructions);
         UpdateAddresses();
     }
@@ -1205,6 +1400,9 @@ public class UndertaleCode : UndertaleNamedResource, UndertaleObjectWithBlobs, I
     /// <param name="instructions">The new instructions for this code entry.</param>
     public void Replace(IList<UndertaleInstruction> instructions)
     {
+        if (ParentEntry is not null)
+            return;
+
         Instructions.Clear();
         Append(instructions);
     }
@@ -1217,6 +1415,9 @@ public class UndertaleCode : UndertaleNamedResource, UndertaleObjectWithBlobs, I
     /// <exception cref="Exception"> if the GML code does not compile or if there's an error writing the code to the profile entry.</exception>
     public void AppendGML(string gmlCode, UndertaleData data)
     {
+        if (ParentEntry is not null)
+            return;
+
         CompileContext context = Compiler.Compiler.CompileGMLText(gmlCode, data, this);
         if (!context.SuccessfulCompile || context.HasError)
         {
@@ -1252,6 +1453,9 @@ public class UndertaleCode : UndertaleNamedResource, UndertaleObjectWithBlobs, I
     /// <exception cref="Exception">If the GML code does not compile or if there's an error writing the code to the profile entry.</exception>
     public void ReplaceGML(string gmlCode, UndertaleData data)
     {
+        if (ParentEntry is not null)
+            return;
+
         CompileContext context = Compiler.Compiler.CompileGMLText(gmlCode, data, this);
         if (!context.SuccessfulCompile || context.HasError)
         {

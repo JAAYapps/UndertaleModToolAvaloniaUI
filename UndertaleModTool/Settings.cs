@@ -17,7 +17,7 @@ namespace UndertaleModTool
 
         public string Version { get; set; } = MainWindow.Version;
         public string GameMakerStudioPath { get; set; } = "%appdata%\\GameMaker-Studio";
-        public string GameMakerStudio2RuntimesPath { get; set; } = "%systemdrive%\\ProgramData\\GameMakerStudio2\\Cache\\runtimes"; /* Using %systemdrive% here fixes the runtimes not being found when the system drive is not C:\\ */
+        public string GameMakerStudio2RuntimesPath { get; set; } = "%ProgramData%\\GameMakerStudio2\\Cache\\runtimes";
         public bool AssetOrderSwappingEnabled { get; set; } = false;
         public bool ProfileModeEnabled { get; set; } = false;
         public bool UseGMLCache { get; set; } = false;
@@ -50,6 +50,9 @@ namespace UndertaleModTool
 
         public double GlobalGridThickness { get; set; } = 1;
         public bool GridThicknessEnabled { get; set; } = false;
+
+        public bool EnableDarkMode { get; set; } = false;
+        public bool ShowDebuggerOption { get; set; } = false;
 
         public static Settings Instance;
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using UndertaleModLib.Models;
 
 namespace UndertaleModLib.Decompiler
@@ -42,6 +43,9 @@ namespace UndertaleModLib.Decompiler
         GameObject, // or GameObjectInstance or InstanceType, these are all interchangable
         Script,
         Shader,
+        AnimCurve,
+        Sequence,
+        ParticleSystem,
 
         EventType, // For event_perform
 
@@ -376,7 +380,7 @@ namespace UndertaleModLib.Decompiler
                     arguments[i] = scriptArgs[function_name][i];
             }
 
-            function_name = function_name.Replace("color", "colour"); // Just GameMaker things... both are valid :o
+            function_name = function_name.Replace("color", "colour", StringComparison.InvariantCulture); // Just GameMaker things... both are valid :o
 
             if(context.GlobalContext.Data?.IsGameMaker2() ?? false)
             {
@@ -1043,10 +1047,10 @@ namespace UndertaleModLib.Decompiler
             };
 
             // TODO: make proper file/manifest for all games to use, not just UT/DR, and also not these specific names
-            string lowerName = data?.GeneralInfo?.DisplayName?.Content.ToLower();
+            string lowerName = data?.GeneralInfo?.DisplayName?.Content.ToLower(CultureInfo.InvariantCulture);
 
             // Just Undertale
-            if (lowerName != null && lowerName.StartsWith("undertale"))
+            if (lowerName != null && lowerName.StartsWith("undertale", StringComparison.InvariantCulture))
             {
 
                 //AddOverrideFor("gml_Object_obj_wizardorb_chaser_Alarm_0", "pop", AssetIDType.Script);
@@ -1082,7 +1086,7 @@ namespace UndertaleModLib.Decompiler
             }
 
             // Just Deltarune
-            if (lowerName != null && (lowerName == "survey_program" || lowerName.StartsWith("deltarune") || lowerName == "deltarune chapter 1 & 2"))
+            if (lowerName != null && (lowerName == "survey_program" || lowerName.StartsWith("deltarune", StringComparison.InvariantCulture) || lowerName == "deltarune chapter 1 & 2"))
             {
                 builtin_vars.Add("actreadysprite", AssetIDType.Sprite);
                 builtin_vars.Add("actsprite", AssetIDType.Sprite);
@@ -1237,7 +1241,7 @@ namespace UndertaleModLib.Decompiler
             }
 
             // Both UT and DR
-            if (lowerName != null && (lowerName.StartsWith("undertale") || lowerName == "survey_program" || lowerName.StartsWith("deltarune")))
+            if (lowerName != null && (lowerName.StartsWith("undertale", StringComparison.InvariantCulture) || lowerName == "survey_program" || lowerName.StartsWith("deltarune", StringComparison.InvariantCulture)))
             {
                 AddOverrideFor("gml_Script_scr_getbuttonsprite", "control", AssetIDType.Enum_GamepadButton);
                 AddOverrideFor("gml_Script_scr_getbuttonsprite", "button", AssetIDType.Enum_GamepadButton);
@@ -1272,8 +1276,13 @@ namespace UndertaleModLib.Decompiler
 
                 builtin_funcs["gml_Script__background_set"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Sprite };
                 builtin_funcs["gml_Script_c_addxy"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Color };
+                builtin_funcs["gml_Script_c_autodepth"] = new[] { AssetIDType.Boolean };
+                builtin_funcs["gml_Script_c_autofacing"] = new[] { AssetIDType.Boolean };
                 builtin_funcs["gml_Script_c_autowalk"] = new[] { AssetIDType.Boolean };
                 builtin_funcs["gml_Script_c_fadeout"] = new[] { AssetIDType.Other };
+                builtin_funcs["gml_Script_c_fadeout_color"] = new[] { AssetIDType.Other, AssetIDType.Color };
+                builtin_funcs["gml_Script_c_instance"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.GameObject };
+                builtin_funcs["gml_Script_c_msgzurasu"] = new[] { AssetIDType.Boolean };
                 builtin_funcs["gml_Script_c_pan"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Other };
                 builtin_funcs["gml_Script_c_pannable"] = new[] { AssetIDType.Boolean };
                 builtin_funcs["gml_Script_c_panobj"] = new[] { AssetIDType.GameObject, AssetIDType.Other };
@@ -1281,10 +1290,12 @@ namespace UndertaleModLib.Decompiler
                 builtin_funcs["gml_Script_c_script_instance"] = new[] { AssetIDType.GameObject, AssetIDType.Script, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other };
                 builtin_funcs["gml_Script_c_script_instance_stop"] = new[] { AssetIDType.GameObject, AssetIDType.Script };
                 builtin_funcs["gml_Script_c_setxy"] = new[] { AssetIDType.Other, AssetIDType.Other };
+                builtin_funcs["gml_Script_c_shakestep_x"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Boolean };
                 builtin_funcs["gml_Script_c_soundplay"] = new[] { AssetIDType.Sound };
                 builtin_funcs["gml_Script_c_soundplay_x"] = new[] { AssetIDType.Sound, AssetIDType.Other, AssetIDType.Other };
                 builtin_funcs["gml_Script_c_sprite"] = new[] { AssetIDType.Sprite };
                 builtin_funcs["gml_Script_c_stickto"] = new[] { AssetIDType.GameObject, AssetIDType.Other };
+                builtin_funcs["gml_Script_c_visible"] = new[] { AssetIDType.Boolean };
                 builtin_funcs["gml_Script_c_wait"] = new[] { AssetIDType.Other };
                 builtin_funcs["gml_Script_c_walkdirect"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Other };
                 builtin_funcs["gml_Script_c_walkdirect_wait"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Other };
@@ -1362,20 +1373,27 @@ namespace UndertaleModLib.Decompiler
                 builtin_funcs["gml_Script_draw_sprite_ext_glow"] = new[] { AssetIDType.Sprite, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Color, AssetIDType.Other, AssetIDType.Boolean, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other };
                 builtin_funcs["draw_sprite_ext_glow"] = new[] { AssetIDType.Sprite, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Color, AssetIDType.Other, AssetIDType.Boolean, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other };
                 builtin_funcs["gml_Script_scr_draw_sprite_tiled_area"] = new[] { AssetIDType.Sprite, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Color, AssetIDType.Boolean };
-                builtin_funcs["gml_Script_c_actorsetsprites"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Sprite, AssetIDType.Boolean };
+                builtin_funcs["gml_Script_c_actorsetsprites"] = new[] { AssetIDType.Other, AssetIDType.Sprite, AssetIDType.Sprite, AssetIDType.Sprite, AssetIDType.Sprite };
+                builtin_funcs["gml_Script_c_actortoobject"] = new[] { AssetIDType.GameObject };
                 builtin_funcs["gml_Script_scr_marker_animated"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Sprite, AssetIDType.Other };
                 builtin_funcs["scr_marker_animated"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Sprite, AssetIDType.Other };
                 builtin_funcs["gml_Script_c_jump_sprite"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Sprite, AssetIDType.Sprite };
                 builtin_funcs["gml_Script_scr_dark_marker_animated"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Sprite, AssetIDType.Boolean };
                 builtin_funcs["scr_act_charsprite"] = new[] { AssetIDType.Sprite, AssetIDType.Other, AssetIDType.Other, AssetIDType.Boolean };
                 builtin_funcs["scr_draw_sprite_tiled_area"] = new[] { AssetIDType.Sprite, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Color, AssetIDType.Boolean };
-                builtin_funcs["c_actorsetsprites"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Sprite, AssetIDType.Boolean };
+                builtin_funcs["c_actorsetsprites"] = new[] { AssetIDType.Other, AssetIDType.Sprite, AssetIDType.Sprite, AssetIDType.Sprite, AssetIDType.Sprite };
+                builtin_funcs["c_actortoobject"] = new[] { AssetIDType.GameObject };
                 builtin_funcs["c_jump_sprite"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Sprite, AssetIDType.Sprite };
                 builtin_funcs["scr_dark_marker_animated"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Sprite, AssetIDType.Boolean };
                 builtin_funcs["_background_set"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Sprite };
                 builtin_funcs["c_addxy"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Color };
+                builtin_funcs["c_autodepth"] = new[] { AssetIDType.Boolean };
+                builtin_funcs["c_autofacing"] = new[] { AssetIDType.Boolean };
                 builtin_funcs["c_autowalk"] = new[] { AssetIDType.Boolean };
                 builtin_funcs["c_fadeout"] = new[] { AssetIDType.Other };
+                builtin_funcs["c_fadeout_color"] = new[] { AssetIDType.Other, AssetIDType.Color };
+                builtin_funcs["c_instance"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.GameObject };
+                builtin_funcs["c_msgzurasu"] = new[] { AssetIDType.Boolean };
                 builtin_funcs["c_pan"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Other };
                 builtin_funcs["c_pannable"] = new[] { AssetIDType.Boolean };
                 builtin_funcs["c_panobj"] = new[] { AssetIDType.GameObject, AssetIDType.Other };
@@ -1383,10 +1401,12 @@ namespace UndertaleModLib.Decompiler
                 builtin_funcs["c_script_instance"] = new[] { AssetIDType.GameObject, AssetIDType.Script, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other };
                 builtin_funcs["c_script_instance_stop"] = new[] { AssetIDType.GameObject, AssetIDType.Script };
                 builtin_funcs["c_setxy"] = new[] { AssetIDType.Other, AssetIDType.Other };
+                builtin_funcs["c_shakestep_x"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Other, AssetIDType.Boolean };
                 builtin_funcs["c_soundplay"] = new[] { AssetIDType.Sound };
                 builtin_funcs["c_soundplay_x"] = new[] { AssetIDType.Sound, AssetIDType.Other, AssetIDType.Other };
                 builtin_funcs["c_sprite"] = new[] { AssetIDType.Sprite };
                 builtin_funcs["c_stickto"] = new[] { AssetIDType.GameObject, AssetIDType.Other };
+                builtin_funcs["c_visible"] = new[] { AssetIDType.Boolean };
                 builtin_funcs["c_wait"] = new[] { AssetIDType.Other };
                 builtin_funcs["c_walkdirect"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Other };
                 builtin_funcs["c_walkdirect_wait"] = new[] { AssetIDType.Other, AssetIDType.Other, AssetIDType.Other };
@@ -1481,7 +1501,8 @@ namespace UndertaleModLib.Decompiler
                 builtin_vars.Add("sourceobject", AssetIDType.GameObject);
                 //builtin_vars.Add("target", AssetIDType.GameObject);
                 builtin_vars.Add("writergod", AssetIDType.GameObject);
-                builtin_vars.Add("k", AssetIDType.GameObject);
+                AddOverrideFor("obj_carcutscene", "k", AssetIDType.GameObject);
+                AddOverrideFor("obj_carcutscene_ch1", "k", AssetIDType.GameObject);
                 builtin_vars.Add("childBullet", AssetIDType.GameObject);
                 builtin_vars.Add("body_obj", AssetIDType.GameObject);
                 builtin_vars.Add("sneo", AssetIDType.GameObject);
@@ -1995,6 +2016,32 @@ namespace UndertaleModLib.Decompiler
                 // C TIER quality
                 builtin_vars.Add("sound1", AssetIDType.Sound);
                 builtin_vars.Add("sound2", AssetIDType.Sound);
+            }
+
+            // In 2.3.7+, booleans don't need to be typed.
+            // Turn any boolean types (other than overrides) into AssetIDType.Other
+            // so integers don't turn into booleans when they shouldn't
+            if (data.IsVersionAtLeast(2, 3, 7))
+            {
+                foreach (KeyValuePair<string, AssetIDType> kvp in builtin_vars)
+                {
+                    if (kvp.Value == AssetIDType.Boolean)
+                        builtin_vars.Remove(kvp.Key);
+                }
+                foreach (KeyValuePair<string, AssetIDType> kvp in return_types)
+                {
+                    if (kvp.Value == AssetIDType.Boolean)
+                        builtin_vars.Remove(kvp.Key);
+                }
+                foreach (KeyValuePair<string, AssetIDType[]> kvp in builtin_funcs)
+                {
+                    AssetIDType[] arr = kvp.Value;
+                    for (int i = 0; i < arr.Length; i++)
+                    {
+                        if (arr[i] == AssetIDType.Boolean)
+                            arr[i] = AssetIDType.Other;
+                    }
+                }
             }
         }
     }

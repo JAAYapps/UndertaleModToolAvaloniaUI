@@ -39,6 +39,14 @@ namespace UndertaleModTool
             this.DataContext = this;
             InitializeComponent();
         }
+        private void Window_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (!IsVisible || IsLoaded)
+                return;
+
+            if (Settings.Instance.EnableDarkMode)
+                MainWindow.SetDarkTitleBarForWindow(this, true, false);
+        }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
@@ -94,6 +102,9 @@ namespace UndertaleModTool
                     continue;
 
                 string runtimeRunner = System.IO.Path.Combine(runtimePath, @"windows\Runner.exe");
+                string runtimeRunnerX64 = System.IO.Path.Combine(runtimePath, @"windows\x64\Runner.exe");
+                if (Environment.Is64BitOperatingSystem && File.Exists(runtimeRunnerX64))
+                    runtimeRunner = runtimeRunnerX64;
                 if (!File.Exists(runtimeRunner))
                     continue;
 

@@ -18,6 +18,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using UndertaleModLib.Models;
+using static UndertaleModLib.Models.UndertaleRoom;
 
 namespace UndertaleModTool
 {
@@ -57,6 +58,20 @@ namespace UndertaleModTool
 
             UndertaleRoomEditor.SetupRoomWithGrids(room);
             UndertaleRoomEditor.GenerateSpriteCache(room);
+
+            ParticleSystemRectConverter.ClearDict();
+            foreach (var layer in room.Layers)
+            {
+                if (layer.LayerType == LayerType.Assets)
+                {
+                    if (layer.AssetsData.ParticleSystems is not null)
+                    {
+                        var particleSystems = layer.AssetsData.ParticleSystems.Select(x => x.ParticleSystem);
+                        ParticleSystemRectConverter.Initialize(particleSystems);
+                    }
+                    
+                }
+            }
         }
 
         private void RoomCanvas_Loaded(object sender, RoutedEventArgs e)

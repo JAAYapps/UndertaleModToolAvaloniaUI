@@ -12,6 +12,7 @@ public class UndertaleEmbeddedAudio : UndertaleNamedResource, PaddedObject, IDis
     /// <summary>
     /// The name of the embedded audio entry.
     /// </summary>
+    /// <remarks>This is an UTMT only attribute. GameMaker does not store names for them.</remarks>
     public UndertaleString Name { get; set; }
 
     /// <summary>
@@ -44,7 +45,7 @@ public class UndertaleEmbeddedAudio : UndertaleNamedResource, PaddedObject, IDis
     /// <inheritdoc />
     public void UnserializePadding(UndertaleReader reader)
     {
-        while (reader.Position % 4 != 0)
+        while (reader.AbsPosition % 4 != 0)
             if (reader.ReadByte() != 0)
                 throw new IOException("Padding error!");
     }
@@ -54,6 +55,7 @@ public class UndertaleEmbeddedAudio : UndertaleNamedResource, PaddedObject, IDis
     {
         try
         {
+            // TODO: Does only the GUI set this?
             return Name.Content + " (" + GetType().Name + ")";
         }
         catch
