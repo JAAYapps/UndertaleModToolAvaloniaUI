@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Avalonia.Data.Converters;
+using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
-using System.Windows.Data;
 
-namespace UndertaleModTool
+namespace UndertaleModToolAvalonia
 {
     public class StringTitleConverter : IValueConverter
     {

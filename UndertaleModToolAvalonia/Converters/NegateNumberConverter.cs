@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Avalonia.Data.Converters;
+using System;
 using System.Globalization;
-using System.Windows.Data;
 
-namespace UndertaleModTool
+namespace UndertaleModToolAvalonia
 {
     public class NegateNumberConverter : IValueConverter
     {

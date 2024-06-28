@@ -6,6 +6,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using SixLabors.ImageSharp;
 using SkiaSharp;
 using System;
 using System.Buffers;
@@ -20,6 +21,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UndertaleModLib.Models;
+using UndertaleModToolAvalonia.Utility;
 using UndertaleModToolAvalonia.Views;
 using UndertaleModToolAvalonia.Views.EditorViews;
 using static UndertaleModLib.Models.UndertaleRoom;
@@ -167,7 +169,7 @@ namespace UndertaleModToolAvalonia
                 temp = temp.WithWidth(1);
             if (temp.Height == 0)
                 temp = temp.WithHeight(1);
-            WriteableBitmap spriteBMP = new WriteableBitmap(new PixelSize((int)temp.Width, (int)temp.Height), new Vector(96.0f, 96.0f), Avalonia.Platform.PixelFormat.Rgba8888, Avalonia.Platform.AlphaFormat.Unpremul);
+            //WriteableBitmap spriteBMP = new WriteableBitmap(new PixelSize((int)temp.Width, (int)temp.Height), new Vector(96.0f, 96.0f), Avalonia.Platform.PixelFormat.Rgba8888, Avalonia.Platform.AlphaFormat.Unpremul);
 
             temp = temp.WithWidth(temp.Width - ((diffW > 0) ? diffW : 0));
             temp = temp.WithHeight(temp.Height - ((diffH > 0) ? diffH : 0));
@@ -191,24 +193,13 @@ namespace UndertaleModToolAvalonia
             return spriteSrc;
         }
 
-        private WriteableBitmap BitmapToWritableBitmap(Bitmap bitmap)
-        {
-            using (var memoryStream = new MemoryStream())
-            {
-                bitmap.Save(memoryStream);
-                memoryStream.Seek(0, SeekOrigin.Begin);
-
-                return WriteableBitmap.Decode(memoryStream);
-            }
-        }
-
         private void ProcessTileSet(string textureName, Bitmap bmp, List<Tuple<uint, uint, uint, uint>> tileRectList, int targetX, int targetY)
         {
-            WriteableBitmap data = BitmapToWritableBitmap(bmp);
-            //BitmapData data = bmp.LockBits(new Rect(0, 0, bmp.Size.Width, bmp.Size.Height), ImageLockMode.ReadOnly, bmp.PixelFormat);
-            //int depth =  //Image.GetPixelFormatSize(data.PixelFormat) / 8;
+            var data = BitmapInfo.BitmapToWritableBitmap(bmp);
 
-            int bufferLen = data.Stride * bmp.Height;
+            int depth = BitmapInfo.GetDepth(bmp);
+
+            int bufferLen = BitmapInfo.GetStride(bmp) * (int)bmp.Size.Height;
             byte[] buffer;
             if (ReuseTileBuffer)
             {
@@ -223,7 +214,7 @@ namespace UndertaleModToolAvalonia
             else
                 buffer = new byte[bufferLen];
 
-            Marshal.Copy(data.Scan0, buffer, 0, bufferLen);
+            Marshal.Copy(data.Lock().Address, buffer, 0, bufferLen);
 
             _ = Parallel.ForEach(tileRectList, (tileRect) =>
             {
@@ -243,9 +234,10 @@ namespace UndertaleModToolAvalonia
                 // (for example, tile 10055649 of "room_fire_core_topright")
                 // (both examples are from Undertale)
                 // This algorithm doesn't support that, so this tile will be processed by "CreateSpriteSource()"
-                if (w > data.Width || h > data.Height || x < 0 || y < 0 || x + w > data.Width || y + h > data.Height)
+                if (w > data.Size.Width || h > data.Size.Height || x < 0 || y < 0 || x + w > data.Size.Width || y + h > data.Size.Height)
                     return;
 
+                int stride = BitmapInfo.GetStride(data);
                 int bufferResLen = w * h * depth;
                 byte[] bufferRes = ArrayPool<byte>.Shared.Rent(bufferResLen); // may return bigger array than requested
 
@@ -255,28 +247,28 @@ namespace UndertaleModToolAvalonia
                 {
                     for (int j = 0; j < w * depth; j += depth)
                     {
-                        int origIndex = (y * data.Stride) + (i * data.Stride) + (x * depth) + j;
+                        int origIndex = (y * stride) + (i * stride) + (x * depth) + j;
                         int croppedIndex = (i * w * depth) + j;
 
                         Buffer.BlockCopy(buffer, origIndex, bufferRes, croppedIndex, depth);
                     }
                 }
 
-                Bitmap tileBMP = new(w, h);
-                BitmapData dataNew = tileBMP.LockBits(new Rectangle(0, 0, w, h), ImageLockMode.WriteOnly, data.PixelFormat);
-                Marshal.Copy(bufferRes, 0, dataNew.Scan0, bufferResLen);
-                tileBMP.UnlockBits(dataNew);
+                //Bitmap tileBMP = new(w, h);
+                //BitmapData dataNew = tileBMP.LockBits(new Rectangle(0, 0, w, h), ImageLockMode.WriteOnly, data.PixelFormat);
+                var tileBMP = new WriteableBitmap(new PixelSize(w, h), new Vector(96.0f, 96.0f), Avalonia.Platform.PixelFormat.Rgba8888, Avalonia.Platform.AlphaFormat.Unpremul);
+                using var dataNew = tileBMP.Lock();
+                Marshal.Copy(bufferRes, 0, dataNew.Address, bufferResLen);
                 ArrayPool<byte>.Shared.Return(bufferRes);
 
-                IntPtr bmpPtr = tileBMP.GetHbitmap();
-                ImageSource spriteSrc = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(bmpPtr, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                IntPtr bmpPtr = tileBMP.Lock().Address;
+                Bitmap spriteSrc = new Bitmap(PixelFormat.Rgba8888, AlphaFormat.Unpremul, bmpPtr, PixelSize.Empty, new Vector(96.0, 96.0), stride);
                 tileBMP.Dispose();
 
                 Tuple<string, Tuple<uint, uint, uint, uint>> tileKey = new(textureName, new((uint)origX, (uint)origY, (uint)w, (uint)h));
                 tileCache.TryAdd(tileKey, spriteSrc);
             });
 
-            bmp.UnlockBits(data);
             bmp.Dispose();
 
             if (ReuseTileBuffer)

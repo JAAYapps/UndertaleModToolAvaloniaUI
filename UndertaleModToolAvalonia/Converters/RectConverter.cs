@@ -1,21 +1,22 @@
-﻿using System;
+﻿using Avalonia;
+using Avalonia.Data.Converters;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Data;
 
-namespace UndertaleModTool
+namespace UndertaleModToolAvalonia
 {
     public class RectConverter : IMultiValueConverter
     {
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
         {
             bool ignore = parameter is string par && par == "returnEmptyOnNull";
 
-            if (values.Any(e => e == DependencyProperty.UnsetValue))
+            if (values.Any(e => e == AvaloniaProperty.UnsetValue))
             {
                 if (ignore)
                     return new Rect(0, 0, 0, 0);

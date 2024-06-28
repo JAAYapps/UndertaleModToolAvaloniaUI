@@ -1,19 +1,20 @@
-﻿using System;
+﻿using Avalonia;
+using Avalonia.Data.Converters;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Data;
 
-namespace UndertaleModTool
+namespace UndertaleModToolAvalonia
 {
     public class SumRectConverter : IMultiValueConverter
     {
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (values.Any(e => e == DependencyProperty.UnsetValue))
+            if (values.Any(e => e == AvaloniaProperty.UnsetValue))
             {
                 return null;
             }
