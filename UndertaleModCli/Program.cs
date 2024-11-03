@@ -657,7 +657,8 @@ public partial class Program : IScriptInterface
         {
             if (Verbose)
                 Console.WriteLine($"Dumping {texture.Name}");
-            File.WriteAllBytes($"{directory}/{texture.Name.Content}.png", texture.TextureData.TextureBlob);
+            using FileStream fs = new($"{directory}/{texture.Name.Content}.png", FileMode.Create);
+            texture.TextureData.Image.SavePng(fs);
         }
     }
 
@@ -700,7 +701,7 @@ public partial class Program : IScriptInterface
         if (Verbose)
             Console.WriteLine("Replacing " + textureEntry);
 
-        texture.TextureData.TextureBlob = File.ReadAllBytes(fileToReplace.FullName);
+        texture.TextureData.Image = GMImage.FromPng(File.ReadAllBytes(fileToReplace.FullName));
     }
 
     /// <summary>
@@ -712,7 +713,7 @@ public partial class Program : IScriptInterface
         string lines;
         try
         {
-            lines = File.ReadAllText(path);
+            lines = File.ReadAllText(path, Encoding.UTF8);
         }
         catch (Exception exc)
         {
@@ -739,7 +740,7 @@ public partial class Program : IScriptInterface
 
         try
         {
-            CSharpScript.EvaluateAsync(code, CliScriptOptions, this, typeof(IScriptInterface)).GetAwaiter().GetResult();
+            CSharpScript.EvaluateAsync(code, CliScriptOptions.WithFilePath(scriptFile ?? "").WithFileEncoding(Encoding.UTF8), this, typeof(IScriptInterface)).GetAwaiter().GetResult();
             ScriptExecutionSuccess = true;
             ScriptErrorMessage = "";
         }
