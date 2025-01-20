@@ -11,6 +11,7 @@ using static UndertaleModLib.UndertaleReader;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Builder;
+using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
 using System.Linq;
 using System.Text;
