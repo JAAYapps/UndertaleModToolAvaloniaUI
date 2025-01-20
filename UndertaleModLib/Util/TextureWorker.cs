@@ -77,7 +77,7 @@ namespace UndertaleModLib.Util
             IMagickImage<byte> croppedImage = null;
             lock (embeddedImage)
             {
-                croppedImage = embeddedImage.Clone(texPageItem.SourceX, texPageItem.SourceY, texPageItem.SourceWidth, texPageItem.SourceHeight);
+                croppedImage = embeddedImage.CloneArea(texPageItem.SourceX, texPageItem.SourceY, texPageItem.SourceWidth, texPageItem.SourceHeight);
             }
 
             // Resize the image, if necessary
