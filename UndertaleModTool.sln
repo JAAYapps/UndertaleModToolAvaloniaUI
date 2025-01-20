@@ -11,11 +11,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UndertaleModTests", "Undert
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UndertaleModCli", "UndertaleModCli\UndertaleModCli.csproj", "{CC5FDC60-A955-4D0C-B59F-8BD451778237}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UndertaleModToolUpdater", "UndertaleModToolUpdater\UndertaleModToolUpdater.csproj", "{1E004B65-F3C8-4A62-B649-1465EA6A3B01}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UndertaleModToolUpdater", "UndertaleModToolUpdater\UndertaleModToolUpdater.csproj", "{1E004B65-F3C8-4A62-B649-1465EA6A3B01}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UndertaleModLibTests", "UndertaleModLibTests\UndertaleModLibTests.csproj", "{AAE3D4CA-0B6C-4928-AE86-066F5251F70A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UndertaleModLibTests", "UndertaleModLibTests\UndertaleModLibTests.csproj", "{AAE3D4CA-0B6C-4928-AE86-066F5251F70A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UndertaleModToolAvalonia", "UndertaleModToolAvalonia\UndertaleModToolAvalonia.csproj", "{CF781392-092E-4C55-BEDB-035BB2646207}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UndertaleModToolAvalonia", "UndertaleModToolAvalonia\UndertaleModToolAvalonia.csproj", "{4DAA2F1F-3EC8-4190-B21A-EE6FB6266320}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -73,14 +73,14 @@ Global
 		{AAE3D4CA-0B6C-4928-AE86-066F5251F70A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AAE3D4CA-0B6C-4928-AE86-066F5251F70A}.Release|x64.ActiveCfg = Release|Any CPU
 		{AAE3D4CA-0B6C-4928-AE86-066F5251F70A}.Release|x64.Build.0 = Release|Any CPU
-		{CF781392-092E-4C55-BEDB-035BB2646207}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CF781392-092E-4C55-BEDB-035BB2646207}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CF781392-092E-4C55-BEDB-035BB2646207}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{CF781392-092E-4C55-BEDB-035BB2646207}.Debug|x64.Build.0 = Debug|Any CPU
-		{CF781392-092E-4C55-BEDB-035BB2646207}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CF781392-092E-4C55-BEDB-035BB2646207}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CF781392-092E-4C55-BEDB-035BB2646207}.Release|x64.ActiveCfg = Release|Any CPU
-		{CF781392-092E-4C55-BEDB-035BB2646207}.Release|x64.Build.0 = Release|Any CPU
+		{4DAA2F1F-3EC8-4190-B21A-EE6FB6266320}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DAA2F1F-3EC8-4190-B21A-EE6FB6266320}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DAA2F1F-3EC8-4190-B21A-EE6FB6266320}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4DAA2F1F-3EC8-4190-B21A-EE6FB6266320}.Debug|x64.Build.0 = Debug|Any CPU
+		{4DAA2F1F-3EC8-4190-B21A-EE6FB6266320}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DAA2F1F-3EC8-4190-B21A-EE6FB6266320}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DAA2F1F-3EC8-4190-B21A-EE6FB6266320}.Release|x64.ActiveCfg = Release|Any CPU
+		{4DAA2F1F-3EC8-4190-B21A-EE6FB6266320}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

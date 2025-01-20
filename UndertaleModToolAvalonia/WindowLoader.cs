@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Splat;
 using System;
 using System.Collections.Generic;
 
@@ -134,7 +133,7 @@ namespace UndertaleModToolAvalonia
         }
 
 
-        public static IControl createView(UserControl perent, Type view, Type ViewModel, bool isWindowInstanceRequired = false, params object[] parms)
+        public static Control createView(UserControl perent, Type view, Type ViewModel, bool isWindowInstanceRequired = false, params object[] parms)
         {
             try
             {

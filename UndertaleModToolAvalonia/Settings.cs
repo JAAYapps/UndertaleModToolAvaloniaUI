@@ -7,6 +7,9 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
+using Avalonia;
+using CommunityToolkit.Mvvm.ComponentModel;
+using UndertaleModToolAvalonia.Utility;
 using UndertaleModToolAvalonia.Views;
 
 namespace UndertaleModToolAvalonia
@@ -17,6 +20,10 @@ namespace UndertaleModToolAvalonia
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "UndertaleModTool");
         public static string ProfilesFolder = Path.Combine(AppDataFolder, "Profiles");
 
+        // Related to profile system and appdata
+        public byte[] MD5PreviouslyLoaded = new byte[13];
+        public byte[] MD5CurrentlyLoaded = new byte[15];
+        
         public string Version { get; set; } = Assembly.GetEntryAssembly().GetName().Version.ToString();
         public string GameMakerStudioPath { get; set; } = "%appdata%\\GameMaker-Studio";
         public string GameMakerStudio2RuntimesPath { get; set; } = "%systemdrive%\\ProgramData\\GameMakerStudio2\\Cache\\runtimes"; /* Using %systemdrive% here fixes the runtimes not being found when the system drive is not C:\\ */
@@ -53,6 +60,10 @@ namespace UndertaleModToolAvalonia
         public double GlobalGridThickness { get; set; } = 1;
         public bool GridThicknessEnabled { get; set; } = false;
 
+        public bool CanSave { get; set; } = false;
+        
+        public bool CanSafelySave { get; set; } = false;
+        
         public static Settings Instance;
 
         public static JsonSerializerOptions JsonOptions = new JsonSerializerOptions
@@ -96,7 +107,7 @@ namespace UndertaleModToolAvalonia
                     Save();
             } catch (Exception e)
             {
-                MessageBox.Show($"Failed to load settings.json! Using default values.\n{e.Message}");
+                Application.Current.ShowMessage($"Failed to load settings.json! Using default values.\n{e.Message}");
                 new Settings();
             }
         }
@@ -112,7 +123,7 @@ namespace UndertaleModToolAvalonia
             }
             catch (Exception e)
             {
-                MessageBox.Show($"Failed to save settings.json!\n{e.Message}");
+                Application.Current.ShowMessage($"Failed to save settings.json!\n{e.Message}");
             }
         }
     }

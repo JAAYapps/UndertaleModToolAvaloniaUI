@@ -3,11 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace JAAYTransdumper.Models
+namespace UndertaleModToolUniversal.Models
 {
     public class ImageItem
     {
         public string Name { get; set; }
-        public IBitmap Image { get; set; }
+        public Bitmap Image { get; set; }
     }
 }

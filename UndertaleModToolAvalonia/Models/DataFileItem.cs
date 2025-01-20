@@ -9,5 +9,7 @@ namespace UndertaleModToolAvalonia.Models
         public string Name { get; set; }
 
         public string Preview { get; set; }
+        
+        
     }
 }

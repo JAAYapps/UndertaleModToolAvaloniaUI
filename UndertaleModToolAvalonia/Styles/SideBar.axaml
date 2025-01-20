@@ -11,7 +11,7 @@
   <Style Selector="TabControl.sidebar">
     <Setter Property="TabStripPlacement" Value="Left"/>
     <Setter Property="Padding" Value="0 0 0 0"/>
-    <Setter Property="Background" Value="{x:Null}"/>
+    <!-- <Setter Property="Background" Value="{TemplateBinding Background}"/> -->
     <Setter Property="Template">
       <ControlTemplate>
         <Border
@@ -27,13 +27,11 @@
                 DockPanel.Dock="Left">
               <ItemsPresenter
                   Name="PART_ItemsPresenter"
-                  Items="{TemplateBinding Items}"
-                  ItemsPanel="{TemplateBinding ItemsPanel}"
-                  ItemTemplate="{TemplateBinding ItemTemplate}">
+                  ItemsPanel="{TemplateBinding ItemsPanel}">
               </ItemsPresenter>
             </ScrollViewer>
             <ContentControl Content="{TemplateBinding Tag}" HorizontalContentAlignment="Right" DockPanel.Dock="Bottom"/>
-            <ScrollViewer Background="{x:Null}"
+            <ScrollViewer Background="{TemplateBinding Background}"
                 HorizontalScrollBarVisibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=SelectedItem.(ScrollViewer.HorizontalScrollBarVisibility)}"
                 VerticalScrollBarVisibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=SelectedItem.(ScrollViewer.VerticalScrollBarVisibility)}">
               <ContentPresenter
@@ -65,10 +63,11 @@
     <Setter Property="IsVisible" Value="False" />
   </Style>
   <Style Selector="TabControl.sidebar > TabItem:selected">
-    <Setter Property="Background" Value="#1fffffff"/>
+    <!-- <Setter Property="Background" Value="{TemplateBinding Background}"/> -->
   </Style>
-
+<!-- #1fffffff -->
   <Style Selector="TabControl.sidebar > TabItem:pointerover /template/ Border#PART_LayoutRoot">
-    <Setter Property="Background" Value="#3fffffff"/>
+    <Setter Property="Background" Value="{TemplateBinding Background}"/>
   </Style>
 </Styles>
+<!-- #3fffffff -->

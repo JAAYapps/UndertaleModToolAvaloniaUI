@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Data;
+using Avalonia.Data.Converters;
 using UndertaleModLib;
 
-namespace UndertaleModTool
+namespace UndertaleModToolAvalonia.Converters
 {
     public class DataFieldOneTimeConverter : IValueConverter
     {
@@ -22,7 +17,7 @@ namespace UndertaleModTool
             object resObj = info?.GetValue(data);
 
             if (resObj is bool res)
-                return res ? Visibility.Visible : Visibility.Collapsed;
+                return res;
             else
                 return null;
         }

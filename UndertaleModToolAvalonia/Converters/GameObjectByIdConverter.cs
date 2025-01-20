@@ -1,25 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Data;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Data.Converters;
 using UndertaleModLib.Models;
+using UndertaleModToolAvalonia.Views;
 
-namespace UndertaleModTool
+namespace UndertaleModToolAvalonia.Converters
 {
-    [ValueConversion(typeof(uint), typeof(UndertaleGameObject))]
+    //[ValueConversion(typeof(uint), typeof(UndertaleGameObject))]
     public class GameObjectByIdConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             uint val = System.Convert.ToUInt32(value);
             UndertaleGameObject returnObj = null;
-            if (val < (Application.Current.MainWindow as MainWindow).Data.GameObjects.Count)
+            if (val < AppConstants.Data.GameObjects.Count)
             {
-                returnObj = (Application.Current.MainWindow as MainWindow).Data.GameObjects[(int)val];
+                returnObj = AppConstants.Data.GameObjects[(int)val];
                 return returnObj;
             }
             else
@@ -30,7 +28,7 @@ namespace UndertaleModTool
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (uint)(Application.Current.MainWindow as MainWindow).Data.GameObjects.IndexOf((UndertaleGameObject)value);
+            return (uint)AppConstants.Data.GameObjects.IndexOf((UndertaleGameObject)value);
         }
     }
 }

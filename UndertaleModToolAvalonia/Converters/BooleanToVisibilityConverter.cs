@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Globalization;
-using System.Windows;
-using System.Windows.Data;
+using Avalonia.Data.Converters;
 
-namespace UndertaleModTool
+namespace UndertaleModToolAvalonia.Converters
 {
     public sealed class BooleanToVisibilityConverter : IValueConverter
     {
-        public Visibility trueValue { get; set; }
-        public Visibility falseValue { get; set; }
+        public bool trueValue { get; set; }
+        public bool falseValue { get; set; }
         
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

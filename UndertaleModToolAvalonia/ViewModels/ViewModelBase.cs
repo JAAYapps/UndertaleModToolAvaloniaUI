@@ -1,11 +1,7 @@
-using ReactiveUI;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace UndertaleModToolAvalonia.ViewModels
+namespace UndertaleModToolAvalonia.ViewModels;
+
+public class ViewModelBase : ObservableObject
 {
-    public class ViewModelBase : ReactiveObject
-    {
-    }
 }

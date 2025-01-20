@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Data;
+using Avalonia.Data.Converters;
 using UndertaleModLib.Models;
 
-namespace UndertaleModTool
+namespace UndertaleModToolAvalonia.Converters
 {
-    [ValueConversion(typeof(uint), typeof(string))]
+    //[ValueConversion(typeof(uint), typeof(string))]
     public class EventNameConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

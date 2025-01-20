@@ -92,7 +92,7 @@ namespace UndertaleModLib.Util
             IMagickImage<byte> returnImage = croppedImage;
             if (includePadding)
             {
-                returnImage = new MagickImage(MagickColor.FromRgba(0, 0, 0, 0), exportWidth, exportHeight);
+                returnImage = new MagickImage(MagickColor.FromRgba(0, 0, 0, 0), (uint)exportWidth, (uint)exportHeight);
                 returnImage.Composite(croppedImage, texPageItem.TargetX, texPageItem.TargetY, CompositeOperator.Copy);
                 croppedImage.Dispose();
             }
@@ -140,7 +140,7 @@ namespace UndertaleModLib.Util
             }
 
             // Resize using bilinear interpolation
-            newImage.InterpolativeResize(width, height, PixelInterpolateMethod.Bilinear);
+            newImage.InterpolativeResize((uint)width, (uint)height, PixelInterpolateMethod.Bilinear);
             return newImage;
         }
 
@@ -177,7 +177,7 @@ namespace UndertaleModLib.Util
                     {
                         byte fullByte = 0x00;
                         int pxStart = (xByte * 8);
-                        int pxEnd = Math.Min(pxStart + 8, image.Width);
+                        int pxEnd = (int)Math.Min(pxStart + 8, image.Width);
 
                         for (int x = pxStart; x < pxEnd; x++)
                         {
@@ -206,7 +206,7 @@ namespace UndertaleModLib.Util
         public static IMagickImage<byte> GetCollisionMaskImage(UndertaleSprite.MaskEntry mask, int maskWidth, int maskHeight)
         {
             // Create image to draw on
-            MagickImage image = new(MagickColor.FromRgba(0, 0, 0, 255), maskWidth, maskHeight);
+            MagickImage image = new(MagickColor.FromRgba(0, 0, 0, 255), (uint)maskWidth, (uint)maskHeight);
             IPixelCollection<byte> pixels = image.GetPixels();
 
             // Get black/white colors to use for drawing
@@ -263,7 +263,7 @@ namespace UndertaleModLib.Util
             try
             {
                 MagickImageInfo info = new(filePath);
-                return (info.Width, info.Height);
+                return ((int)info.Width, (int)info.Height);
             }
             catch (Exception)
             {

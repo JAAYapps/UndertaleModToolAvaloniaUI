@@ -1,14 +1,15 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Globalization;
-using System.Windows;
-using System.Windows.Data;
+using System.Linq;
+using Avalonia;
+using Avalonia.Data.Converters;
 
-namespace UndertaleModTool
+namespace UndertaleModToolAvalonia.Converters
 {
     public class GridConverter : IMultiValueConverter
     {
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(IList<object?> values, Type targetType, object parameter, CultureInfo culture)
         {
             if (values.Any(x => x is not double))
                 return new Rect();

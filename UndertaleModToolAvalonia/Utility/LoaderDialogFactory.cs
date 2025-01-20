@@ -2,7 +2,6 @@
 using Avalonia.Threading;
 using Avalonia.X11;
 using log4net;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia;
 using UndertaleModToolAvalonia.ViewModels.EditorsViewModels;
 using UndertaleModToolAvalonia.Views;
 using UndertaleModToolAvalonia.Views.EditorViews;
@@ -39,7 +39,7 @@ namespace UndertaleModToolAvalonia.Utility
 
         private LoaderDialogFactory() {}
 
-        public static async Task Create(Window perent, bool preventClose = false, string title = "", string msg = "")
+        public static async void Create(Window perent, bool preventClose = false, string title = "", string msg = "")
         {
             if (!Created || IsClosed)
             {
@@ -56,6 +56,7 @@ namespace UndertaleModToolAvalonia.Utility
                 LoaderDialogFactory.preventClose = preventClose;
                 Created = true;
                 IsClosed = false;
+                await loaderDialogView.ShowDialog(perent);
             }
             else
                 await loaderDialogView.ShowDialog(perent);
@@ -157,7 +158,7 @@ namespace UndertaleModToolAvalonia.Utility
         public static void StartProgressBarUpdater()
         {
             if (cts is not null)
-                MessageBox.Show("Warning - there is another progress bar updater task running (hangs) in the background.\nRestart the application to prevent some unexpected behavior.");
+                Application.Current.ShowMessage("Warning - there is another progress bar updater task running (hangs) in the background.\nRestart the application to prevent some unexpected behavior.");
 
             cts = new CancellationTokenSource();
             cToken = cts.Token;
@@ -172,7 +173,7 @@ namespace UndertaleModToolAvalonia.Utility
             cts.Cancel();
 
             if (await Task.Run(() => !updater.Wait(2000))) //if ProgressUpdater isn't responding
-                MessageBox.Show("Stopping the progress bar updater task is failed.\nIt's highly recommended to restart the application.");
+                await Application.Current.ShowMessage("Stopping the progress bar updater task is failed.\nIt's highly recommended to restart the application.");
             else
             {
                 cts.Dispose();
@@ -182,6 +183,16 @@ namespace UndertaleModToolAvalonia.Utility
             updater.Dispose();
         }
 
+        public static void Hide()
+        {
+            loaderDialogViewModel.State = WindowState.Minimized;
+        }
+        
+        public static void Show()
+        {
+            loaderDialogViewModel.State = WindowState.Normal;
+        }
+        
         public static void Dispose()
         {
             loaderDialogView.Close();

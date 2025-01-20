@@ -1,18 +1,12 @@
-<Window xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UndertaleModToolAvalonia"
+        xmlns:vm="clr-namespace:UndertaleModToolAvalonia.ViewModels.EditorsViewModels"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorView"
-        Title="Editor">
-  <Window.Title>
-    <MultiBinding StringFormat="{}{0} - {1} [{2}]">
-      <Binding Path="TitleMain"/>
-      <Binding Path="Data.GeneralInfo" FallbackValue="No game loaded"/>
-      <Binding Path="FilePath"/>
-    </MultiBinding>
-  </Window.Title>
+        x:DataType="vm:EditorViewModel">
   <Grid>
     <DockPanel>
       <Menu DockPanel.Dock="Top">
@@ -22,7 +16,7 @@
           <MenuItem Header="_Save" HotKey="Ctrl+S">
             <MenuItem.Styles>
               <Style Selector="MenuItem">
-                <Setter Property="IsEnabled" Value="{Binding CanSave}"/>
+                <!-- <Setter Property="IsEnabled" Value="{Binding CanSave}"/> -->
               </Style>
             </MenuItem.Styles>
           </MenuItem>
@@ -31,21 +25,21 @@
             <!-- TODO: I think I need a custom command for that... -->
             <MenuItem.Styles>
               <Style Selector="MenuItem">
-                <Setter Property="IsEnabled" Value="{Binding CanSave}"/>
+                <!-- <Setter Property="IsEnabled" Value="{Binding CanSave}"/> -->
               </Style>
             </MenuItem.Styles>
           </MenuItem>
           <MenuItem Header="Run game under _debugger" HotKey="Shift+F5">
             <MenuItem.Styles>
               <Style Selector="MenuItem">
-                <Setter Property="IsEnabled" Value="{Binding CanSave}"/>
+                <!-- <Setter Property="IsEnabled" Value="{Binding CanSave}"/> -->
               </Style>
             </MenuItem.Styles>
           </MenuItem>
           <MenuItem Header="Run game with other runner" HotKey="Alt+F5">
             <MenuItem.Styles>
               <Style Selector="MenuItem">
-                <Setter Property="IsEnabled" Value="{Binding CanSave}"/>
+                <!-- <Setter Property="IsEnabled" Value="{Binding CanSave}"/> -->
               </Style>
             </MenuItem.Styles>
           </MenuItem>
@@ -85,14 +79,14 @@
           <StackPanel Grid.Row="0" Margin="0,0,0,5" Orientation="Horizontal">
             <Button Margin="0,0,2,0" Name="BackButton">
               
-              <Image Name="BackButtonImage">
+              <Image Name="BackButtonImage" Source="/Assets/arrow_blue.png">
                 
               </Image>
             </Button>
             <Button Name="ForwardButton" >
-              <Image Name="ForwardButtonImage" RenderTransformOrigin="0.5,0.5">
+              <Image Name="ForwardButtonImage" Margin="26,0,-26,0" RenderTransformOrigin="0.5,0.5" Source="/Assets/arrow_blue.png">
                 <Image.RenderTransform>
-                  <ScaleTransform ScaleX="-1" ScaleY="-1"/>
+                  <ScaleTransform ScaleX="-1" ScaleY="1"/>
                 </Image.RenderTransform>
                 
               </Image>
@@ -277,7 +271,7 @@
             </StackPanel>
           </Grid>
           <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <ContentControl Margin="10" Content="{Binding Selected, Mode=OneWay}" Name="DataEditor">
+            <ContentControl Margin="10" Name="DataEditor">
               <ContentControl.Resources>
 
               </ContentControl.Resources>
@@ -288,4 +282,4 @@
     </DockPanel>
   </Grid>
   
-</Window>
+</UserControl>

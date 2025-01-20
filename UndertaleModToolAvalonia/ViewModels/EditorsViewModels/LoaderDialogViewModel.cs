@@ -1,76 +1,63 @@
 ﻿using Avalonia.Controls;
-using Avalonia.Threading;
-using ReactiveUI;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace UndertaleModToolAvalonia.ViewModels.EditorsViewModels
 {
-    public class LoaderDialogViewModel : ViewModelBase
+    public partial class LoaderDialogViewModel : ViewModelBase
     {
         private readonly Window perent;
 
-        private double value = 0;
+        [ObservableProperty] private double value = 0;
 
-        public double Value { get => this.value; set => this.RaiseAndSetIfChanged(ref this.value, value); }
+        [ObservableProperty] private string messageTitle = string.Empty;
 
-        private string messageTitle = string.Empty;
+        [ObservableProperty] private string message = string.Empty;
 
-        public string MessageTitle { get => this.messageTitle; set => this.RaiseAndSetIfChanged(ref this.messageTitle, value); }
+        [ObservableProperty] private bool preventClose = true;
+        
+        [ObservableProperty] private bool isClosed = false;
 
-        private string message = string.Empty;
+        [ObservableProperty] private string statusText = "Please wait...";
 
-        public string Message { get => this.message; set => this.RaiseAndSetIfChanged(ref this.message, value); }
+        [ObservableProperty] private bool isIndeterminate = true;
 
-        private bool preventClose = true;
+        [ObservableProperty] private string savedStatusText = string.Empty;
 
-        public bool PreventClose { get => this.preventClose; set => this.RaiseAndSetIfChanged(ref this.preventClose, value); }
+        [ObservableProperty] private double? maximum = 100;
 
-        private string statusText = "Please wait...";
+        [ObservableProperty] private WindowState state = WindowState.Normal;
+        
+        public double? ComputedMaximum => !IsIndeterminate ? maximum : null;
 
-        public string StatusText { get => this.statusText; set => this.RaiseAndSetIfChanged(ref this.statusText, value); }
-
-        private bool isIndeterminate = true;
-
-        public bool IsIndeterminate { get => this.isIndeterminate; set => this.RaiseAndSetIfChanged(ref this.isIndeterminate, value); }
-
-        private string savedStatusText = string.Empty;
-
-        public string SavedStatusText { get => this.savedStatusText; set => this.RaiseAndSetIfChanged(ref this.savedStatusText, value); }
-
-        private double maximum = 100;
-
-        public double? Maximum
+        partial void OnIsIndeterminateChanged(bool value)
         {
-            get
-            {
-                return !IsIndeterminate ? maximum : null;
-            }
-
-            set
-            {
-                IsIndeterminate = !value.HasValue;
-                if (value.HasValue)
-                    this.RaiseAndSetIfChanged(ref this.maximum, value.Value);
-            }
+            // Notify change of ComputedMaximum whenever IsIndeterminate changes
+            OnPropertyChanged(nameof(ComputedMaximum));
         }
 
+        partial void OnMaximumChanged(double? value)
+        {
+            // Update IsIndeterminate based on the value of Maximum
+            IsIndeterminate = !value.HasValue;
+
+            // Notify change of ComputedMaximum whenever Maximum changes
+            OnPropertyChanged(nameof(ComputedMaximum));
+        }
+        
         public LoaderDialogViewModel(Window perent, string title, string msg)
         {
             MessageTitle = title;
             Message = msg;
             this.perent = perent;
         }
-
+        
         public async Task ReportProgress(string status)
         {
             await Task.Run(() => StatusText = status);
         }
+        
         public async Task ReportProgress(double value) //update without status text changing
         {
             try

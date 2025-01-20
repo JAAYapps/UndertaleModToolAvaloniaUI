@@ -9,10 +9,5 @@ namespace UndertaleModToolAvalonia.Views.EditorViews
         {
             InitializeComponent();
         }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
     }
 }

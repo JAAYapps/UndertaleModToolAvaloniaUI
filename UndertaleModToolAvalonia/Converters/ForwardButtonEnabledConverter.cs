@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
-using System.Windows.Data;
+using Avalonia.Data.Converters;
 
-namespace UndertaleModTool
+namespace UndertaleModToolAvalonia.Converters
 {
     public class ForwardButtonEnabledConverter : IMultiValueConverter
     {
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(IList<object?> values, Type targetType, object parameter, CultureInfo culture)
         {
             if (values[0] is not int pos || values[1] is not int count)
                 return false;
