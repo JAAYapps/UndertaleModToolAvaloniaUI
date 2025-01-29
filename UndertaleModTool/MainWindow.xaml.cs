@@ -1,4 +1,6 @@
-﻿using Microsoft.CodeAnalysis;
+﻿#pragma warning disable CA1416 // Validate platform compatibility
+
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.Win32;
@@ -352,6 +354,12 @@ namespace UndertaleModTool
                 SetDarkMode(true, true);
                 SetDarkTitleBarForWindow(this, true, false);
             }
+
+            try
+            {
+                SetTransparencyGridColors(Settings.Instance.TransparencyGridColor1, Settings.Instance.TransparencyGridColor2);
+            }
+            catch (FormatException) { }
         }
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -656,6 +664,12 @@ namespace UndertaleModTool
             }
         }
 
+        public static void SetTransparencyGridColors(string color1, string color2)
+        {
+            Application.Current.Resources["TransparencyGridColor1"] = new SolidColorBrush((Color)System.Windows.Media.ColorConverter.ConvertFromString(color1));
+            Application.Current.Resources["TransparencyGridColor2"] = new SolidColorBrush((Color)System.Windows.Media.ColorConverter.ConvertFromString(color2));
+        }
+
         private async void Command_New(object sender, ExecutedRoutedEventArgs e)
         {
             await MakeNewDataFile();
@@ -775,7 +789,6 @@ namespace UndertaleModTool
                 return SaveResult.Error;
             }
             
-            #pragma warning disable CA1416
             if (codeEditor.DecompiledChanged || codeEditor.DisassemblyChanged)
             {
                 IsSaving = true;
@@ -786,7 +799,6 @@ namespace UndertaleModTool
                 result = IsSaving ? SaveResult.Error : SaveResult.Saved;
                 IsSaving = false;
             }
-            #pragma warning restore CA1416
 
             return result;
         }
@@ -1074,10 +1086,8 @@ namespace UndertaleModTool
                                                       ? "Tile sets"
                                                       : "Backgrounds & Tile sets";
 
-                        #pragma warning disable CA1416
                         UndertaleCodeEditor.gettext = null;
                         UndertaleCodeEditor.gettextJSON = null;
-                        #pragma warning restore CA1416
                     }
 
                     dialog.Hide();
@@ -1272,9 +1282,7 @@ namespace UndertaleModTool
                     Data.ToolInfo.CurrentMD5 = BitConverter.ToString(MD5CurrentlyLoaded).Replace("-", "").ToLowerInvariant();
                 }
 
-                #pragma warning disable CA1416
                 UndertaleCodeEditor.gettextJSON = null;
-                #pragma warning restore CA1416
 
                 Dispatcher.Invoke(() =>
                 {
@@ -2477,7 +2485,6 @@ namespace UndertaleModTool
             {
                 Focus();
 
-                #pragma warning disable CA1416
                 if (Selected == code)
                 {
                     var codeEditor = FindVisualChild<UndertaleCodeEditor>(DataEditor);
@@ -2512,7 +2519,6 @@ namespace UndertaleModTool
                     UndertaleCodeEditor.EditorTab = editorTab;
                     UndertaleCodeEditor.ChangeLineNumber(lineNum, editorTab);
                 }
-                #pragma warning restore CA1416
 
                 HighlightObject(code);
                 ChangeSelection(code, inNewTab);
@@ -2744,7 +2750,6 @@ namespace UndertaleModTool
             return dlg.ShowDialog() == true ? dlg.FileName : null;
         }
 
-        #pragma warning disable CA1416
         public string PromptChooseDirectory()
         {
             VistaFolderBrowserDialog folderBrowser = new VistaFolderBrowserDialog();
@@ -2752,13 +2757,11 @@ namespace UndertaleModTool
             return folderBrowser.ShowDialog() == true ? folderBrowser.SelectedPath + "/" : null;
         }
 
-        #pragma warning disable CA1416
         public void PlayInformationSound()
         {
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 System.Media.SystemSounds.Asterisk.Play();
         }
-        #pragma warning restore CA1416
 
         public void ScriptMessage(string message)
         {
@@ -4078,3 +4081,5 @@ result in loss of work.");
         }
     }
 }
+
+#pragma warning restore CA1416 // Validate platform compatibility
