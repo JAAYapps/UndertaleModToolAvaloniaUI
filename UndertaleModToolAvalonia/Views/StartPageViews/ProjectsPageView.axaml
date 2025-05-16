@@ -14,7 +14,16 @@
     </Grid.RowDefinitions>
     <Border Grid.Row="0" Margin="10" BorderBrush="DarkGray" BorderThickness="2">
       <ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" AllowAutoHide="False">
-        <views:DataFileView DataContext="{Binding FileViewModel}" Background="Transparent"/>
+        <Border CornerRadius="12">
+          <TransitioningContentControl Content="{Binding CurrentPage}" >
+            <TransitioningContentControl.PageTransition>
+              <PageSlide Orientation="Horizontal" Duration="0:00:00.500" />
+            </TransitioningContentControl.PageTransition>
+          </TransitioningContentControl>
+          <!--
+          <views:DataFileView DataContext="{Binding FileViewModel}" Background="Transparent"/>
+        -->
+        </Border>
       </ScrollViewer>
     </Border>
   </Grid>

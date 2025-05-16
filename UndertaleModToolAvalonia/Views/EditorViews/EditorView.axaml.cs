@@ -3,7 +3,7 @@ using Avalonia.Markup.Xaml;
 
 namespace UndertaleModToolAvalonia.Views.EditorViews
 {
-    public partial class EditorView : Window
+    public partial class EditorView : UserControl
     {
         public EditorView()
         {

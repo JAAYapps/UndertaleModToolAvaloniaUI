@@ -12,6 +12,8 @@ namespace UndertaleModToolAvalonia.ViewModels.StartPageViewModels.DataItemViewMo
 
 public partial class DataFileViewModel : ViewModelBase
 {
+    public EventHandler FileLoaded { get; set; }
+    
     public DataFileViewModel()
     {
         List<DataFileItem> dataFileItems = new List<DataFileItem>();
@@ -33,6 +35,7 @@ public partial class DataFileViewModel : ViewModelBase
         await Application.Current.ShowMessage($"Loading data from {filename}");
         if (filename == "OpenFile")
         {
+            FileLoaded(this, null);
         //     try
         //     {
         //         Window window = await WindowLoader.createWindowAsync(perent,
