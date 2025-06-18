@@ -178,7 +178,7 @@ namespace UndertaleModLib.Util
                     {
                         byte fullByte = 0x00;
                         int pxStart = (xByte * 8);
-                        int pxEnd = (int)Math.Min(pxStart + 8, image.Width);
+                        int pxEnd = Math.Min(pxStart + 8, (int)image.Width);
 
                         for (int x = pxStart; x < pxEnd; x++)
                         {
@@ -264,7 +264,7 @@ namespace UndertaleModLib.Util
             try
             {
                 MagickImageInfo info = new(filePath);
-                return ((int width, int height))(info.Width, info.Height);
+                return ((int)info.Width, (int)info.Height);
             }
             catch (Exception)
             {
