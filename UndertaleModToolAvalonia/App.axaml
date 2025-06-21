@@ -9,7 +9,29 @@
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>
-  
+
+	<Application.Resources>
+		<Color x:Key="TransparencyGridColor1">#FF666666</Color>
+		<Color x:Key="TransparencyGridColor2">#FF999999</Color>
+
+		<DrawingBrush x:Key="TransparencyGridBrush" TileMode="Tile"
+                      DestinationRect="0,0,16,16" SourceRect="0,0,16,16">
+			<DrawingBrush.Drawing>
+				<DrawingGroup>
+					<GeometryDrawing Brush="{DynamicResource TransparencyGridColor1}">
+						<RectangleGeometry Rect="0,0,16,16"/>
+					</GeometryDrawing>
+					<GeometryDrawing Brush="{DynamicResource TransparencyGridColor2}">
+						<GeometryGroup>
+							<RectangleGeometry Rect="0,0,8,8"/>
+							<RectangleGeometry Rect="8,8,8,8"/>
+						</GeometryGroup>
+					</GeometryDrawing>
+				</DrawingGroup>
+			</DrawingBrush.Drawing>
+		</DrawingBrush>
+	</Application.Resources>
+	
     <Application.Styles>
         <sty:FluentAvaloniaTheme PreferSystemTheme="True" PreferUserAccentColor="True" />
         <StyleInclude Source="/Styles/MenuIcons.axaml"/>

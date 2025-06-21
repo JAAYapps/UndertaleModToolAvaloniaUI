@@ -1,21 +1,27 @@
+using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
-using Avalonia;
-using CommunityToolkit.Mvvm.Input;
-using UndertaleModToolAvalonia.Models;
-using UndertaleModToolAvalonia.Utility;
+using UndertaleModToolAvalonia.Models.StartPageModels;
+using UndertaleModToolAvalonia.Services.FileService;
+using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
 
 namespace UndertaleModToolAvalonia.ViewModels.StartPageViewModels.DataItemViewModels;
 
 public partial class DataFileViewModel : ViewModelBase
 {
+    private readonly EditorViewModel editorViewModel;
+
     public EventHandler FileLoaded { get; set; }
-    
-    public DataFileViewModel()
+
+    private IFileService fileService;
+
+    public DataFileViewModel(IFileService fileService, EditorViewModel editorViewModel)
     {
+        this.fileService = fileService;
+        this.editorViewModel = editorViewModel;
         List<DataFileItem> dataFileItems = new List<DataFileItem>();
         DataFileItem OpenFile = new DataFileItem();
         OpenFile.Preview = "Open File";
@@ -30,35 +36,40 @@ public partial class DataFileViewModel : ViewModelBase
     }
     
     [RelayCommand]
-    public async Task LoadData(string filename)
+    public async Task LoadDataAsync(object? parameters)
     {
-        await Application.Current.ShowMessage($"Loading data from {filename}");
-        if (filename == "OpenFile")
+        if (parameters is not object[] values) return;
+
+        // Unpack the values from the array in the same order you bound them
+        var name = values[0] as string;
+        var storageProvider = values[1] as Avalonia.Platform.Storage.IStorageProvider;
+
+        if (string.IsNullOrEmpty(name)) return;
+
+        // Now you have both the name and the StorageProvider!
+        if (name == "OpenFile")
         {
-            FileLoaded(this, null);
-        //     try
-        //     {
-        //         Window window = await WindowLoader.createWindowAsync(perent,
-        //             typeof(EditorView), typeof(EditorViewModel), true);
-        //         WindowLoader.setMainWindow(window);
-        //         EditorViewModel? editorViewModel = window.DataContext as EditorViewModel;
-        //         if (editorViewModel != null && await editorViewModel.OpenDialog())
-        //         {
-        //             window?.Show();
-        //             Window main = (Application.Current.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime).MainWindow;
-        //             (Application.Current.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime).MainWindow = window;
-        //             main.Close();
-        //         }
-        //         else
-        //         {
-        //             MessageBox.Show("Failed to load file or Editor. ");
-        //             window?.Close();
-        //         }
-        //     }
-        //     catch (Exception e)
-        //     {
-        //         MessageBox.Show($"Error loading\n{e.Message}", perent);
-        //     }
+            if (storageProvider is null)
+            {
+                // Handle error: couldn't find the StorageProvider
+                return;
+            }
+
+            // Use the FileService to get a file path
+            var files = await fileService.LoadFileAsync(storageProvider);
+            var filePath = files?.FirstOrDefault()?.Path.LocalPath;
+
+            if (string.IsNullOrEmpty(filePath))
+                return; // User cancelled
+
+            await editorViewModel.LoadFileAsync(filePath);
+
+            FileLoaded?.Invoke(this, EventArgs.Empty);
+        }
+        else
+        {
+            // Logic for loading a recently used file directly
+            // await Application.Current.ShowMessage($"Loading data from {name}");
         }
     }
 

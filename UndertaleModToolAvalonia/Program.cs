@@ -14,12 +14,9 @@ namespace UndertaleModToolAvalonia
     {
         public static bool completeFail = false;
         public static string failMessage = string.Empty;
-        
-        public static string GetExecutableDirectory()
-        {
-            return Path.GetDirectoryName(Environment.ProcessPath);
-        }
-        
+
+        public static string GetExecutableDirectory() => Path.GetDirectoryName(Environment.ProcessPath)!;
+
         // Initialization code. Don't use any Avalonia, third-party APIs or any
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
         // yet and stuff might break.
@@ -41,13 +38,12 @@ namespace UndertaleModToolAvalonia
 
             try
             {
-                AppDomain currentDomain = default(AppDomain);
-                currentDomain = AppDomain.CurrentDomain;
+                AppDomain currentDomain = AppDomain.CurrentDomain;
                 // Handler for unhandled exceptions.
                 currentDomain.UnhandledException += GlobalUnhandledExceptionHandler;
                 // Handler for exceptions in threads behind forms.
                 var builder = BuildAvaloniaApp();
-                InitMpv();
+                // InitMpv();
                 return builder.StartWithClassicDesktopLifetime(args);
             }
             catch (Exception e)
@@ -65,8 +61,7 @@ namespace UndertaleModToolAvalonia
 
         private static void GlobalUnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs e)
         {
-            Exception ex = default(Exception);
-            ex = (Exception)e.ExceptionObject;
+            Exception ex = (Exception)e.ExceptionObject;
             ILog log = LogManager.GetLogger(typeof(Program));
             log.Error(ex.Message + "\n" + ex.StackTrace);
             File.WriteAllText(Path.Combine(GetExecutableDirectory(), "crash2.txt"), (ex.ToString() + "\n" + ex.Message + "\n" + ex.StackTrace));
@@ -74,8 +69,7 @@ namespace UndertaleModToolAvalonia
 
         private static void GlobalThreadExceptionHandler(object sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
         {
-            Exception ex = default(Exception);
-            ex = e.Exception;
+            Exception ex = e.Exception;
             ILog log = LogManager.GetLogger(typeof(Program)); //Log4NET
             log.Error(ex.Message + "\n" + ex.StackTrace);
             File.WriteAllText(Path.Combine(GetExecutableDirectory(), "crash3.txt"), (ex.Message + "\n" + ex.StackTrace));

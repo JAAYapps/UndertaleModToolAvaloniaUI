@@ -7,8 +7,6 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorsViewModels
 {
     public partial class LoaderDialogViewModel : ViewModelBase
     {
-        private readonly Window perent;
-
         [ObservableProperty] private double value = 0;
 
         [ObservableProperty] private string messageTitle = string.Empty;
@@ -46,11 +44,8 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorsViewModels
             OnPropertyChanged(nameof(ComputedMaximum));
         }
         
-        public LoaderDialogViewModel(Window perent, string title, string msg)
+        public LoaderDialogViewModel()
         {
-            MessageTitle = title;
-            Message = msg;
-            this.perent = perent;
         }
         
         public async Task ReportProgress(string status)

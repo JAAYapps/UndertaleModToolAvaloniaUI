@@ -8,23 +8,65 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.Views.StartPageViews.ProjectsPageView"
              x:DataType="vm:ProjectsPageViewModel">
-  <Grid>
-    <Grid.RowDefinitions>
-      <RowDefinition Height="*"/>
-    </Grid.RowDefinitions>
-    <Border Grid.Row="0" Margin="10" BorderBrush="DarkGray" BorderThickness="2">
-      <ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" AllowAutoHide="False">
-        <Border CornerRadius="12">
-          <TransitioningContentControl Content="{Binding CurrentPage}" >
-            <TransitioningContentControl.PageTransition>
-              <PageSlide Orientation="Horizontal" Duration="0:00:00.500" />
-            </TransitioningContentControl.PageTransition>
-          </TransitioningContentControl>
-          <!--
-          <views:DataFileView DataContext="{Binding FileViewModel}" Background="Transparent"/>
-        -->
-        </Border>
-      </ScrollViewer>
-    </Border>
-  </Grid>
+	<DockPanel>
+		<Menu DockPanel.Dock="Top">
+			<MenuItem Header="_File">
+				<MenuItem Header="_New" HotKey="Ctrl+N" Command="{Binding NewProjectCommand}"/>
+				<MenuItem Header="_Open" HotKey="Ctrl+O"/>
+				<MenuItem Header="_Save" HotKey="Ctrl+S">
+					<MenuItem.Styles>
+						<Style Selector="MenuItem">
+							<!-- <Setter Property="IsEnabled" Value="{Binding CanSave}"/> -->
+						</Style>
+					</MenuItem.Styles>
+				</MenuItem>
+				<Separator/>
+				<MenuItem Header="_Temp run game" HotKey="F5">
+					<!-- TODO: I think I need a custom command for that... -->
+					<MenuItem.Styles>
+						<Style Selector="MenuItem">
+							<!-- <Setter Property="IsEnabled" Value="{Binding CanSave}"/> -->
+						</Style>
+					</MenuItem.Styles>
+				</MenuItem>
+				<MenuItem Header="Run game under _debugger" HotKey="Shift+F5">
+					<MenuItem.Styles>
+						<Style Selector="MenuItem">
+							<!-- <Setter Property="IsEnabled" Value="{Binding CanSave}"/> -->
+						</Style>
+					</MenuItem.Styles>
+				</MenuItem>
+				<MenuItem Header="Run game with other runner" HotKey="Alt+F5">
+					<MenuItem.Styles>
+						<Style Selector="MenuItem">
+							<!-- <Setter Property="IsEnabled" Value="{Binding CanSave}"/> -->
+						</Style>
+					</MenuItem.Styles>
+				</MenuItem>
+				<Separator/>
+				<MenuItem Header="Generate o_ffset map"/>
+				<Separator/>
+				<MenuItem Header="S_ettings"/>
+				<MenuItem Header="_Close" HotKey="Ctrl+Q"/>
+			</MenuItem>
+			<MenuItem Name="RootScriptItem" Header="_Scripts">
+				<MenuItem Header="(...loading...)" IsEnabled="False"/>
+			</MenuItem>
+			<MenuItem Header="_Help">
+				<MenuItem Header="_GitHub" />
+				<MenuItem Header="_About" />
+			</MenuItem>
+		</Menu>
+		<Border Grid.Row="0" Margin="10" BorderBrush="DarkGray" BorderThickness="2">
+			<ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" AllowAutoHide="False">
+				<Border CornerRadius="12">
+					<TransitioningContentControl Content="{Binding CurrentPage}" >
+						<TransitioningContentControl.PageTransition>
+							<PageSlide Orientation="Horizontal" Duration="0:00:00.500" />
+						</TransitioningContentControl.PageTransition>
+					</TransitioningContentControl>
+				</Border>
+			</ScrollViewer>
+		</Border>
+	</DockPanel>
 </UserControl>

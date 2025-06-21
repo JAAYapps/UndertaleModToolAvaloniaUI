@@ -13,7 +13,7 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 using UndertaleModLib.Models;
 using UndertaleModLib.Util;
-using UndertaleModToolAvalonia.Utility;
+using UndertaleModToolAvalonia.Utilities;
 using static UndertaleModLib.Models.UndertaleRoom;
 
 namespace UndertaleModToolAvalonia.Converters
@@ -100,7 +100,7 @@ namespace UndertaleModToolAvalonia.Converters
             Bitmap spriteSrc;
             if (isTile)
             {
-                if (tileCache.TryGetValue(new(texName, new(tile.SourceX, tile.SourceY, tile.Width, tile.Height)), out spriteSrc))
+                if (tileCache.TryGetValue(new(texName, new((uint)tile.SourceX, (uint)tile.SourceY, tile.Width, tile.Height)), out spriteSrc))
                     return spriteSrc;
             }
 
@@ -126,7 +126,7 @@ namespace UndertaleModToolAvalonia.Converters
                 if (cacheEnabled)
                 {
                     if (isTile)
-                        tileCache.TryAdd(new(texName, new(tile.SourceX, tile.SourceY, tile.Width, tile.Height)), spriteSrc);
+                        tileCache.TryAdd(new(texName, new((uint)tile.SourceX, (uint)tile.SourceY, tile.Width, tile.Height)), spriteSrc);
                     else
                         imageCache.TryAdd(texName, spriteSrc);
                 }

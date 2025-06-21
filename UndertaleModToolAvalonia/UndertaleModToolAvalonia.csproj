@@ -10,16 +10,17 @@
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**" />
-        <EmbeddedResource Include="Assets\chime-notification.wav" CopyToOutputDirectory="PreserveNewest" />
+        <AvaloniaResource Remove="Assets\chime-notification.wav" />
+        <EmbeddedResource Include="Assets\chime-notification.wav" CopyToOutputDirectory="Never" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="11.3.0" />
-        <PackageReference Include="Avalonia.Desktop" Version="11.3.0" />
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.0" />
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.0" />
+        <PackageReference Include="Avalonia" Version="11.3.1" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.3.1" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.1" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.1" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.3" />
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.1" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
         <PackageReference Include="CSFML" Version="2.6.1" />
         <PackageReference Include="FluentAvalonia.BreadcrumbBar" Version="2.0.2" />
@@ -32,10 +33,10 @@
         <PackageReference Include="MessageBox.Avalonia" Version="3.2.0" />
         <PackageReference Include="Microsoft.CodeAnalysis" Version="4.14.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" Version="4.14.0" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.5" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.6" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="SFML.Audio" Version="2.6.1" />
-        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.8" />
+        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.10" />
     </ItemGroup>
 
     <ItemGroup>
@@ -63,5 +64,11 @@
 
     <ItemGroup>
       <Folder Include="Controls\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AvaloniaResource Update="Assets\GML.xshd">
+        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      </AvaloniaResource>
     </ItemGroup>
 </Project>

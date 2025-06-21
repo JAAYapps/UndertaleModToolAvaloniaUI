@@ -3,44 +3,51 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.StartPageViewModels.DataItemViewModels"
+			 xmlns:converter="using:UndertaleModToolAvalonia.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.Views.StartPageViews.DataItemViews.DataFileView" x:Name="FileView"
              x:DataType="vm:DataFileViewModel">
 
-  <ItemsControl ItemsSource="{Binding Items}">
-    <ItemsControl.ItemsPanel>
-      <ItemsPanelTemplate>
-        <WrapPanel />
-      </ItemsPanelTemplate>
-    </ItemsControl.ItemsPanel>
-    <ItemsControl.ItemTemplate>
-      <DataTemplate >
-        <!--  -->
-        <Button BorderThickness="0" Command="{Binding #FileView.((vm:DataFileViewModel)DataContext).LoadData}" CommandParameter="{Binding Name}">
-          <Button.Styles>
-            <Style Selector="Button">
-              <Setter Property="Background" Value="Transparent"/>
-            </Style>
-            <Style Selector="Button:pointerover">
-              <Setter Property="Opacity" Value="0.5"/>
-              <Setter Property="Background" Value="#D5BF8D"/>
-            </Style>
-          </Button.Styles>
-          <Grid Margin="10" MinWidth="160" MinHeight="160" MaxWidth="160" MaxHeight="160">
-            <Grid.RowDefinitions>
-              <RowDefinition Height="2*"/>
-              <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-            <Grid Grid.Row="0">
-              <Image x:Name="DataIcon" Margin="0,-20,0,0" Stretch="None" Source="avares://UndertaleModToolAvalonia/Assets/icon.ico" />
-            </Grid>
-            <TextBlock x:Name="fileName" Text="{Binding Preview}" Grid.Row="1" 
-                       FontSize="18" TextWrapping="Wrap" TextAlignment="Center"
-                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch" LineHeight="20"
-                       FontWeight="Bold"/>
-          </Grid>
-        </Button>
-      </DataTemplate>
-    </ItemsControl.ItemTemplate>
-  </ItemsControl>
+    <ItemsControl ItemsSource="{Binding Items}">
+        <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+                <WrapPanel />
+            </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+            <DataTemplate >
+                <!--  -->
+                <Button BorderThickness="0" Command="{Binding #FileView.((vm:DataFileViewModel)DataContext).LoadDataCommand}">
+			        <Button.CommandParameter>
+				        <MultiBinding Converter="{x:Static converter:ObjectArrayConverter.Instance}">
+					        <Binding Path="Name" />
+					        <Binding Path="$parent[Window].StorageProvider" />
+				        </MultiBinding>
+			        </Button.CommandParameter>
+                    <Button.Styles>
+                        <Style Selector="Button">
+                            <Setter Property="Background" Value="Transparent"/>
+                        </Style>
+                        <Style Selector="Button:pointerover">
+                            <Setter Property="Opacity" Value="0.5"/>
+                            <Setter Property="Background" Value="#D5BF8D"/>
+                        </Style>
+                    </Button.Styles>
+                    <Grid Margin="10" MinWidth="160" MinHeight="160" MaxWidth="160" MaxHeight="160">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="2*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0">
+                            <Image x:Name="DataIcon" Margin="0,-20,0,0" Stretch="None" Source="avares://UndertaleModToolAvalonia/Assets/icon.ico" />
+                        </Grid>
+                        <TextBlock x:Name="fileName" Text="{Binding Preview}" Grid.Row="1" 
+                            FontSize="18" TextWrapping="Wrap" TextAlignment="Center"
+                            HorizontalAlignment="Stretch" VerticalAlignment="Stretch" LineHeight="20"
+                            FontWeight="Bold"/>
+                    </Grid>
+                </Button>
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
 </UserControl>

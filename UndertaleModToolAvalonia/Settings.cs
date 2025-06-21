@@ -1,24 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Avalonia;
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using System.Windows;
-using Avalonia;
-using CommunityToolkit.Mvvm.ComponentModel;
-using UndertaleModToolAvalonia.Utility;
-using UndertaleModToolAvalonia.Views;
+using System.Text.Json.Serialization;
+using Underanalyzer.Decompiler;
+using UndertaleModToolAvalonia.Utilities;
 
 namespace UndertaleModToolAvalonia
 {
     public class Settings
     {
-        public static string AppDataFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "UndertaleModTool");
+        public static string AppDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "UndertaleModTool");
         public static string ProfilesFolder = Path.Combine(AppDataFolder, "Profiles");
+        public static string CorrectionsFolder { get; } = Path.Combine(Program.GetExecutableDirectory(), "Corrections");
 
         // Related to profile system and appdata
         public byte[] MD5PreviouslyLoaded = new byte[13];
@@ -59,6 +55,19 @@ namespace UndertaleModToolAvalonia
 
         public double GlobalGridThickness { get; set; } = 1;
         public bool GridThicknessEnabled { get; set; } = false;
+
+        public string TransparencyGridColor1 { get; set; } = "#FF666666";
+        public string TransparencyGridColor2 { get; set; } = "#FF999999";
+
+        public bool EnableDarkMode { get; set; } = false;
+        public bool ShowDebuggerOption { get; set; } = false;
+        public DecompilerSettings DecompilerSettings { get; set; }
+        public const string DefaultInstanceIdPrefix = "inst_";
+        public string InstanceIdPrefix { get; set; } = DefaultInstanceIdPrefix;
+
+        public bool ShowNullEntriesInResourceTree { get; set; } = false;
+
+        public bool RememberWindowPlacements { get; set; } = false;
 
         public bool CanSave { get; set; } = false;
         
@@ -125,6 +134,97 @@ namespace UndertaleModToolAvalonia
             {
                 Application.Current.ShowMessage($"Failed to save settings.json!\n{e.Message}");
             }
+        }
+    }
+
+    /// <summary>
+    /// GML decompiler settings instance used by the main UndertaleModTool tool.
+    /// </summary>
+    public class DecompilerSettings : IDecompileSettings
+    {
+        /// <summary>
+        /// Types of indents provided for in-tool decompilation.
+        /// </summary>
+        [JsonConverter(typeof(JsonStringEnumConverter<IndentStyleKind>))]
+        public enum IndentStyleKind
+        {
+            FourSpaces,
+            TwoSpaces,
+            Tabs
+        }
+
+        // Inner settings used to store values that we don't have any business reimplementing
+        [JsonIgnore]
+        private DecompileSettings _innerSettings;
+
+        /// <summary>
+        /// Indentation style being used for decompilation.
+        /// </summary>
+        public IndentStyleKind IndentStyle { get; set; }
+
+        /// <inheritdoc/>
+        [JsonIgnore]
+        public string IndentString
+        {
+            get => IndentStyle switch
+            {
+                IndentStyleKind.FourSpaces => "    ",
+                IndentStyleKind.TwoSpaces => "  ",
+                IndentStyleKind.Tabs => "\t",
+                _ => throw new Exception("Unknown indent style")
+            };
+        }
+
+        // Interface implementation (passes through to inner settings instance)
+        public bool UseSemicolon { get => _innerSettings.UseSemicolon; set => _innerSettings.UseSemicolon = value; }
+        public bool UseCSSColors { get => _innerSettings.UseCSSColors; set => _innerSettings.UseCSSColors = value; }
+        public bool PrintWarnings { get => _innerSettings.PrintWarnings; set => _innerSettings.PrintWarnings = value; }
+        public bool MacroDeclarationsAtTop { get => _innerSettings.MacroDeclarationsAtTop; set => _innerSettings.MacroDeclarationsAtTop = value; }
+        public bool EmptyLineAfterBlockLocals { get => _innerSettings.EmptyLineAfterBlockLocals; set => _innerSettings.EmptyLineAfterBlockLocals = value; }
+        public bool EmptyLineAroundEnums { get => _innerSettings.EmptyLineAroundEnums; set => _innerSettings.EmptyLineAroundEnums = value; }
+        public bool EmptyLineAroundBranchStatements { get => _innerSettings.EmptyLineAroundBranchStatements; set => _innerSettings.EmptyLineAroundBranchStatements = value; }
+        public bool EmptyLineBeforeSwitchCases { get => _innerSettings.EmptyLineBeforeSwitchCases; set => _innerSettings.EmptyLineBeforeSwitchCases = value; }
+        public bool EmptyLineAfterSwitchCases { get => _innerSettings.EmptyLineAfterSwitchCases; set => _innerSettings.EmptyLineAfterSwitchCases = value; }
+        public bool EmptyLineAroundFunctionDeclarations { get => _innerSettings.EmptyLineAroundFunctionDeclarations; set => _innerSettings.EmptyLineAroundFunctionDeclarations = value; }
+        public bool EmptyLineAroundStaticInitialization { get => _innerSettings.EmptyLineAroundStaticInitialization; set => _innerSettings.EmptyLineAroundStaticInitialization = value; }
+        public bool OpenBlockBraceOnSameLine { get => _innerSettings.OpenBlockBraceOnSameLine; set => _innerSettings.OpenBlockBraceOnSameLine = value; }
+        public bool RemoveSingleLineBlockBraces { get => _innerSettings.RemoveSingleLineBlockBraces; set => _innerSettings.RemoveSingleLineBlockBraces = value; }
+        public bool CleanupTry { get => _innerSettings.CleanupTry; set => _innerSettings.CleanupTry = value; }
+        public bool CleanupElseToContinue { get => _innerSettings.CleanupElseToContinue; set => _innerSettings.CleanupElseToContinue = value; }
+        public bool CleanupDefaultArgumentValues { get => _innerSettings.CleanupDefaultArgumentValues; set => _innerSettings.CleanupDefaultArgumentValues = value; }
+        public bool CleanupBuiltinArrayVariables { get => _innerSettings.CleanupBuiltinArrayVariables; set => _innerSettings.CleanupBuiltinArrayVariables = value; }
+        public bool CleanupLocalVarDeclarations { get => _innerSettings.CleanupLocalVarDeclarations; set => _innerSettings.CleanupLocalVarDeclarations = value; }
+        public bool CreateEnumDeclarations { get => _innerSettings.CreateEnumDeclarations; set => _innerSettings.CreateEnumDeclarations = value; }
+        public string UnknownEnumName { get => _innerSettings.UnknownEnumName; set => _innerSettings.UnknownEnumName = value; }
+        public string UnknownEnumValuePattern { get => _innerSettings.UnknownEnumValuePattern; set => _innerSettings.UnknownEnumValuePattern = value; }
+        public string UnknownArgumentNamePattern { get => _innerSettings.UnknownArgumentNamePattern; set => _innerSettings.UnknownArgumentNamePattern = value; }
+        public bool AllowLeftoverDataOnStack { get => _innerSettings.AllowLeftoverDataOnStack; set => _innerSettings.AllowLeftoverDataOnStack = value; }
+
+        public DecompilerSettings()
+        {
+            RestoreDefaults();
+        }
+
+        /// <summary>
+        /// Restores default values for all decompiler settings.
+        /// </summary>
+        public void RestoreDefaults()
+        {
+            _innerSettings = new DecompileSettings()
+            {
+                UnknownArgumentNamePattern = "arg{0}",
+                RemoveSingleLineBlockBraces = true,
+                EmptyLineAroundBranchStatements = true,
+                EmptyLineBeforeSwitchCases = true
+            };
+            IndentStyle = IndentStyleKind.FourSpaces;
+        }
+
+        /// <inheritdoc/>
+        public bool TryGetPredefinedDouble(double value, [MaybeNullWhen(false)] out string result, out bool isResultMultiPart)
+        {
+            // Pass through to inner settings instance, which has some predefined values already
+            return _innerSettings.TryGetPredefinedDouble(value, out result, out isResultMultiPart);
         }
     }
 }

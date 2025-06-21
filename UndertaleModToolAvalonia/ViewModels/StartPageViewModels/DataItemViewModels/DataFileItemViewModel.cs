@@ -1,13 +1,13 @@
 ﻿using System;
 using CommunityToolkit.Mvvm.ComponentModel;
-using UndertaleModToolAvalonia.Models;
+using UndertaleModToolAvalonia.Models.StartPageModels;
 
 namespace UndertaleModToolAvalonia.ViewModels.StartPageViewModels.DataItemViewModels
 {
     public partial class DataFileItemViewModel : ViewModelBase
     {
         /// <summary>
-        /// Creates a new DataFileItemViewModel for the given <see cref="Models.DataFileItem"/>
+        /// Creates a new DataFileItemViewModel for the given <see cref="Models.StartPageModels.DataFileItem"/>
         /// </summary>
         /// <param name="item">The item to load</param>
         public DataFileItemViewModel(DataFileItem item)

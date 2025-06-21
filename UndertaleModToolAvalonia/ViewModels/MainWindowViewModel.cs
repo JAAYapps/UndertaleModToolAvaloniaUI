@@ -1,39 +1,30 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Reflection;
-using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FluentAvalonia.Core;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.ObjectModel;
+using System.Reflection;
 using UndertaleModLib;
 using UndertaleModLib.Util;
-using UndertaleModToolAvalonia.Models;
+using UndertaleModToolAvalonia.Services.LoadingDialogService;
 using UndertaleModToolAvalonia.ViewModels.StartPageViewModels;
 
 namespace UndertaleModToolAvalonia.ViewModels
 {
     public partial class MainWindowViewModel : ViewModelBase
     {
+        private readonly IServiceProvider services;
+
         [ObservableProperty] private string titleMain = string.Empty;
         
         [ObservableProperty] public UndertaleData? data = AppConstants.Data;
 
         [ObservableProperty] string? filePath = AppConstants.FilePath;
-
-        // Version info
-        public static string Edition = "(Git: " + GitVersion.GetGitVersion().Substring(0, 7) + ")";
         
-        // On debug, build with git versions and provided release version. Otherwise, use the provided release version only.
-#if DEBUG || SHOW_COMMIT_HASH
-        public static string Version = Assembly.GetExecutingAssembly().GetName().Version.ToString() + (Edition != "" ? " - " + Edition : "");
-#else
-        public static string Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-#endif
-        
-        public MainWindowViewModel()
+        public MainWindowViewModel(IServiceProvider services)
         {
-            TitleMain = "UndertaleModTool by krzys_h, recreated by Joshua Vanderzee v:" + Version;
+            this.services = services;
+            TitleMain = "UndertaleModTool by krzys_h, recreated by Joshua Vanderzee v:" + AppConstants.Version;
             
             Pages = new ObservableCollection<PageTemplate>()
             {
@@ -49,10 +40,10 @@ namespace UndertaleModToolAvalonia.ViewModels
 
         [ObservableProperty] private PageTemplate selectedPage;
 
-        partial void OnSelectedPageChanged(PageTemplate? value)
+        partial void OnSelectedPageChanged(PageTemplate value)
         {
             if (value is null) return;
-            var instance = Activator.CreateInstance(value.PageType);
+            var instance = services.GetRequiredService(value.PageType);
             if (instance is null) return;
             CurrentPage = (ViewModelBase)instance;
             selectedPage = value;

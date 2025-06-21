@@ -6,17 +6,32 @@
         xmlns:vm="clr-namespace:UndertaleModToolAvalonia.ViewModels.EditorsViewModels"
         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="130"
         x:Class="UndertaleModToolAvalonia.Views.EditorViews.LoaderDialogView"
-        Title="{Binding MessageTitle}" Height="130" Width="400" WindowStartupLocation="CenterOwner" CanResize="False"
-        Topmost="True" WindowState="Maximized"
-        x:DataType="vm:LoaderDialogViewModel">
-  <Grid Margin="10">
-    <Grid.RowDefinitions>
-      <RowDefinition Height="*"/>
-      <RowDefinition Height="*"/>
-      <RowDefinition Height="*"/>
-    </Grid.RowDefinitions>
-    <TextBlock Grid.Row="0" VerticalAlignment="Center" Text="{Binding Message}"/>
-    <ProgressBar Grid.Row="1" IsIndeterminate="{Binding IsIndeterminate}" Maximum="{Binding Maximum}" Minimum="0" Value="{Binding Value}" Name="ProgressBar" Height="40"></ProgressBar>
-    <TextBlock Grid.Row="2" VerticalAlignment="Center" Text="{Binding StatusText}"/>
-  </Grid>
+        Title="{Binding MessageTitle}" Height="130" Width="400"
+		WindowStartupLocation="CenterOwner" CanResize="False"
+        Topmost="True"
+        x:DataType="vm:LoaderDialogViewModel"
+		TransparencyLevelHint="AcrylicBlur"
+        ExtendClientAreaToDecorationsHint="True">
+	<Panel>
+		<ExperimentalAcrylicBorder IsHitTestVisible="False">
+			<ExperimentalAcrylicBorder.Material>
+				<ExperimentalAcrylicMaterial
+				    BackgroundSource="Digger"
+				    TintColor="Black"
+				    TintOpacity="1"
+				    MaterialOpacity="0.65" />
+			</ExperimentalAcrylicBorder.Material>
+		</ExperimentalAcrylicBorder>
+		<Grid Margin="10">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="*"/>
+			</Grid.RowDefinitions>
+
+			<TextBlock Grid.Row="0" VerticalAlignment="Center" Text="{Binding Message}"/>
+			<ProgressBar Grid.Row="1" IsIndeterminate="{Binding IsIndeterminate}" Maximum="{Binding Maximum}" Minimum="0" Value="{Binding Value}" Name="ProgressBar" Height="30" MinHeight="40"></ProgressBar>
+			<TextBlock Grid.Row="2" VerticalAlignment="Center" Text="{Binding StatusText}"/>
+		</Grid>
+	</Panel>
 </Window>
