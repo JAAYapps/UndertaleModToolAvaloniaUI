@@ -2,48 +2,41 @@ using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
-using UndertaleModToolAvalonia.ViewModels.EditorsViewModels;
+using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
 using UndertaleModToolAvalonia.Views.EditorViews;
 
 namespace UndertaleModToolAvalonia.Services.LoadingDialogService;
 
-public class LoadingDialogService : ILoadingDialogService
+public class LoadingDialogService(IServiceProvider services) : ILoadingDialogService
 {
-    private readonly IServiceProvider _services;
-    private LoaderDialogView? _dialogView;
-    private LoaderDialogViewModel? _viewModel;
-
-    // The service provider is injected so we can create ViewModels on demand.
-    public LoadingDialogService(IServiceProvider services)
-    {
-        _services = services;
-    }
+    private LoaderDialogView? dialogView;
+    private LoaderDialogViewModel? viewModel;
 
     public void Show(string title = "Loading...", string message = "Please wait...")
     {
         // Ensure we're on the UI thread before creating a window
         Dispatcher.UIThread.Invoke(() =>
         {
-            if (_dialogView is not null)
+            if (dialogView is not null)
             {
                 // If a dialog is already showing, just bring it to the front and update its text
-                _viewModel!.MessageTitle = title;
-                _viewModel!.Message = message;
-                _dialogView.Activate();
+                viewModel!.MessageTitle = title;
+                viewModel!.Message = message;
+                dialogView.Activate();
                 return;
             }
 
             // Create the UI
-            _dialogView = new LoaderDialogView();
-            _viewModel = _services.GetRequiredService<LoaderDialogViewModel>();
+            dialogView = new LoaderDialogView();
+            viewModel = services.GetRequiredService<LoaderDialogViewModel>();
 
             // Configure the ViewModel
-            _viewModel.MessageTitle = title;
-            _viewModel.Message = message;
-            _dialogView.DataContext = _viewModel;
+            viewModel.MessageTitle = title;
+            viewModel.Message = message;
+            dialogView.DataContext = viewModel;
 
             // Show the window modelessly (doesn't block the UI)
-            _dialogView.Show();
+            dialogView.Show();
         });
     }
 
@@ -51,42 +44,42 @@ public class LoadingDialogService : ILoadingDialogService
     {
         Dispatcher.UIThread.Invoke(() =>
         {
-            _dialogView?.Close();
-            _dialogView = null;
-            _viewModel = null;
+            dialogView?.Close();
+            dialogView = null;
+            viewModel = null;
         });
     }
 
     public async Task UpdateStatusAsync(string status)
     {
-        if (_viewModel is not null)
+        if (viewModel is not null)
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                _viewModel.StatusText = status;
+                viewModel.StatusText = status;
             });
         }
     }
 
     public async Task UpdateProgressAsync(double value, double max)
     {
-        if (_viewModel is not null)
+        if (viewModel is not null)
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                _viewModel.Maximum = max;
-                _viewModel.Value = value;
+                viewModel.Maximum = max;
+                viewModel.Value = value;
             });
         }
     }
 
     public async Task SetIndeterminateAsync(bool isIndeterminate)
     {
-        if (_viewModel is not null)
+        if (viewModel is not null)
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                _viewModel.IsIndeterminate = isIndeterminate;
+                viewModel.IsIndeterminate = isIndeterminate;
             });
         }
     }

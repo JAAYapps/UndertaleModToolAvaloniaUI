@@ -10,8 +10,8 @@
   <Grid>
     <DockPanel>
       <Grid DockPanel.Dock="Bottom">
-        <TextBox x:Name="CommandBox" AcceptsReturn="True" Margin="0,0,35,0"/>
-        <Label Content="None" HorizontalAlignment="Right" VerticalAlignment="Top" VerticalContentAlignment="Top" Name="ObjectLabel"/>
+        <TextBox x:Name="CommandBox" AcceptsReturn="True" Margin="0,0,55,0"/>
+        <Label Content="None" HorizontalAlignment="Right" VerticalAlignment="Top" VerticalContentAlignment="Top" Name="ObjectLabel" Margin="0,0,15,0"/>
       </Grid>
       <Grid>
         <Grid.RowDefinitions>
@@ -29,24 +29,53 @@
             <RowDefinition Height="*"/>
           </Grid.RowDefinitions>
           <StackPanel Grid.Row="0" Margin="0,0,0,5" Orientation="Horizontal">
-            <Button Margin="0,0,2,0" Name="BackButton">
-              
-              <Image Name="BackButtonImage" Source="/Assets/arrow_blue.png">
-                
-              </Image>
+            <Button Margin="0,0,2,0" Name="BackButton" Height="26" Width="50">
+			  <Button.Styles>
+				<Style Selector="Button">
+			      <Setter Property="Background">
+				    <Setter.Value>
+				      <ImageBrush Source="/Assets/arrow_blue.png" Stretch="None"/>
+				    </Setter.Value>
+				  </Setter>
+			    </Style>
+			    <Style Selector="Button:pointerover /template/ ContentPresenter">
+				  <Setter Property="Background">
+				    <Setter.Value>
+				      <ImageBrush Source="/Assets/arrow_red.png" Stretch="None"/>
+				    </Setter.Value>
+				  </Setter>
+			    </Style>
+			  </Button.Styles>
             </Button>
-            <Button Name="ForwardButton" >
-              <Image Name="ForwardButtonImage" Margin="26,0,-26,0" RenderTransformOrigin="0.5,0.5" Source="/Assets/arrow_blue.png">
-                <Image.RenderTransform>
-                  <ScaleTransform ScaleX="-1" ScaleY="1"/>
-                </Image.RenderTransform>
-                
-              </Image>
+            <Button Name="ForwardButton" Margin="0,0,2,0" Height="26" Width="50">
+			  <Button.Styles>
+				<Style Selector="Button">
+				  <Setter Property="Background">
+					<Setter.Value>
+					  <ImageBrush Source="/Assets/arrow_blue.png" Stretch="None" TransformOrigin="0.5,0.5">
+						  <ImageBrush.Transform>
+							  <RotateTransform Angle="180" CenterX="25" CenterY="12.4"/>
+						  </ImageBrush.Transform>
+					  </ImageBrush>
+					</Setter.Value>
+				  </Setter>
+				</Style>
+				  <Style Selector="Button:pointerover /template/ ContentPresenter">
+					<Setter Property="Background">
+					  <Setter.Value>
+						<ImageBrush Source="/Assets/arrow_red.png" Stretch="None" TransformOrigin="0.5,0.5">
+						  <ImageBrush.Transform>
+							<RotateTransform Angle="180" CenterX="25" CenterY="12.4"/>
+						  </ImageBrush.Transform>
+						</ImageBrush>
+					  </Setter.Value>
+					</Setter>
+				  </Style>
+				</Button.Styles>
             </Button>
           </StackPanel>
 
           <TextBox Grid.Row="1" Name="SearchBox">
-            <!-- Source - https://stackoverflow.com/a/7433840/12136394 -->
             
           </TextBox>
         </Grid>
@@ -213,12 +242,12 @@
                 </TabControl.ContentTemplate>
               </TabControl>
             </ScrollViewer>
-            <StackPanel Grid.Column="1" Margin="5" Orientation="Horizontal">
-              <Button Width="16" Height="16" >
-                <Image Source="/Assets/tabs_left_button.png" Stretch="None"/>
+            <StackPanel Grid.Column="1" Margin="5,5,15,5" Orientation="Horizontal">
+              <Button Width="30" Height="20" MinWidth="30" MinHeight="20">
+                <Image Source="/Assets/tabs_left_button.png" Stretch="Uniform"/>
               </Button>
-              <Button Width="16" Height="16" >
-                <Image Source="/Assets/tabs_right_button.png" Stretch="None"/>
+              <Button Width="30" Height="20" MinWidth="30" MinHeight="20">
+                <Image Source="/Assets/tabs_right_button.png" Stretch="Uniform"/>
               </Button>
             </StackPanel>
           </Grid>
@@ -233,5 +262,4 @@
       </Grid>
     </DockPanel>
   </Grid>
-  
 </UserControl>

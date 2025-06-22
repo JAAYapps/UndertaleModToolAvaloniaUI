@@ -1,11 +1,9 @@
 ﻿using Avalonia.Controls;
 
-namespace UndertaleModToolAvalonia.ViewModels.EditorsViewModels
+namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 {
     internal class ProfileViewModel : ViewModelBase
     {
-        private readonly Window perent;
-
         public static string GameMakerStudioPath
         {
             get => Settings.Instance.GameMakerStudioPath;
@@ -162,11 +160,6 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorsViewModels
                 Settings.Instance.GridThicknessEnabled = value;
                 Settings.Save();
             }
-        }
-
-        public ProfileViewModel(Window perent)
-        {
-            this.perent = perent;
         }
     }
 }

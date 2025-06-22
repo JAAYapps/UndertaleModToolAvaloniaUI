@@ -86,7 +86,7 @@
 					</StackPanel>
 
 					<StackPanel Grid.Column="1">
-						<Button Command="{Binding OpenGmlSettingsCommand}" Padding="8,2,8,2" HorizontalAlignment="Left" VerticalAlignment="Top">GML compiler/decompiler settings</Button>
+						<Button Command="{Binding OpenGmlSettingsCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}}" Padding="8,2,8,2" HorizontalAlignment="Left" VerticalAlignment="Top">GML compiler/decompiler settings</Button>
 					</StackPanel>
 				</Grid>
 

@@ -16,11 +16,10 @@ using UndertaleModToolAvalonia.Services.PlayerService;
 using UndertaleModToolAvalonia.Services.ProfileService;
 using UndertaleModToolAvalonia.Services.UpdateService;
 using UndertaleModToolAvalonia.Utilities;
-using UndertaleModToolAvalonia.ViewModels.EditorsViewModels;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
 using UndertaleModToolAvalonia.ViewModels.StartPageViewModels;
 using UndertaleModToolAvalonia.ViewModels.StartPageViewModels.DataItemViewModels;
-using UndertaleModToolAvalonia.Views.EditorViews;
+using UndertaleModToolAvalonia.ViewModels.StartPageViewModels.SettingsViewModels;
 using MainWindow = UndertaleModToolAvalonia.Views.MainWindow;
 using MainWindowViewModel = UndertaleModToolAvalonia.ViewModels.MainWindowViewModel;
 
@@ -119,11 +118,13 @@ public partial class App : Application
         services.AddTransient<DataFileViewModel>();
         services.AddSingleton<EditorViewModel>();
         services.AddTransient<SettingsPageViewModel>();
+        services.AddTransient<GMLSettingsViewModel>();
 
         services.AddSingleton<IProfileService, ProfileService>();
-        services.AddSingleton<IDialogService, GMLSettingsDialogService>();
+        services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<ILoadingDialogService, LoadingDialogService>();
         services.AddSingleton<IUpdateService, UpdateService>();
+        services.AddSingleton<IDialogService, DialogService>();
 
         services.AddTransient<MainWindow>(provider => new MainWindow
         {

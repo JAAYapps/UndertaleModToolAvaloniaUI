@@ -52,8 +52,6 @@ namespace UndertaleModToolAvalonia
                 failMessage = e.Message + "\r\n" + e.StackTrace;
                 Console.WriteLine(failMessage);
                 File.WriteAllText(Path.Combine(GetExecutableDirectory(), "crash.txt"), e.ToString());
-                var builder = BuildAvaloniaApp();
-                builder.StartWithClassicDesktopLifetime(args);
             }
 
             return 0;

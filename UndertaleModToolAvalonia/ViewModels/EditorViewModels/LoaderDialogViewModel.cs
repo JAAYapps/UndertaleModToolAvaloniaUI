@@ -3,7 +3,7 @@ using System;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace UndertaleModToolAvalonia.ViewModels.EditorsViewModels
+namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 {
     public partial class LoaderDialogViewModel : ViewModelBase
     {

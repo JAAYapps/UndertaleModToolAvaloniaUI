@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Avalonia.Controls;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using System;
@@ -341,9 +342,9 @@ namespace UndertaleModToolAvalonia.ViewModels.StartPageViewModels
         }
 
         [RelayCommand]
-        private async Task OpenGmlSettingsAsync()
+        private async Task OpenGmlSettingsAsync(Window owner)
         {
-            await dialogService.ShowDialogAsync<GMLSettingsViewModel>();
+            await dialogService.ShowDialogAsync<GMLSettingsViewModel, bool>(owner);
             Settings.Save();
         }
     }

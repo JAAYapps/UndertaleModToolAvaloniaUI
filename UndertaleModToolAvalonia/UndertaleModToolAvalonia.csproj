@@ -67,7 +67,16 @@
     </ItemGroup>
 
     <ItemGroup>
+      <AvaloniaResource Update="Assets\avalonia-logo.ico">
+        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      </AvaloniaResource>
       <AvaloniaResource Update="Assets\GML.xshd">
+        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      </AvaloniaResource>
+      <AvaloniaResource Update="Assets\icon.ico">
+        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      </AvaloniaResource>
+      <AvaloniaResource Update="Assets\tabs_left_button.png">
         <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       </AvaloniaResource>
     </ItemGroup>

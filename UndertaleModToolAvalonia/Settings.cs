@@ -16,6 +16,11 @@ namespace UndertaleModToolAvalonia
         public static string ProfilesFolder = Path.Combine(AppDataFolder, "Profiles");
         public static string CorrectionsFolder { get; } = Path.Combine(Program.GetExecutableDirectory(), "Corrections");
 
+        /// <summary>
+        /// Whether file associations settings should be prompted for on startup.
+        /// </summary>
+        public static bool ShouldPromptForAssociations { get; set; } = false;
+
         // Related to profile system and appdata
         public byte[] MD5PreviouslyLoaded = new byte[13];
         public byte[] MD5CurrentlyLoaded = new byte[15];

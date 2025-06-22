@@ -265,7 +265,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                         AppConstants.Data = data;
 
                         UndertaleCachedImageLoader.Reset();
-                        CachedTileDataLoader.Reset();
+                        // CachedTileDataLoader.Reset();
 
                         AppConstants.Data.ToolInfo.DecompilerSettings = Settings.Instance.DecompilerSettings;
                         AppConstants.Data.ToolInfo.InstanceIdPrefix = () => Settings.Instance.InstanceIdPrefix;

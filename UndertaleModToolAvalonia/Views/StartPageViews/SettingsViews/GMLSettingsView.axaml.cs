@@ -1,8 +1,6 @@
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 
-namespace UndertaleModToolAvalonia;
+namespace UndertaleModToolAvalonia.Views.StartPageViews.SettingsViews;
 
 public partial class GMLSettingsView : Window
 {

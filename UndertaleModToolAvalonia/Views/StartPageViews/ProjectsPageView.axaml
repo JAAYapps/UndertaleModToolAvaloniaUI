@@ -58,15 +58,11 @@
 			</MenuItem>
 		</Menu>
 		<Border Grid.Row="0" Margin="10" BorderBrush="DarkGray" BorderThickness="2">
-			<ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" AllowAutoHide="False">
-				<Border CornerRadius="12">
-					<TransitioningContentControl Content="{Binding CurrentPage}" >
-						<TransitioningContentControl.PageTransition>
-							<PageSlide Orientation="Horizontal" Duration="0:00:00.500" />
-						</TransitioningContentControl.PageTransition>
-					</TransitioningContentControl>
-				</Border>
-			</ScrollViewer>
+			<TransitioningContentControl Content="{Binding CurrentPage}" >
+				<TransitioningContentControl.PageTransition>
+					<PageSlide Orientation="Horizontal" Duration="0:00:00.500" />
+				</TransitioningContentControl.PageTransition>
+			</TransitioningContentControl>
 		</Border>
 	</DockPanel>
 </UserControl>
