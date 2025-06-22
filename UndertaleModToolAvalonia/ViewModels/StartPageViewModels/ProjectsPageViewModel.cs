@@ -1,9 +1,12 @@
-using System;
-using System.Collections.ObjectModel;
-using System.Threading.Tasks;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
+using UndertaleModToolAvalonia.Services.FileService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
 using UndertaleModToolAvalonia.ViewModels.StartPageViewModels.DataItemViewModels;
@@ -18,9 +21,12 @@ public partial class ProjectsPageViewModel : ViewModelBase
 
     private readonly IServiceProvider services;
 
-    public ProjectsPageViewModel(IServiceProvider services)
+    private IFileService fileService;
+
+    public ProjectsPageViewModel(IServiceProvider services, IFileService fileService)
     {
         this.services = services;
+        this.fileService = fileService;
         if (instance == null)
         {
             Console.WriteLine("Projects is initialized.");
@@ -80,5 +86,25 @@ public partial class ProjectsPageViewModel : ViewModelBase
     private void NewProject()
     {
         OnSelectedPageChanged(Pages[1]);
+    }
+
+    [RelayCommand]
+    private async Task OpenFile(IStorageProvider storageProvider)
+    {
+        if (storageProvider is null)
+        {
+            // Handle error: couldn't find the StorageProvider
+            return;
+        }
+
+        // Use the FileService to get a file path
+        var files = await fileService.LoadFileAsync(storageProvider);
+        var filePath = files?.FirstOrDefault()?.Path.LocalPath;
+
+        if (string.IsNullOrEmpty(filePath))
+            return; // User cancelled
+
+        OnSelectedPageChanged(Pages[1]);
+        await editorViewModel.LoadFileAsync(filePath);
     }
 }

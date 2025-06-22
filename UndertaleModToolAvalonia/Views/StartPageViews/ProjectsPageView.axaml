@@ -12,7 +12,7 @@
 		<Menu DockPanel.Dock="Top">
 			<MenuItem Header="_File">
 				<MenuItem Header="_New" HotKey="Ctrl+N" Command="{Binding NewProjectCommand}"/>
-				<MenuItem Header="_Open" HotKey="Ctrl+O"/>
+				<MenuItem Header="_Open" HotKey="Ctrl+O" Command="{Binding OpenFileCommand}" CommandParameter="{Binding $parent[Window].StorageProvider}"/>
 				<MenuItem Header="_Save" HotKey="Ctrl+S">
 					<MenuItem.Styles>
 						<Style Selector="MenuItem">
