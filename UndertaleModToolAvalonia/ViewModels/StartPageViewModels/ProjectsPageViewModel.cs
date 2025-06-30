@@ -17,19 +17,28 @@ public partial class ProjectsPageViewModel : ViewModelBase
 {
     private static ProjectsPageViewModel? instance;
     
-    private EditorViewModel editorViewModel;
+    private EditorViewModel? editorViewModel;
 
-    private readonly IServiceProvider services;
+    private readonly IServiceProvider? services;
 
-    private IFileService fileService;
+    private IFileService? fileService;
+
+    public ProjectsPageViewModel()
+    {
+        Pages = new ObservableCollection<PageTemplate>()
+        {
+            new PageTemplate(typeof(DataFileViewModel), "Projects"),
+            new PageTemplate(typeof(EditorViewModel), "Editor"),
+        };
+    }
 
     public ProjectsPageViewModel(IServiceProvider services, IFileService fileService)
     {
-        this.services = services;
-        this.fileService = fileService;
         if (instance == null)
         {
             Console.WriteLine("Projects is initialized.");
+            this.services = services;
+            this.fileService = fileService;
             instance = this;
             
             Pages = new ObservableCollection<PageTemplate>()
@@ -42,7 +51,7 @@ public partial class ProjectsPageViewModel : ViewModelBase
         else
         {
             Pages = instance.Pages;
-            services = instance.services;
+            services = instance.services!;
             CurrentPage = instance.CurrentPage;
             selectedPage = instance.selectedPage;
             editorViewModel = instance.editorViewModel;
@@ -52,9 +61,9 @@ public partial class ProjectsPageViewModel : ViewModelBase
         }
     }
     
-    [ObservableProperty] private ViewModelBase currentPage;
+    [ObservableProperty] private ViewModelBase? currentPage;
     
-    [ObservableProperty] private PageTemplate selectedPage;
+    [ObservableProperty] private PageTemplate? selectedPage;
     
     public ObservableCollection<PageTemplate> Pages { get; }
     

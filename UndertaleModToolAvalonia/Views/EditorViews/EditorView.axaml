@@ -6,7 +6,7 @@
         xmlns:vm="clr-namespace:UndertaleModToolAvalonia.ViewModels.EditorViewModels"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorView"
-        x:DataType="vm:EditorViewModel">
+        x:DataType="vm:EditorViewModel" IsEnabled="{Binding IsEnabled}">
   <Grid>
     <DockPanel>
       <Grid DockPanel.Dock="Bottom">

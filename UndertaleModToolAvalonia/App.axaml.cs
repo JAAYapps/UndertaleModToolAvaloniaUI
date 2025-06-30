@@ -14,6 +14,7 @@ using UndertaleModToolAvalonia.Services.FileService;
 using UndertaleModToolAvalonia.Services.LoadingDialogService;
 using UndertaleModToolAvalonia.Services.PlayerService;
 using UndertaleModToolAvalonia.Services.ProfileService;
+using UndertaleModToolAvalonia.Services.ReferenceFinderService;
 using UndertaleModToolAvalonia.Services.UpdateService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
@@ -125,6 +126,7 @@ public partial class App : Application
         services.AddSingleton<ILoadingDialogService, LoadingDialogService>();
         services.AddSingleton<IUpdateService, UpdateService>();
         services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<IReferenceFinderService, ReferenceFinderService>();
 
         services.AddTransient<MainWindow>(provider => new MainWindow
         {

@@ -183,7 +183,7 @@ namespace UndertaleModToolAvalonia.ViewModels
                 {
                     var runtimeParams = new RuntimePickerParameters(FilePath, Data);
 
-                    var runtime = await dialogService.ShowDialogAsync<RuntimePickerViewModel, RuntimePickerParameters, RuntimeModel>(owner, runtimeParams, "InitializeAsync");
+                    var runtime = await dialogService.ShowDialogAsync<RuntimePickerViewModel, RuntimePickerParameters, RuntimeModel>(owner, runtimeParams);
 
                     if (runtime == null)
                         return;

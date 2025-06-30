@@ -1,0 +1,76 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:local="using:UndertaleModToolAvalonia.Controls"
+			 xmlns:converters="using:UndertaleModToolAvalonia.Converters.ControlConverters"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:Name="Self"
+             x:Class="UndertaleModToolAvalonia.Controls.UndertaleObjectReference">
+	<UserControl.Resources>
+		<ContextMenu x:Key="contextMenu">
+			<MenuItem Header="Open in new tab" Command="{Binding #Self.OpenInNewTabCommand}" CommandParameter="{Binding #Self.ObjectReference}"/>
+			<MenuItem Header="Find all references" IsVisible="{Binding #Self.IsTypeReferenceable}" Command="{Binding #Self.FindAllReferencesCommand}" CommandParameter="{Binding #Self.ObjectReference}"/>
+		</ContextMenu>
+		<converters:StringReferenceBackgroundConverter x:Key="StringRefBgConverter"/>
+		<VisualBrush x:Key="EmptyBrush" AlignmentX="Left" AlignmentY="Center" Stretch="None">
+			<VisualBrush.Visual>
+				<TextBlock Padding="4,0" Text="(empty)" Foreground="DarkGray"/>
+			</VisualBrush.Visual>
+		</VisualBrush>
+		<VisualBrush x:Key="NullBrush" AlignmentX="Left" AlignmentY="Center" Stretch="None">
+			<VisualBrush.Visual>
+				<TextBlock Padding="4,0" Text="(null)" Foreground="DarkGray"/>
+			</VisualBrush.Visual>
+		</VisualBrush>
+	</UserControl.Resources>
+	<Grid DataContext="{Binding $self}">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*"/>
+			<ColumnDefinition Width="Auto"/>
+			<ColumnDefinition Width="Auto"/>
+		</Grid.ColumnDefinitions>
+		<TextBox Grid.Column="0" x:Name="ObjectText" IsReadOnly="True" Cursor="Arrow"
+                 Text="{Binding #Self.ObjectReference, Mode=OneWay, Converter={StaticResource ObjectToStringConverter}}">
+			<TextBox.Styles>
+				<Style Selector="local|UndertaleObjectReference[CanChange=True] > Grid > TextBox">
+					<Setter Property="ToolTip.Tip" Value="Self is an object reference. Drag and drop an object of matching type from the tree on the left to change it!" />
+				</Style>
+				<Style Selector="local|UndertaleObjectReference[ObjectReference={x:Null}] > Grid > TextBox">
+					<Setter Property="Background" Value="{StaticResource NullBrush}"/>
+				</Style>
+			</TextBox.Styles>
+		</TextBox>
+		<Button Grid.Column="1" x:Name="DetailsButton"
+                Command="{Binding #Self.OpenInTabCommand}"
+                CommandParameter="{Binding #Self.ObjectReference}"
+                ToolTip.Tip="Open referenced object">
+			<Button.Content>
+				<TextBlock>...</TextBlock>
+			</Button.Content>
+			<Button.Styles>
+				<Style Selector="local|UndertaleObjectReference[ObjectReference={x:Null}]:not(.is-code) > Grid > Button#DetailsButton">
+					<Setter Property="IsEnabled" Value="False"/>
+				</Style>
+				<Style Selector="local|UndertaleObjectReference.is-code[ObjectReference={x:Null}] > Grid > Button#DetailsButton">
+					<Setter Property="IsEnabled" Value="True"/>
+					<Setter Property="Content">
+						<TextBlock>+</TextBlock>
+					</Setter>
+					<Setter Property="ToolTip.Tip" Value="Create new code entry"/>
+				</Style>
+			</Button.Styles>
+		</Button>
+		<Button Grid.Column="2" x:Name="RemoveButton"
+                Command="{Binding #Self.RemoveCommand}"
+                CommandParameter="{Binding #Self.ObjectReference}"
+                Content=" X " ToolTip.Tip="Remove reference">
+			<Button.Styles>
+				<Style Selector="local|UndertaleObjectReference[CanRemove=False] > Grid > Button#RemoveButton, 
+                                 local|UndertaleObjectReference[ObjectReference={x:Null}] > Grid > Button#RemoveButton">
+					<Setter Property="IsEnabled" Value="False"/>
+				</Style>
+			</Button.Styles>
+		</Button>
+	</Grid>
+</UserControl>

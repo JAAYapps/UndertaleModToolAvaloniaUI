@@ -10,7 +10,7 @@ using UndertaleModToolAvalonia.Utilities;
 
 namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 {
-    public partial class RuntimePickerViewModel : ViewModelBase
+    public partial class RuntimePickerViewModel : ViewModelBase, IInitializable<RuntimePickerParameters>
     {
         [ObservableProperty]
         public ObservableCollection<RuntimeModel> runtimes = new ObservableCollection<RuntimeModel>();
@@ -18,18 +18,20 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         [ObservableProperty]
         public RuntimeModel? selected = null;
 
-        public async Task InitializeAsync(RuntimePickerParameters parameters)
+        public async Task<bool> InitializeAsync(RuntimePickerParameters parameters)
         {
             DiscoverRuntimes(parameters.FilePath, parameters.Data);
             if (Runtimes.Count == 0)
             {
                 await App.Current!.ShowError("Unable to find game EXE or any installed Studio runtime", "Run error");
                 Selected = null;
+                return false;
             }
             else if (Runtimes.Count == 1)
             {
                 Selected = Runtimes[0];
             }
+            return true;
         }
 
         public void DiscoverRuntimes(string dataFilePath, UndertaleData data)
