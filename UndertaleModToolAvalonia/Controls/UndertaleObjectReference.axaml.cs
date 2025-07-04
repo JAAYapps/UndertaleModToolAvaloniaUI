@@ -18,42 +18,42 @@ public partial class UndertaleObjectReference : UserControl
             nameof(ObjectReference), defaultValue: null, inherits: false, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
     public static readonly StyledProperty<Type?> ObjectTypeProperty =
-    AvaloniaProperty.Register<UndertaleObjectReference, Type?>(
+        AvaloniaProperty.Register<UndertaleObjectReference, Type?>(
         nameof(ObjectType), defaultValue: null, inherits: false, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
     public static readonly StyledProperty<bool?> CanRemoveProperty =
-    AvaloniaProperty.Register<UndertaleObjectReference, bool?>(
+        AvaloniaProperty.Register<UndertaleObjectReference, bool?>(
         nameof(CanRemove), defaultValue: null, inherits: false, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
     public static readonly StyledProperty<bool?> CanChangeProperty =
-    AvaloniaProperty.Register<UndertaleObjectReference, bool?>(
+        AvaloniaProperty.Register<UndertaleObjectReference, bool?>(
         nameof(CanChange), defaultValue: null, inherits: false, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
     public static readonly StyledProperty<UndertaleGameObject?> GameObjectProperty =
-    AvaloniaProperty.Register<UndertaleObjectReference, UndertaleGameObject?>(
+        AvaloniaProperty.Register<UndertaleObjectReference, UndertaleGameObject?>(
         nameof(GameObject), defaultValue: null, inherits: false, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
     public static readonly StyledProperty<EventType?> ObjectEventTypeProperty =
-    AvaloniaProperty.Register<UndertaleObjectReference, EventType?>(
+        AvaloniaProperty.Register<UndertaleObjectReference, EventType?>(
         nameof(ObjectEventType), defaultValue: null, inherits: false, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
     public static readonly StyledProperty<uint?> ObjectEventSubtypeProperty =
-    AvaloniaProperty.Register<UndertaleObjectReference, uint?>(
+        AvaloniaProperty.Register<UndertaleObjectReference, uint?>(
         nameof(ObjectEventSubtype), defaultValue: null, inherits: false, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
     public static readonly StyledProperty<UndertaleRoom?> RoomProperty =
-    AvaloniaProperty.Register<UndertaleObjectReference, UndertaleRoom?>(
+        AvaloniaProperty.Register<UndertaleObjectReference, UndertaleRoom?>(
         nameof(Room), defaultValue: null, inherits: false, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
     public static readonly StyledProperty<UndertaleRoom.GameObject?> RoomGameObjectProperty =
-    AvaloniaProperty.Register<UndertaleObjectReference, UndertaleRoom.GameObject?>(
+        AvaloniaProperty.Register<UndertaleObjectReference, UndertaleRoom.GameObject?>(
         nameof(RoomGameObject), defaultValue: null, inherits: false, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
     public static readonly StyledProperty<bool> IsTypeReferenceableProperty =
         AvaloniaProperty.Register<UndertaleObjectReference, bool>(nameof(IsTypeReferenceable));
 
     public static readonly StyledProperty<ICommand?> RemoveCommandProperty =
-       AvaloniaProperty.Register<UndertaleObjectReference, ICommand?>(nameof(RemoveCommand));
+        AvaloniaProperty.Register<UndertaleObjectReference, ICommand?>(nameof(RemoveCommand));
 
     public static readonly StyledProperty<ICommand?> OpenInTabCommandProperty =
         AvaloniaProperty.Register<UndertaleObjectReference, ICommand?>(nameof(OpenInTabCommand));

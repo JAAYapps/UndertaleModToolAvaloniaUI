@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:local="using:UndertaleModToolAvalonia.Controls"
 			 xmlns:converters="using:UndertaleModToolAvalonia.Converters.ControlConverters"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="30"
 			 x:Name="Self"
              x:Class="UndertaleModToolAvalonia.Controls.UndertaleObjectReference">
 	<UserControl.Resources>
@@ -13,6 +13,7 @@
 			<MenuItem Header="Find all references" IsVisible="{Binding #Self.IsTypeReferenceable}" Command="{Binding #Self.FindAllReferencesCommand}" CommandParameter="{Binding #Self.ObjectReference}"/>
 		</ContextMenu>
 		<converters:StringReferenceBackgroundConverter x:Key="StringRefBgConverter"/>
+		<converters:ObjectToStringConverter x:Key="ObjToStringConverter"/>
 		<VisualBrush x:Key="EmptyBrush" AlignmentX="Left" AlignmentY="Center" Stretch="None">
 			<VisualBrush.Visual>
 				<TextBlock Padding="4,0" Text="(empty)" Foreground="DarkGray"/>
@@ -31,7 +32,7 @@
 			<ColumnDefinition Width="Auto"/>
 		</Grid.ColumnDefinitions>
 		<TextBox Grid.Column="0" x:Name="ObjectText" IsReadOnly="True" Cursor="Arrow"
-                 Text="{Binding #Self.ObjectReference, Mode=OneWay, Converter={StaticResource ObjectToStringConverter}}">
+                 Text="{Binding #Self.ObjectReference, Mode=OneWay, Converter={StaticResource ObjToStringConverter}}">
 			<TextBox.Styles>
 				<Style Selector="local|UndertaleObjectReference[CanChange=True] > Grid > TextBox">
 					<Setter Property="ToolTip.Tip" Value="Self is an object reference. Drag and drop an object of matching type from the tree on the left to change it!" />
@@ -55,7 +56,9 @@
 				<Style Selector="local|UndertaleObjectReference.is-code[ObjectReference={x:Null}] > Grid > Button#DetailsButton">
 					<Setter Property="IsEnabled" Value="True"/>
 					<Setter Property="Content">
-						<TextBlock>+</TextBlock>
+						<Template>
+							<TextBlock>+</TextBlock>
+						</Template>
 					</Setter>
 					<Setter Property="ToolTip.Tip" Value="Create new code entry"/>
 				</Style>

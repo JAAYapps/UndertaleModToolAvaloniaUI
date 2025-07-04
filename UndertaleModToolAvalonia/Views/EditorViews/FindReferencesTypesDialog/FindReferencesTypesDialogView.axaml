@@ -7,6 +7,20 @@
         mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="555"
         x:Class="UndertaleModToolAvalonia.Views.EditorViews.FindReferencesTypesDialog.FindReferencesTypesDialogView"
         Title="The types of references" Height="555" Width="450">
+	<Window.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.ThemeDictionaries>
+				<ResourceDictionary x:Key="Light">
+					<SolidColorBrush x:Key='ForegroundBrush'>Black</SolidColorBrush>
+					<SolidColorBrush x:Key='Background'>LightGray</SolidColorBrush>
+				</ResourceDictionary>
+				<ResourceDictionary x:Key="Dark">
+					<SolidColorBrush x:Key='ForegroundBrush'>White</SolidColorBrush>
+					<SolidColorBrush x:Key='Background'>Gray</SolidColorBrush>
+				</ResourceDictionary>
+			</ResourceDictionary.ThemeDictionaries>
+		</ResourceDictionary>
+	</Window.Resources>
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
@@ -16,10 +30,10 @@
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 		<TextBlock Grid.Row="0" Text="Where to search the references?" HorizontalAlignment="Left" Margin="10,10,0,0" FontSize="22"/>
-		<Rectangle Grid.Row="1" Margin="10,0,20,0" Height="2" Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+		<Rectangle Grid.Row="1" Margin="10,0,20,0" Height="2" Fill="{DynamicResource ForegroundBrush}" />
 
 		<ScrollViewer Grid.Row="2" Margin="10,15,20,0" VerticalScrollBarVisibility="Auto">
-			<ItemsControl ItemsSource="{Binding TypesList}" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}">
+			<ItemsControl ItemsSource="{Binding TypesList}" Background="{DynamicResource Background}">
 				<ItemsControl.ItemTemplate>
 					<DataTemplate x:DataType="vm:SelectableType">
 						<CheckBox Content="{Binding Name}" IsChecked="{Binding IsSelected}" FontSize="16" VerticalContentAlignment="Center" Margin="5,2"/>
@@ -29,10 +43,10 @@
 		</ScrollViewer>
 
 		<StackPanel Grid.Row="3" Orientation="Horizontal" Margin="10,7,0,0">
-			<Button Content="Select all" Height="26" Width="63" Command="{Binding SelectAllCommand}"/>
-			<Button Content="Deselect all" Margin="5,0,0,0" Height="26" Width="71" Command="{Binding DeselectAllCommand}"/>
+			<Button Content="Select all" Height="30" Width="63" Command="{Binding SelectAllCommand}"/>
+			<Button Content="Deselect all" Margin="5,0,0,0" Height="30" Width="76" Command="{Binding DeselectAllCommand}"/>
 		</StackPanel>
 
-		<Button Grid.Row="4" Content="Search" FontSize="18" Width="134" Height="40" Command="{Binding SearchCommand}" Margin="0,15,0,15"/>
+		<Button Grid.Row="4" Content="Search" FontSize="18" Width="134" Height="40" Command="{Binding SearchCommand}" Margin="0,15,0,15" HorizontalAlignment="Center"/>
 	</Grid>
 </Window>

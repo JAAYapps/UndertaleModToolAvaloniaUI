@@ -34,30 +34,30 @@ public partial class ProjectsPageViewModel : ViewModelBase
 
     public ProjectsPageViewModel(IServiceProvider services, IFileService fileService)
     {
+        this.services = services;
+        this.fileService = fileService;
         if (instance == null)
         {
             Console.WriteLine("Projects is initialized.");
-            this.services = services;
-            this.fileService = fileService;
-            instance = this;
             
             Pages = new ObservableCollection<PageTemplate>()
             {
                 new PageTemplate(typeof(DataFileViewModel), "Projects"),
                 new PageTemplate(typeof(EditorViewModel), "Editor"),
             };
+            instance = this;
             OnSelectedPageChanged(Pages[0]); // Must be called to properly update UI.
         }
         else
         {
             Pages = instance.Pages;
-            services = instance.services!;
             CurrentPage = instance.CurrentPage;
             selectedPage = instance.selectedPage;
             editorViewModel = instance.editorViewModel;
             Console.WriteLine("Already is initialized.");
             ScriptMessages.PlayInformationSound();
-            OnSelectedPageChanged(Pages[0]); // Must be called to properly update UI.
+            instance = this;
+            OnSelectedPageChanged(SelectedPage); // Must be called to properly update UI.
         }
     }
     
@@ -77,17 +77,17 @@ public partial class ProjectsPageViewModel : ViewModelBase
             return;
         }
 
-        var instance = services.GetRequiredService(value.PageType);
-        if (instance is null) return;
-        CurrentPage = (ViewModelBase)instance;
+        var newInstance = services?.GetRequiredService(value.PageType);
+        if (newInstance is null) return;
+        CurrentPage = (ViewModelBase)newInstance;
         selectedPage = value;
         if (typeof(EditorViewModel) == value.PageType && editorViewModel is null)
         {
-            editorViewModel = (EditorViewModel)instance;
+            editorViewModel = (EditorViewModel)newInstance;
         }
         if (typeof(DataFileViewModel) == value.PageType)
         {
-            ((DataFileViewModel)instance).FileLoaded += (s, e) => { OnSelectedPageChanged(Pages[1]); };
+            ((DataFileViewModel)newInstance).FileLoaded += (s, e) => { OnSelectedPageChanged(Pages[1]); };
         }
     }
 

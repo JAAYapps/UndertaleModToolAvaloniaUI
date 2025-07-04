@@ -6,8 +6,7 @@
 			 xmlns:local="using:UndertaleModToolAvalonia.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.Views.EditorViews.DataEditorViews.UndertaleAudioGroupEditor"
-		     x:DataType="undertale:UndertaleAudioGroup"
-			 d:DataContext="{d:DesignInstance undertale:UndertaleAudioGroup}">
+		     x:DataType="undertale:UndertaleAudioGroup">
 	<Grid>
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="1*"/>

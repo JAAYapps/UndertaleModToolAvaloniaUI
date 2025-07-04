@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:UndertaleModToolAvalonia.Controls"
+			 xmlns:local="using:UndertaleModToolAvalonia.Controls"
+			 xmlns:converters="using:UndertaleModToolAvalonia.Converters.ControlConverters"
+             mc:Ignorable="d" d:DesignHeight="20" d:DesignWidth="800"
+             x:Class="UndertaleModToolAvalonia.Controls.AudioFileReference"
+			 x:Name="Self">
+	<UserControl.Resources>
+		<VisualBrush x:Key="EmptyBrush" AlignmentX="Left" AlignmentY="Center" Stretch="None">
+			<VisualBrush.Visual>
+				<TextBlock Padding="4,0" Text="(empty)" Foreground="Gray"/>
+			</VisualBrush.Visual>
+		</VisualBrush>
+		<VisualBrush x:Key="NullBrush" AlignmentX="Left" AlignmentY="Center" Stretch="None">
+			<VisualBrush.Visual>
+				<TextBlock Padding="4,0" Text="(null)" Foreground="DarkGray"/>
+			</VisualBrush.Visual>
+		</VisualBrush>
+		<ContextMenu x:Key="contextMenu">
+			<MenuItem Header="Open in new tab" Command="{Binding #Self.OpenInNewTabCommand}" CommandParameter="{Binding #Self.AudioReference}"/>
+		</ContextMenu>
+		<converters:AudioToStringConverter x:Key="audioToStringConverter" />
+	</UserControl.Resources>
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="1*"/>
+			<ColumnDefinition Width="3*"/>
+			<ColumnDefinition Width="Auto"/>
+			<ColumnDefinition Width="Auto"/>
+		</Grid.ColumnDefinitions>
+		<TextBox Grid.Column="0" Text="{Binding #Self.AudioID}">
+			<TextBox.Styles>
+				<Style Selector="local|AudioFileReference[GroupID=0] TextBox">
+					<Setter Property="IsReadOnly" Value="True"/>
+				</Style>
+			</TextBox.Styles>
+		</TextBox>
+		<TextBox Grid.Column="1" x:Name="ObjectText" IsReadOnly="True" Cursor="Arrow"
+                           ToolTip.Tip="This is an object reference. Drag and drop an object of matching type from the tree on the left to change it!">
+			<TextBox.Text>
+				<MultiBinding Converter="{StaticResource audioToStringConverter}">
+					<Binding Path="#Self.AudioID" />
+					<Binding Path="#Self.GroupID" />
+					<Binding Path="#Self.GroupReference.Name.Content" />
+				</MultiBinding>
+			</TextBox.Text>
+		</TextBox>
+		<Button Grid.Column="2" Command="{Binding #Self.OpenInTabCommand}" Content=" ... " ToolTip.Tip="Open referenced object"
+				IsEnabled="{Binding #Self.AudioReference, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+		<Button Grid.Column="3" Command="{Binding #Self.RemoveCommand}" CommandParameter="{Binding #Self.AudioReference}" Content=" X " ToolTip.Tip="Remove reference"
+				IsEnabled="{Binding #Self.AudioReference, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+	</Grid>
+</UserControl>

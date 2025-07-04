@@ -1,28 +1,28 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
-using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Threading.Tasks;
+using Avalonia.Markup.Xaml;
+using System.Runtime.Serialization;
 using System.Windows.Input;
-using UndertaleModLib;
 using UndertaleModLib.Models;
-using UndertaleModToolAvalonia.Models;
-using UndertaleModToolAvalonia.Services.DialogService;
-using UndertaleModToolAvalonia.Utilities;
-using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
-using UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTypesDialog;
-using UndertaleModToolAvalonia.Views;
-using UndertaleModToolAvalonia.Views.EditorViews.FindReferencesTypesDialog;
 
 namespace UndertaleModToolAvalonia.Controls;
 
-public partial class UndertaleStringReference : UserControl
+public partial class AudioFileReference : UserControl
 {
-    public static readonly StyledProperty<UndertaleString?> ObjectReferenceProperty =
-        AvaloniaProperty.Register<UndertaleStringReference, UndertaleString?>(
-            nameof(ObjectReference), defaultValue: null, inherits: false, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
+    public static readonly StyledProperty<UndertaleEmbeddedAudio?> AudioReferenceProperty =
+        AvaloniaProperty.Register<AudioFileReference, UndertaleEmbeddedAudio?>(
+        nameof(AudioReference), defaultValue: null, inherits: false, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
+
+    public static readonly StyledProperty<UndertaleAudioGroup?> GroupReferenceProperty =
+        AvaloniaProperty.Register<AudioFileReference, UndertaleAudioGroup?>(
+        nameof(GroupReference), defaultValue: null, inherits: false, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
+
+    public static readonly StyledProperty<int?> AudioIDProperty =
+        AvaloniaProperty.Register<AudioFileReference, int?>(nameof(AudioID));
+
+    public static readonly StyledProperty<int?> GroupIDProperty =
+        AvaloniaProperty.Register<AudioFileReference, int?>(nameof(GroupID));
 
     public static readonly StyledProperty<bool> IsTypeReferenceableProperty =
         AvaloniaProperty.Register<UndertaleStringReference, bool>(nameof(IsTypeReferenceable));
@@ -35,6 +35,9 @@ public partial class UndertaleStringReference : UserControl
 
     public static readonly StyledProperty<ICommand?> FindAllReferencesCommandProperty =
         AvaloniaProperty.Register<UndertaleObjectReference, ICommand?>(nameof(FindAllReferencesCommand));
+
+    public static readonly StyledProperty<ICommand?> RemoveCommandProperty =
+        AvaloniaProperty.Register<UndertaleObjectReference, ICommand?>(nameof(RemoveCommand));
 
     public ICommand? OpenInTabCommand
     {
@@ -54,10 +57,22 @@ public partial class UndertaleStringReference : UserControl
         set => SetValue(FindAllReferencesCommandProperty, value);
     }
 
-    public UndertaleString? ObjectReference
+    public ICommand? RemoveCommand
     {
-        get => GetValue(ObjectReferenceProperty);
-        set => SetValue(ObjectReferenceProperty, value);
+        get => GetValue(RemoveCommandProperty);
+        set => SetValue(RemoveCommandProperty, value);
+    }
+
+    public UndertaleEmbeddedAudio AudioReference
+    {
+        get => GetValue(AudioReferenceProperty);
+        set { SetValue(AudioReferenceProperty, value); }
+    }
+
+    public UndertaleAudioGroup GroupReference
+    {
+        get => GetValue(GroupReferenceProperty);
+        set { SetValue(GroupReferenceProperty, value); }
     }
 
     public bool IsTypeReferenceable
@@ -66,21 +81,30 @@ public partial class UndertaleStringReference : UserControl
         set { SetValue(IsTypeReferenceableProperty, value); }
     }
 
-    public UndertaleStringReference()
+    public int AudioID
+    {
+        get => (int)GetValue(AudioIDProperty);
+        set { SetValue(AudioIDProperty, value); }
+    }
+
+    public int GroupID
+    {
+        get => (int)GetValue(GroupIDProperty);
+        set { SetValue(GroupIDProperty, value); }
+    }
+
+    public AudioFileReference()
     {
         InitializeComponent();
-        // TODO UndertaleResourceReferenceMap.IsTypeReferenceable(objType);
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
 
-        if (change.Property == ObjectReferenceProperty)
+        if (change.Property == AudioReferenceProperty)
         {
-            var newValue = change.GetNewValue<UndertaleString?>();
-            PseudoClasses.Set(":null-reference", newValue is null);
-            PseudoClasses.Set(":empty-content", newValue?.Content == string.Empty);
+            var newValue = change.GetNewValue<UndertaleEmbeddedAudio?>();
             UpdateContextMenu(newValue);
         }
     }
@@ -88,19 +112,19 @@ public partial class UndertaleStringReference : UserControl
     protected override void OnApplyTemplate(Avalonia.Controls.Primitives.TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
-        UpdateContextMenu(ObjectReference);
+        UpdateContextMenu(AudioReference);
     }
 
-    private void UpdateContextMenu(UndertaleString? undertaleString)
+    private void UpdateContextMenu(UndertaleEmbeddedAudio? undertaleEmbeddedAudio)
     {
         // The TextBox is internally available 
         if (ObjectText == null) return;
 
-        if (undertaleString is not null)
+        if (undertaleEmbeddedAudio is not null)
         {
             if (Resources.TryGetValue("contextMenu", out var menuResource) && menuResource is ContextMenu menu)
             {
-                menu.DataContext = undertaleString;
+                menu.DataContext = undertaleEmbeddedAudio;
                 ObjectText.ContextMenu = menu;
             }
         }
@@ -112,14 +136,14 @@ public partial class UndertaleStringReference : UserControl
 
     private void Details_MouseDown(object sender, PointerPressedEventArgs e)
     {
-        if (ObjectReference is null)
+        if (AudioReference is null)
             return;
         var point = e.GetCurrentPoint(this);
         if (point.Properties.IsMiddleButtonPressed)
         {
-            if (OpenInNewTabCommand?.CanExecute(ObjectReference) == true)
+            if (OpenInNewTabCommand?.CanExecute(AudioReference) == true)
             {
-                OpenInNewTabCommand.Execute(ObjectReference);
+                OpenInNewTabCommand.Execute(AudioReference);
             }
         }
     }
