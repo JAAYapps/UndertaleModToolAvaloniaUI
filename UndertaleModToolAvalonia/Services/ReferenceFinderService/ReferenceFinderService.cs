@@ -1894,6 +1894,11 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
         };
         }
 
+        public bool IsTypeReferenceable(UndertaleResource undertaleResource)
+        {
+            return UndertaleResourceReferenceMap.IsTypeReferenceable(undertaleResource.GetType());
+        }
+
         public (Type, string)[] GetTypeMapForVersion(Type type, UndertaleData data)
         {
             return UndertaleResourceReferenceMap.GetTypeMapForVersion(type, data);

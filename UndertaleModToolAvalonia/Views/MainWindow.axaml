@@ -10,7 +10,8 @@
         Icon="/Assets/icon.ico" WindowStartupLocation="CenterScreen"
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
-		ExtendClientAreaToDecorationsHint="True">
+		ExtendClientAreaToDecorationsHint="True"
+		Title="{Binding TitleMain}">
 	<Window.Title>
 		<MultiBinding StringFormat="{}{0} - {1} [{2}]">
 			<Binding Path="TitleMain"/>

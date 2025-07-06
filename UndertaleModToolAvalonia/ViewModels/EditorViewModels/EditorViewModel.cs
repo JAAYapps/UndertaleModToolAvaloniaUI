@@ -15,10 +15,14 @@ using System.IO;
 using System.Net.Http;
 using System.Reflection;
 using System.Runtime;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Tmds.DBus.Protocol;
 using UndertaleModLib;
 using UndertaleModLib.Decompiler;
+using UndertaleModLib.Models;
+using UndertaleModLib.ModelsDebug;
 using UndertaleModToolAvalonia.Converters;
 using UndertaleModToolAvalonia.Models;
 using UndertaleModToolAvalonia.Models.EditorModels;
@@ -182,6 +186,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
         public async Task LoadFileAsync(string filename, bool preventClose = false, bool onlyGeneralInfo = false)
         {
+            IsEnabled = false;
             // --- Start Loading Process ---
             loadingDialogService.Show("Loading File", "Reading data.win, please wait...");
             await loadingDialogService.SetIndeterminateAsync(true);
@@ -198,7 +203,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     {
                         data = UndertaleIO.Read(stream, async (string warning, bool isImportant) =>
                         {
-                            await App.Current.ShowWarning(warning, "Loading warning");
+                            await App.Current!.ShowWarning(warning, "Loading warning");
                             if (isImportant)
                             {
                                 hadImportantWarnings = true;
@@ -214,7 +219,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 #if DEBUG
                     Debug.WriteLine(e);
 #endif
-                    await App.Current.ShowError("An error occurred while trying to load:\n" + e.Message, "Load error");
+                    await App.Current!.ShowError("An error occurred while trying to load:\n" + e.Message, "Load error");
                 }
 
                 if (onlyGeneralInfo)
@@ -235,13 +240,13 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     {
                         if (data.UnsupportedBytecodeVersion)
                         {
-                            await App.Current.ShowWarning("Only bytecode versions 13 to 17 are supported for now, you are trying to load " + data.GeneralInfo.BytecodeVersion + ". A lot of code is disabled and will likely break something. Saving/exporting is disabled.", "Unsupported bytecode version");
+                            await App.Current!.ShowWarning("Only bytecode versions 13 to 17 are supported for now, you are trying to load " + data.GeneralInfo.BytecodeVersion + ". A lot of code is disabled and will likely break something. Saving/exporting is disabled.", "Unsupported bytecode version");
                             Settings.Instance.CanSave = false;
                             Settings.Instance.CanSafelySave = false;
                         }
                         else if (hadImportantWarnings)
                         {
-                            await App.Current.ShowWarning("Warnings occurred during loading. Data loss will likely occur when trying to save!", "Loading problems");
+                            await App.Current!.ShowWarning("Warnings occurred during loading. Data loss will likely occur when trying to save!", "Loading problems");
                             Settings.Instance.CanSave = true;
                             Settings.Instance.CanSafelySave = false;
                         }
@@ -258,13 +263,13 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                         }
                         if (data.IsYYC())
                         {
-                            await App.Current.ShowWarning("This game uses YYC (YoYo Compiler), which means the code is embedded into the game executable. This configuration is currently not fully supported; continue at your own risk.", "YYC");
+                            await App.Current!.ShowWarning("This game uses YYC (YoYo Compiler), which means the code is embedded into the game executable. This configuration is currently not fully supported; continue at your own risk.", "YYC");
                         }
                         if (data.GeneralInfo != null)
                         {
                             if (!data.GeneralInfo.IsDebuggerDisabled)
                             {
-                                await App.Current.ShowWarning("This game is set to run with the GameMaker Studio debugger and the normal runtime will simply hang after loading if the debugger is not running. You can turn this off in General Info by checking the \"Disable Debugger\" box and saving.", "GMS Debugger");
+                                await App.Current!.ShowWarning("This game is set to run with the GameMaker Studio debugger and the normal runtime will simply hang after loading if the debugger is not running. You can turn this off in General Info by checking the \"Disable Debugger\" box and saving.", "GMS Debugger");
                             }
                         }
                         if (Path.GetDirectoryName(AppConstants.FilePath) != Path.GetDirectoryName(filename))
@@ -293,9 +298,183 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             });
 
             loadingDialogService.Hide();
-
+            IsEnabled = true;
             // Clear "GC holes" left in the memory in process of data unserializing
             // https://docs.microsoft.com/en-us/dotnet/api/system.runtime.gcsettings.largeobjectheapcompactionmode?view=net-6.0
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect();
+        }
+
+        public async Task SaveFileAsync(string filename, bool suppressDebug = false)
+        {
+            if (AppConstants.Data == null || AppConstants.Data.UnsupportedBytecodeVersion)
+                return;
+            
+            bool isDifferentPath = AppConstants.FilePath != filename;
+            
+            // --- Start Saving Process ---
+            loadingDialogService.Show("Saving File", "Saveing data.win, please wait...");
+            await loadingDialogService.SetIndeterminateAsync(true);
+
+            IProgress<Tuple<int, string, double>> progress = new Progress<Tuple<int, string, double>>(i => { loadingDialogService.UpdateStatusAsync(i.Item2); loadingDialogService.UpdateProgressAsync(i.Item1, i.Item3); });
+
+            AppConstants.FilePath = filename;
+
+            if (Path.GetDirectoryName(AppConstants.FilePath) != Path.GetDirectoryName(filename))
+                UndertaleHelper.CloseChildFiles();
+
+            DebugDataDialogViewModel.DebugDataMode debugMode = DebugDataDialogViewModel.DebugDataMode.NoDebug;
+            if (!suppressDebug && AppConstants.Data.GeneralInfo != null && !AppConstants.Data.GeneralInfo.IsDebuggerDisabled)
+                await App.Current!.ShowWarning("You are saving the game in GameMaker Studio debug mode. Unless the debugger is running, the normal runtime will simply hang after loading. You can turn this off in General Info by checking the \"Disable Debugger\" box and saving.", "GMS Debugger");
+            Task t = Task.Run(async () =>
+            {
+                bool SaveSucceeded = true;
+
+                try
+                {
+                    using (var stream = new FileStream(filename + "temp", FileMode.Create, FileAccess.Write))
+                    {
+                        UndertaleIO.Write(stream, AppConstants.Data, message =>
+                        {
+                            loadingDialogService.UpdateStatusAsync(message);
+                        });
+                    }
+
+                    if (debugMode != DebugDataDialogViewModel.DebugDataMode.NoDebug)
+                    {
+                        await loadingDialogService.UpdateStatusAsync("Generating debugger data...");
+
+                        UndertaleDebugData debugData = UndertaleDebugData.CreateNew();
+
+                        // setMax.Report(,,AppConstants.Data.Code.Count);
+                        int count = 0;
+                        object countLock = new object();
+                        string[] outputs = new string[AppConstants.Data.Code.Count];
+                        UndertaleDebugInfo[] outputsOffsets = new UndertaleDebugInfo[AppConstants.Data.Code.Count];
+                        GlobalDecompileContext context = new(AppConstants.Data);
+                        Parallel.For(0, AppConstants.Data.Code.Count, (i) =>
+                        {
+                            var code = AppConstants.Data.Code[i];
+
+                            if (debugMode == DebugDataDialogViewModel.DebugDataMode.Decompiled)
+                            {
+                                //Debug.WriteLine("Decompiling " + code.Name.Content);
+                                string output;
+                                try
+                                {
+                                    output = new Underanalyzer.Decompiler.DecompileContext(context, code, AppConstants.Data.ToolInfo.DecompilerSettings)
+                                        .DecompileToString();
+                                }
+                                catch (Exception e)
+                                {
+                                    Debug.WriteLine(e.Message);
+                                    output = "/*\nEXCEPTION!\n" + e.ToString() + "\n*/";
+                                }
+                                outputs[i] = output;
+
+                                UndertaleDebugInfo debugInfo = new UndertaleDebugInfo();
+                                debugInfo.Add(new UndertaleDebugInfo.DebugInfoPair() { SourceCodeOffset = 0, BytecodeOffset = 0 }); // TODO: generate this too! :D
+                                outputsOffsets[i] = debugInfo;
+                            }
+                            else
+                            {
+                                StringBuilder sb = new StringBuilder();
+                                UndertaleDebugInfo debugInfo = new UndertaleDebugInfo();
+
+                                uint addr = 0;
+                                foreach (var instr in code.Instructions)
+                                {
+                                    if (debugMode == DebugDataDialogViewModel.DebugDataMode.FullAssembler || instr.Kind == UndertaleInstruction.Opcode.Pop || instr.Kind == UndertaleInstruction.Opcode.Popz || instr.Kind == UndertaleInstruction.Opcode.B || instr.Kind == UndertaleInstruction.Opcode.Bt || instr.Kind == UndertaleInstruction.Opcode.Bf || instr.Kind == UndertaleInstruction.Opcode.Ret || instr.Kind == UndertaleInstruction.Opcode.Exit)
+                                        debugInfo.Add(new UndertaleDebugInfo.DebugInfoPair() { SourceCodeOffset = (uint)sb.Length, BytecodeOffset = addr * 4 });
+                                    instr.ToString(sb, code, addr);
+                                    addr += instr.CalculateInstructionSize();
+                                    sb.Append('\n');
+                                }
+                                outputs[i] = sb.ToString();
+                                outputsOffsets[i] = debugInfo;
+                            }
+
+                            lock (countLock)
+                            {
+                                progress.Report(new Tuple<int, string, double>(++count, code.Name.Content, AppConstants.Data.Code.Count));
+                            }
+                        });
+
+                        for (int i = 0; i < AppConstants.Data.Code.Count; i++)
+                        {
+                            debugData.SourceCode.Add(new UndertaleScriptSource() { SourceCode = debugData.Strings.MakeString(outputs[i]) });
+                            debugData.DebugInfo.Add(outputsOffsets[i]);
+                            // FIXME: Probably should write something regardless.
+                            if (AppConstants.Data.CodeLocals is not null)
+                            {
+                                debugData.LocalVars.Add(AppConstants.Data.CodeLocals[i]);
+                                if (debugData.Strings.IndexOf(AppConstants.Data.CodeLocals[i].Name) < 0)
+                                    debugData.Strings.Add(AppConstants.Data.CodeLocals[i].Name);
+                                foreach (var local in AppConstants.Data.CodeLocals[i].Locals)
+                                    if (debugData.Strings.IndexOf(local.Name) < 0)
+                                        debugData.Strings.Add(local.Name);
+                            }
+                        }
+
+                        using (UndertaleWriter writer = new UndertaleWriter(new FileStream(Path.ChangeExtension(AppConstants.FilePath, ".yydebug"), FileMode.Create, FileAccess.Write)))
+                        {
+                            debugData.FORM.Serialize(writer);
+                            writer.ThrowIfUnwrittenObjects();
+                            writer.Flush();
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    await Dispatcher.UIThread.Invoke(async () =>
+                    {
+                        await App.Current!.ShowError("An error occurred while trying to save:\n" + e.Message, "Save error");
+                    });
+
+                    SaveSucceeded = false;
+                }
+                // Don't make any changes unless the save succeeds.
+                try
+                {
+                    if (SaveSucceeded)
+                    {
+                        // It saved successfully!
+                        // If we're overwriting a previously existing data file, we're going to overwrite it now.
+                        // Then, we're renaming it back to the proper (non-temp) file name.
+                        File.Move(filename + "temp", filename, true);
+
+                        // Also make the changes to the profile system.
+                        await profileService.ProfileSaveEventAsync(AppConstants.Data, filename);
+                    }
+                    else
+                    {
+                        // It failed, but since we made a temp file for saving, no data was overwritten or destroyed (hopefully)
+                        // We need to delete the temp file though (if it exists).
+                        if (File.Exists(filename + "temp"))
+                            File.Delete(filename + "temp");
+                        // No profile system changes, since the save failed, like a save was never attempted.
+                    }
+                }
+                catch (Exception exc)
+                {
+                    await Dispatcher.UIThread.Invoke(async () =>
+                    {
+                        await App.Current!.ShowError("An error occurred while trying to save:\n" + exc.Message, "Save error");
+                    });
+
+                    SaveSucceeded = false;
+                }
+
+                // TODO UndertaleCodeEditor.gettextJSON = null;
+
+                Dispatcher.UIThread.Invoke(() =>
+                {
+                    loadingDialogService.Hide();
+                });
+            });
+
+            await t;
+
             GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             GC.Collect();
         }
@@ -333,6 +512,12 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         {
             if (asset == null) return;
             // TODO I will adapt the old OpenInTab(asset, true) method here
+        }
+
+        [RelayCommand]
+        private void DeleteAsset(object asset)
+        {
+
         }
 
         [RelayCommand]

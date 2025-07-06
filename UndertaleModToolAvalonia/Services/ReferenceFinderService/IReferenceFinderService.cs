@@ -9,6 +9,8 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
 {
     public interface IReferenceFinderService
     {
+        public bool IsTypeReferenceable(UndertaleResource undertaleResource);
+
         (Type, string)[] GetTypeMapForVersion(Type type, UndertaleData data);
 
         public Task<Dictionary<string, List<object>>?> GetReferencesOfObject(object obj, UndertaleData data, HashSetTypesOverride types, bool checkOne = false);

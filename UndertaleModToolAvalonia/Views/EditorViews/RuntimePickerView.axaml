@@ -7,6 +7,20 @@
 		x:DataType="vm:RuntimePickerViewModel"
         x:Class="UndertaleModToolAvalonia.Views.EditorViews.RuntimePickerView"
         Title="Runtime picker" Height="300" Width="700" WindowStartupLocation="CenterOwner">
+	<Window.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.ThemeDictionaries>
+				<ResourceDictionary x:Key="Light">
+					<SolidColorBrush x:Key='ForegroundBrush'>Black</SolidColorBrush>
+					<SolidColorBrush x:Key='Background'>LightGray</SolidColorBrush>
+				</ResourceDictionary>
+				<ResourceDictionary x:Key="Dark">
+					<SolidColorBrush x:Key='ForegroundBrush'>White</SolidColorBrush>
+					<SolidColorBrush x:Key='Background'>Gray</SolidColorBrush>
+				</ResourceDictionary>
+			</ResourceDictionary.ThemeDictionaries>
+		</ResourceDictionary>
+	</Window.Resources>
 	<Grid Margin="10">
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="*"/>
@@ -26,7 +40,9 @@
                   ItemsSource="{Binding Runtimes}"
                   SelectedItem="{Binding Selected}"
                   IsReadOnly="True"
-                  SelectionMode="Single">
+                  SelectionMode="Single"
+				  BorderThickness="2"
+				  BorderBrush="{DynamicResource ForegroundBrush}">
 			<DataGrid.Columns>
 				<DataGridTextColumn Header="Version" Binding="{Binding Version}" Width="*"/>
 				<DataGridTextColumn Header="Path" Binding="{Binding Path}" Width="2*"/>

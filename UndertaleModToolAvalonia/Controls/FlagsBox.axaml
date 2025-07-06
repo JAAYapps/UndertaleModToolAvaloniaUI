@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:converters="using:UndertaleModToolAvalonia.Converters.ControlConverters"
+			 xmlns:local="using:UndertaleModToolAvalonia.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="UndertaleModToolAvalonia.Controls.FlagsBox"
+			 x:Name="Self">
+	<UserControl.Resources>
+		<converters:EnumToValuesConverter x:Key="enumToValuesConverter"/>
+	</UserControl.Resources>
+	<StackPanel>
+		<TextBox Text="{Binding #Self.Value}" />
+		<Expander Header="Flags">
+			<ItemsControl ItemsSource="{Binding #Self.Value, Converter={StaticResource enumToValuesConverter}}">
+				<ItemsControl.ItemTemplate>
+					<DataTemplate>
+						<StackPanel>
+							<CheckBox>
+								<CheckBox.Resources>
+									<converters:EnumFlagToBoolConverter x:Key="enumFlagToBoolConverter"/>
+								</CheckBox.Resources>
+								<CheckBox.IsChecked>
+									<MultiBinding Converter="{StaticResource enumFlagToBoolConverter}">
+										<Binding Path="#Self.Value"/>
+										<Binding Path="."/>
+									</MultiBinding>
+								</CheckBox.IsChecked>
+								<TextBlock Text="{Binding}"/>
+							</CheckBox>
+						</StackPanel>
+					</DataTemplate>
+				</ItemsControl.ItemTemplate>
+			</ItemsControl>
+		</Expander>
+	</StackPanel>
+</UserControl>

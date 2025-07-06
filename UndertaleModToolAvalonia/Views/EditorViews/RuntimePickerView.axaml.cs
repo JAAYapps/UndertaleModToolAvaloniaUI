@@ -23,7 +23,7 @@ namespace UndertaleModToolAvalonia.Views.EditorViews
                 var selectedRuntime = viewModel.Selected;
                 Close(selectedRuntime);
             }
-                Close();
+            Close();
         }
     }
 }

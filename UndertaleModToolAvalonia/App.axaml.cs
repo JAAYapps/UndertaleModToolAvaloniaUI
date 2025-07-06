@@ -120,6 +120,7 @@ public partial class App : Application
         services.AddSingleton<EditorViewModel>();
         services.AddTransient<SettingsPageViewModel>();
         services.AddTransient<GMLSettingsViewModel>();
+        services.AddTransient<RuntimePickerViewModel>();
 
         services.AddSingleton<IProfileService, ProfileService>();
         services.AddSingleton<IDialogService, DialogService>();

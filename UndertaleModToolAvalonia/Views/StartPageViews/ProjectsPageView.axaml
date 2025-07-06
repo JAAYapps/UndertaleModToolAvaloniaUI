@@ -7,46 +7,26 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.Views.StartPageViews.ProjectsPageView"
-             x:DataType="vm:ProjectsPageViewModel">
+             x:DataType="vm:ProjectsPageViewModel"
+			 Focusable="True">
+	<UserControl.KeyBindings>
+		<KeyBinding Gesture="Ctrl+O" Command="{Binding OpenFileCommand}" CommandParameter="{Binding $parent[Window].StorageProvider}"/>
+		<KeyBinding Gesture="Ctrl+S" Command="{Binding SaveFileCommand}" CommandParameter="{Binding $parent[Window].StorageProvider}"/>
+		<KeyBinding Gesture="F5" Command="{Binding RunGameCommand}"/>
+	</UserControl.KeyBindings>
 	<DockPanel>
-		<Menu DockPanel.Dock="Top">
+		<Menu DockPanel.Dock="Top" IsEnabled="{Binding MenuEnabled}">
 			<MenuItem Header="_File">
 				<MenuItem Header="_New" HotKey="Ctrl+N" Command="{Binding NewProjectCommand}"/>
 				<MenuItem Header="_Open" HotKey="Ctrl+O" Command="{Binding OpenFileCommand}" CommandParameter="{Binding $parent[Window].StorageProvider}"/>
-				<MenuItem Header="_Save" HotKey="Ctrl+S">
-					<MenuItem.Styles>
-						<Style Selector="MenuItem">
-							<!-- <Setter Property="IsEnabled" Value="{Binding CanSave}"/> -->
-						</Style>
-					</MenuItem.Styles>
-				</MenuItem>
+				<MenuItem Header="_Save" HotKey="Ctrl+S" Command="{Binding SaveFileCommand}" CommandParameter="{Binding $parent[Window].StorageProvider}"/>
 				<Separator/>
-				<MenuItem Header="_Temp run game" HotKey="F5">
-					<!-- TODO: I think I need a custom command for that... -->
-					<MenuItem.Styles>
-						<Style Selector="MenuItem">
-							<!-- <Setter Property="IsEnabled" Value="{Binding CanSave}"/> -->
-						</Style>
-					</MenuItem.Styles>
-				</MenuItem>
-				<MenuItem Header="Run game under _debugger" HotKey="Shift+F5">
-					<MenuItem.Styles>
-						<Style Selector="MenuItem">
-							<!-- <Setter Property="IsEnabled" Value="{Binding CanSave}"/> -->
-						</Style>
-					</MenuItem.Styles>
-				</MenuItem>
-				<MenuItem Header="Run game with other runner" HotKey="Alt+F5">
-					<MenuItem.Styles>
-						<Style Selector="MenuItem">
-							<!-- <Setter Property="IsEnabled" Value="{Binding CanSave}"/> -->
-						</Style>
-					</MenuItem.Styles>
-				</MenuItem>
+				<MenuItem Header="_Temp run game" HotKey="F5" Command="{Binding RunGameCommand}" CommandParameter="{Binding $parent[Window].StorageProvider}"/>
+				<MenuItem Header="Run game under GMS _debugger" HotKey="Shift+F5" Command="{Binding RunDebugCommand}" CommandParameter="{Binding $parent[Window].StorageProvider}"/>
+				<MenuItem Header="Run game with other runner" HotKey="Alt+F5" Command="{Binding RunSpecialCommand}" CommandParameter="{Binding $parent[Window].StorageProvider}"/>
 				<Separator/>
-				<MenuItem Header="Generate o_ffset map"/>
+				<MenuItem Header="Generate o_ffset map" Command="{Binding OffsetMapCommand}" CommandParameter="{Binding $parent[Window].StorageProvider}"/>
 				<Separator/>
-				<MenuItem Header="S_ettings"/>
 				<MenuItem Header="_Close" HotKey="Ctrl+Q"/>
 			</MenuItem>
 			<MenuItem Name="RootScriptItem" Header="_Scripts">
