@@ -1,9 +1,6 @@
-﻿using Avalonia.Controls;
-using Avalonia.Threading;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,10 +9,10 @@ using UndertaleModLib;
 using UndertaleModLib.Models;
 using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.Models;
+using UndertaleModToolAvalonia.Models.UndertaleReferenceTypes;
 using UndertaleModToolAvalonia.Services.DialogService;
 using UndertaleModToolAvalonia.Services.ReferenceFinderService;
 using UndertaleModToolAvalonia.Utilities;
-using UndertaleModToolAvalonia.Views.EditorViews.FindReferencesTypesDialog;
 
 namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTypesDialog
 {
@@ -38,7 +35,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
         private readonly IReferenceFinderService? referenceFinder;
         private readonly IDialogService? dialogService;
 
-        public UndertaleResource? SourceObj { get; private set; }
+        public UndertaleObject? SourceObj { get; private set; }
 
         public UndertaleData? Data { get; private set; }
 
@@ -75,7 +72,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
                 return await InitWithSourceObject(parameters.obj, parameters.data);
         }
 
-        private async Task<bool> InitWithSourceObject(UndertaleResource? obj, UndertaleData? data)
+        private async Task<bool> InitWithSourceObject(UndertaleObject? obj, UndertaleData? data)
         {
             (Type, string)[] sourceTypes = UndertaleResourceReferenceMap.GetTypeMapForVersion(obj!.GetType(), data!);
             if (sourceTypes is null)

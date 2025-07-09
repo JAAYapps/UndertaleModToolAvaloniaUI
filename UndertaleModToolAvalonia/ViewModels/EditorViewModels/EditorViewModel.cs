@@ -26,9 +26,11 @@ using UndertaleModLib.ModelsDebug;
 using UndertaleModToolAvalonia.Converters;
 using UndertaleModToolAvalonia.Models;
 using UndertaleModToolAvalonia.Models.EditorModels;
+using UndertaleModToolAvalonia.Models.UndertaleReferenceTypes;
 using UndertaleModToolAvalonia.Services.DialogService;
 using UndertaleModToolAvalonia.Services.LoadingDialogService;
 using UndertaleModToolAvalonia.Services.ProfileService;
+using UndertaleModToolAvalonia.Services.ReferenceFinderService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTypesDialog;
 using UndertaleModToolAvalonia.Views.EditorViews;
@@ -48,6 +50,8 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         private IProfileService profileService;
 
         private IDialogService dialogService;
+
+        private IReferenceFinderService referenceFinderService;
 
         public object Selected
         {
@@ -131,30 +135,13 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         private Task scriptSetupTask;
         
         [ObservableProperty] private string objectLabel  = string.Empty;
-        
-        // TODO Not sure if I can just use Avalonia's theme system.
-        // private static readonly Color darkColor = Color.FromArgb(255, 32, 32, 32);
-        // private static readonly Color darkLightColor = Color.FromArgb(255, 48, 48, 48);
-        // private static readonly Color whiteColor = Color.FromArgb(255, 222, 222, 222);
-        // private static readonly SolidColorBrush grayTextBrush = new(Color.FromArgb(255, 179, 179, 179));
-        // private static readonly SolidColorBrush inactiveSelectionBrush = new(Color.FromArgb(255, 212, 212, 212));
-        // private static readonly Dictionary<ResourceKey, object> appDarkStyle = new()
-        // {
-        //     { SystemColors.WindowTextBrushKey, new SolidColorBrush(whiteColor) },
-        //     { SystemColors.ControlTextBrushKey, new SolidColorBrush(whiteColor) },
-        //     { SystemColors.WindowBrushKey, new SolidColorBrush(darkColor) },
-        //     { SystemColors.ControlBrushKey, new SolidColorBrush(darkLightColor) },
-        //     { SystemColors.ControlLightBrushKey, new SolidColorBrush(Color.FromArgb(255, 60, 60, 60)) },
-        //     { SystemColors.MenuTextBrushKey, new SolidColorBrush(whiteColor) },
-        //     { SystemColors.MenuBrushKey, new SolidColorBrush(darkLightColor) },
-        //     { SystemColors.GrayTextBrushKey, new SolidColorBrush(Color.FromArgb(255, 136, 136, 136)) },
-        //     { SystemColors.InactiveSelectionHighlightBrushKey, new SolidColorBrush(Color.FromArgb(255, 112, 112, 112)) }
-        // };
 
-        public EditorViewModel(ILoadingDialogService loadingDialogService, IProfileService profileService, IDialogService dialogService)
+        public EditorViewModel(ILoadingDialogService loadingDialogService, IProfileService profileService, IDialogService dialogService, IReferenceFinderService referenceFinderService)
         {
             this.loadingDialogService = loadingDialogService;
             this.profileService = profileService;
+            this.dialogService = dialogService;
+            this.referenceFinderService = referenceFinderService;
             Highlighted = new Description("Welcome to UndertaleModTool!", "Open a data.win file to get started, then double click on the items on the left to view them.");
             // TODO Implement OpenInTab(Highlighted);
 
@@ -176,12 +163,6 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                         typeof(System.Text.RegularExpressions.Regex).GetTypeInfo().Assembly)
                     .WithEmitDebugInformation(true); //when script throws an exception, add an exception location (line number)
             });
-
-            // TODO Same thing about Avalonia theme system.
-            // var resources = Application.Current.Resources;
-            // resources["CustomTextBrush"] = SystemColors.ControlTextBrush;
-            // resources[SystemColors.GrayTextBrushKey] = grayTextBrush;
-            // resources[SystemColors.InactiveSelectionHighlightBrushKey] = inactiveSelectionBrush;
         }
 
         public async Task LoadFileAsync(string filename, bool preventClose = false, bool onlyGeneralInfo = false)
@@ -533,12 +514,37 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         }
 
         [RelayCommand]
+        private async Task FindAllTileReferences(object sender)
+        {
+            if (sender is not (UndertaleBackground, UndertaleBackground.TileID))
+            {
+                await App.Current!.ShowError("The selected object is not an \"UndertaleObject\".");
+                return;
+            }
+            var obj = ((UndertaleBackground, UndertaleBackground.TileID))sender;
+            var tileSet = obj.Item1;
+            var selectedID = obj.Item2;
+            try
+            {
+                var typeList = new HashSetTypesOverride() { typeof(UndertaleRoom.Layer) };
+                var tuple = (tileSet, selectedID);
+                var results = await referenceFinderService.GetReferencesOfObject(tuple, AppConstants.Data!, typeList);
+                await dialogService.ShowAsync<FindReferencesResultsViewModel, FindReferencesResultsParameters>(new FindReferencesResultsParameters(tuple, AppConstants.Data!, results));
+            }
+            catch (Exception ex)
+            {
+                await App.Current!.ShowError("An error occurred in the object references related window.\n" +
+                                    $"Please report this on GitHub.\n\n{ex}");
+            }
+        }
+
+        [RelayCommand]
         private async Task FindAllReferences(object sender)
         {
             var obj = (sender as Control)?.DataContext;
-            if (obj is not UndertaleResource res)
+            if (obj is not UndertaleObject res)
             {
-                await App.Current!.ShowError("The selected object is not an \"UndertaleResource\".");
+                await App.Current!.ShowError("The selected object is not an \"UndertaleObject\".");
                 return;
             }
 

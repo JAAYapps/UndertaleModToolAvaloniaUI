@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UndertaleModLib;
+using UndertaleModToolAvalonia.Models.UndertaleReferenceTypes;
 
 namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
 {
     public interface IReferenceFinderService
     {
-        public bool IsTypeReferenceable(UndertaleResource undertaleResource);
+        public bool IsTypeReferenceable(UndertaleObject undertaleResource);
 
         (Type, string)[] GetTypeMapForVersion(Type type, UndertaleData data);
 

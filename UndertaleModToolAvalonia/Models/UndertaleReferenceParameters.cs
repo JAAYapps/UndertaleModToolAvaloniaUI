@@ -7,5 +7,5 @@ using UndertaleModLib;
 
 namespace UndertaleModToolAvalonia.Models
 {
-    public record UndertaleReferenceParameters(UndertaleResource obj, UndertaleData data);
+    public record UndertaleReferenceParameters(UndertaleObject obj, UndertaleData data);
 }

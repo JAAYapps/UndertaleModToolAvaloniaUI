@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:undertale="using:UndertaleModLib.Models"
+			 xmlns:converters="using:UndertaleModToolAvalonia.Converters"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="UndertaleModToolAvalonia.Controls.UndertaleTexturePageItemDisplay"
+			 x:DataType="undertale:UndertaleTexturePageItem" UseLayoutRounding="True">
+	<UserControl.Resources>
+		<converters:UndertaleCachedImageLoader x:Key="UndertaleCachedImageLoader"/>
+	</UserControl.Resources>
+	<Canvas Width="{Binding BoundingWidth, Mode=OneWay}" Height="{Binding BoundingHeight, Mode=OneWay}">
+		<Border Canvas.Left="{Binding TargetX, Mode=OneWay}" Canvas.Top="{Binding TargetY, Mode=OneWay}"
+                Width="{Binding TargetWidth, Mode=OneWay}" Height="{Binding TargetHeight, Mode=OneWay}"
+                BorderBrush="DarkCyan" BorderThickness="1" Name="RenderAreaBorder" RenderOptions.BitmapInterpolationMode="None">
+			<Border.Background>
+				<ImageBrush
+                    Source="{Binding ., Mode=OneWay, Converter={StaticResource UndertaleCachedImageLoader}, ConverterParameter=nocache}"
+                    TileMode="None" Stretch="None">
+				</ImageBrush>
+			</Border.Background>
+		</Border>
+	</Canvas>
+</UserControl>

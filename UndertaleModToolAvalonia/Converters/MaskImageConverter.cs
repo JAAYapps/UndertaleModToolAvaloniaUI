@@ -95,10 +95,5 @@ namespace UndertaleModToolAvalonia
 
             return bitmap;
         }
-
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, System.Globalization.CultureInfo culture)
-        {
-            throw new NotSupportedException();
-        }
     }
 }

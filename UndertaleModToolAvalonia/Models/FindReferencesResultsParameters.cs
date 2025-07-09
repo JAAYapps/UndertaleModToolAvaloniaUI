@@ -7,5 +7,5 @@ using UndertaleModLib;
 
 namespace UndertaleModToolAvalonia.Models
 {
-    public record FindReferencesResultsParameters(UndertaleResource? undertaleResource, UndertaleData data, Dictionary<string, List<object>> results);
+    public record FindReferencesResultsParameters(object? undertaleResource, UndertaleData data, Dictionary<string, List<object>> results);
 }
