@@ -502,18 +502,6 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         }
 
         [RelayCommand]
-        private async Task OpenGitHub()
-        {
-            await UndertaleHelper.OpenBrowser("https://github.com/UnderminersTeam/UndertaleModTool");
-        }
-
-        [RelayCommand]
-        private async Task OpenAbout()
-        {
-            await App.Current.ShowMessage("UndertaleModTool by krzys_h and the Underminers team\nVersion " + AppConstants.Version, "About");
-        }
-
-        [RelayCommand]
         private async Task FindAllTileReferences(object sender)
         {
             if (sender is not (UndertaleBackground, UndertaleBackground.TileID))
@@ -526,6 +514,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             var selectedID = obj.Item2;
             try
             {
+                IsEnabled = false;
                 var typeList = new HashSetTypesOverride() { typeof(UndertaleRoom.Layer) };
                 var tuple = (tileSet, selectedID);
                 var results = await referenceFinderService.GetReferencesOfObject(tuple, AppConstants.Data!, typeList);
@@ -535,6 +524,10 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             {
                 await App.Current!.ShowError("An error occurred in the object references related window.\n" +
                                     $"Please report this on GitHub.\n\n{ex}");
+            }
+            finally
+            {
+                IsEnabled = true;
             }
         }
 
@@ -550,12 +543,17 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
             try
             {
+                IsEnabled = false;
                 await dialogService.ShowAsync<FindReferencesTypesDialogViewModel, UndertaleReferenceParameters>(new UndertaleReferenceParameters(res, AppConstants.Data!));
             }
             catch (Exception ex)
             {
                 await App.Current!.ShowError("An error occurred in the object references related window.\n" +
                                      $"Please report this on GitHub.\n\n{ex}");
+            }
+            finally
+            {
+                IsEnabled = true;
             }
         }
 

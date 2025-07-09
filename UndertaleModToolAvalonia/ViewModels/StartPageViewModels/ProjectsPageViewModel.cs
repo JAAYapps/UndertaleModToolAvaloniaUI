@@ -414,4 +414,16 @@ result in loss of work.");
         });
         MenuEnabled = true;
     }
+
+    [RelayCommand]
+    private async Task OpenGitHub()
+    {
+        await UndertaleHelper.OpenBrowser("https://github.com/UnderminersTeam/UndertaleModTool");
+    }
+
+    [RelayCommand]
+    private async Task OpenAbout()
+    {
+        await App.Current!.ShowMessage("UndertaleModTool by krzys_h and the Underminers team\nVersion " + AppConstants.Version, "About");
+    }
 }

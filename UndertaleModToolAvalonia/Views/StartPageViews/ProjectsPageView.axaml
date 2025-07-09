@@ -33,8 +33,8 @@
 				<MenuItem Header="(...loading...)" IsEnabled="False"/>
 			</MenuItem>
 			<MenuItem Header="_Help">
-				<MenuItem Header="_GitHub" />
-				<MenuItem Header="_About" />
+				<MenuItem Header="_GitHub" Command="{Binding OpenGitHubCommand}"/>
+				<MenuItem Header="_About" Command="{Binding OpenAboutCommand}"/>
 			</MenuItem>
 		</Menu>
 		<Border Grid.Row="0" Margin="10" BorderBrush="DarkGray" BorderThickness="2">

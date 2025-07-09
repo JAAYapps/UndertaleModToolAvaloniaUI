@@ -17,7 +17,6 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
 {
     public class ReferenceFinderService : IReferenceFinderService
     {
-        private EditorViewModel editor;
         private ILoadingDialogService loadingDialog;
 
         private UndertaleData data;
@@ -26,9 +25,8 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
         private Dictionary<UndertaleCode, HashSet<UndertaleVariable>> variReferences;
         private readonly Dictionary<Type, PredicateForVersion[]> typeMap;
 
-        public ReferenceFinderService(EditorViewModel editor, ILoadingDialogService loadingDialog)
+        public ReferenceFinderService(ILoadingDialogService loadingDialog)
         {
-            this.editor = editor;
             this.loadingDialog = loadingDialog;
 
             typeMap = new()
@@ -1502,7 +1500,6 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
                     variReferences[code] = variables;
             }
 
-            editor.IsEnabled = false;
             try
             {
                 loadingDialog.Show("Searching in progress...", "Please wait...");
@@ -1582,7 +1579,6 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
             {
                 loadingDialog.Hide();
 
-                editor.IsEnabled = true;
                 stringReferences = null;
                 funcReferences = null;
                 variReferences = null;
