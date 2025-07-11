@@ -1,29 +1,29 @@
 ﻿using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using log4net;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Scripting;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Runtime;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Tmds.DBus.Protocol;
 using UndertaleModLib;
 using UndertaleModLib.Decompiler;
 using UndertaleModLib.Models;
 using UndertaleModLib.ModelsDebug;
 using UndertaleModToolAvalonia.Converters;
+using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.Models;
 using UndertaleModToolAvalonia.Models.EditorModels;
 using UndertaleModToolAvalonia.Models.UndertaleReferenceTypes;
@@ -32,8 +32,10 @@ using UndertaleModToolAvalonia.Services.LoadingDialogService;
 using UndertaleModToolAvalonia.Services.ProfileService;
 using UndertaleModToolAvalonia.Services.ReferenceFinderService;
 using UndertaleModToolAvalonia.Utilities;
+using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTypesDialog;
 using UndertaleModToolAvalonia.Views.EditorViews;
+using static UndertaleModLib.Models.UndertaleRoom;
 
 namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 {
@@ -87,12 +89,6 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             Right
         }
         
-        private int progressValue;
-        private Task updater;
-        private CancellationTokenSource cts;
-        private CancellationToken cToken;
-        private readonly object bindingLock = new();
-        private HashSet<string> syncBindings = new();
         [ObservableProperty] private bool roomRendererEnabled;
 
         partial void OnRoomRendererEnabledChanged(bool value)
@@ -120,10 +116,6 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         
         [ObservableProperty] private bool lsAppClosed = false;
         
-        private HttpClient httpClient;
-        
-        private LoaderDialogView scriptDialog;
-        
         public static string AppDataFolder => Settings.AppDataFolder;
         public static string ProfilesFolder = Path.Combine(Settings.AppDataFolder, "Profiles");
         public static string CorrectionsFolder = Path.Combine(Program.GetExecutableDirectory(), "Corrections");
@@ -135,6 +127,21 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         private Task scriptSetupTask;
         
         [ObservableProperty] private string objectLabel  = string.Empty;
+
+        private List<ResourceNodeViewModel> unfilteredRootNodes = new();
+
+        public ObservableCollection<ResourceNodeViewModel> FilteredRootNodes { get; } = new();
+
+        [ObservableProperty]
+        private ResourceNodeViewModel? selectedNode;
+
+        [ObservableProperty]
+        private string searchText = string.Empty;
+
+        public EditorViewModel()
+        {
+            BuildTree(null);
+        }
 
         public EditorViewModel(ILoadingDialogService loadingDialogService, IProfileService profileService, IDialogService dialogService, IReferenceFinderService referenceFinderService)
         {
@@ -163,6 +170,118 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                         typeof(System.Text.RegularExpressions.Regex).GetTypeInfo().Assembly)
                     .WithEmitDebugInformation(true); //when script throws an exception, add an exception location (line number)
             });
+        }
+
+        partial void OnSearchTextChanged(string value)
+        {
+            ApplyFilter();
+        }
+
+        private void BuildChildren(ResourceNodeViewModel root, string catagory, IEnumerable<UndertaleObject> children)
+        {
+            var cat = new ResourceNodeViewModel(catagory, null, this, referenceFinderService);
+            if (children == null)
+                return;
+            foreach (var child in children)
+            {
+                cat.Children.Add(new ResourceNodeViewModel(child.ToString(), child, this, referenceFinderService));
+            }
+            root.Children.Add(cat);
+        }
+
+        public void BuildTree(UndertaleData data)
+        {
+            var allNodes = new List<ResourceNodeViewModel>();
+            var dataNode = new ResourceNodeViewModel("Data", null, this, referenceFinderService, true);
+            
+            if (data?.GeneralInfo != null)
+                dataNode.Children.Add(new ResourceNodeViewModel("General info", data.GeneralInfo, this, referenceFinderService));
+            if (data?.GlobalInitScripts != null)
+                dataNode.Children.Add(new ResourceNodeViewModel("Global init", data.GlobalInitScripts, this, referenceFinderService));
+            if (data?.GameEndScripts != null)
+                dataNode.Children.Add(new ResourceNodeViewModel("Game End scripts", data.GameEndScripts, this, referenceFinderService));
+
+            BuildChildren(dataNode, "Audio groups", data != null ? data.AudioGroups : []);
+            BuildChildren(dataNode, "Sounds", data != null ? data.Sounds : []);
+            BuildChildren(dataNode, "Sprites", data != null ? data.Sprites : []);
+            BuildChildren(dataNode, "Backgrounds & Tile sets", data != null ? data.Backgrounds : []);
+            BuildChildren(dataNode, "Paths", data != null ? data.Paths : []);
+            BuildChildren(dataNode, "Scripts", data != null ? data.Scripts : []);
+            BuildChildren(dataNode, "Shaders", data != null ? data.Shaders : []);
+            BuildChildren(dataNode, "Timelines", data != null ? data.Timelines : []);
+            BuildChildren(dataNode, "Game objects", data != null ? data.GameObjects : []);
+            BuildChildren(dataNode, "Rooms", data != null ? data.Rooms : []);
+            BuildChildren(dataNode, "Extensions", data != null ? data.Extensions : []);
+            BuildChildren(dataNode, "Texture page items", data != null ? data.TexturePageItems : []);
+            BuildChildren(dataNode, "Code", data != null ? data.Code : []);
+            BuildChildren(dataNode, "Variables", data != null ? data.Variables : []);
+            BuildChildren(dataNode, "Functions", data != null ? data.Functions : []);
+            BuildChildren(dataNode, "Code locals", data != null ? data.CodeLocals : []);
+            BuildChildren(dataNode, "Strings", data != null ? data.Strings : []);
+            BuildChildren(dataNode, "Embedded textures", data != null ? data.EmbeddedTextures : []);
+            BuildChildren(dataNode, "Embedded audio", data != null ? data.EmbeddedAudio : []);
+            BuildChildren(dataNode, "Texture group information", data != null ? data.TextureGroupInfo : []);
+            BuildChildren(dataNode, "Embedded images", data != null ? data.EmbeddedImages : []);
+            BuildChildren(dataNode, "Particle systems", data != null ? data.ParticleSystems : []);
+            BuildChildren(dataNode, "Particle system emitters", data != null ? data.ParticleSystemEmitters : []);
+            allNodes.Add(dataNode);
+            unfilteredRootNodes = allNodes;
+
+            ApplyFilter();
+        }
+
+        private void ApplyFilter()
+        {
+            FilteredRootNodes.Clear();
+
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                // If search is empty, show the entire unfiltered tree
+                foreach (var node in unfilteredRootNodes)
+                {
+                    FilteredRootNodes.Add(node);
+                }
+            }
+            else
+            {
+                // If there is search text, build a new filtered tree
+                var filteredNodes = FilterNodeList(unfilteredRootNodes);
+                foreach (var node in filteredNodes)
+                {
+                    FilteredRootNodes.Add(node);
+                }
+            }
+        }
+
+        private List<ResourceNodeViewModel> FilterNodeList(IEnumerable<ResourceNodeViewModel> sourceList)
+        {
+            var filteredList = new List<ResourceNodeViewModel>();
+
+            foreach (var node in sourceList)
+            {
+                // First, see if any children match the filter
+                var filteredChildren = FilterNodeList(node.Children);
+
+                // A node is a match if its own header contains the search text...
+                bool selfIsMatch = node.Header.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
+
+                // ...OR if it has any children that are matches.
+                if (selfIsMatch || filteredChildren.Any())
+                {
+                    // If it's a match, create a new node to represent it in the filtered tree
+                    var newNode = new ResourceNodeViewModel(node.Header, node.Model, this, referenceFinderService);
+
+                    // Add the filtered children to the new node
+                    foreach (var child in filteredChildren)
+                    {
+                        newNode.Children.Add(child);
+                    }
+
+                    filteredList.Add(newNode);
+                }
+            }
+
+            return filteredList;
         }
 
         public async Task LoadFileAsync(string filename, bool preventClose = false, bool onlyGeneralInfo = false)
@@ -264,9 +383,9 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                         AppConstants.Data.ToolInfo.DecompilerSettings = Settings.Instance.DecompilerSettings;
                         AppConstants.Data.ToolInfo.InstanceIdPrefix = () => Settings.Instance.InstanceIdPrefix;
                         AppConstants.FilePath = filename;
-                        OnPropertyChanged("Data");
-                        OnPropertyChanged("FilePath");
-                        OnPropertyChanged("IsGMS2");
+                        OnPropertyChanged(nameof(AppConstants.Data));
+                        OnPropertyChanged(nameof(AppConstants.FilePath));
+                        OnPropertyChanged(nameof(UndertaleHelper.IsGMS2));
 
                         /*BackgroundsItemsList.Header = IsGMS2 == Visibility.Visible
                                                       ? "Tile sets"
@@ -284,6 +403,8 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             // https://docs.microsoft.com/en-us/dotnet/api/system.runtime.gcsettings.largeobjectheapcompactionmode?view=net-6.0
             GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             GC.Collect();
+            BuildTree(AppConstants.Data);
+            WeakReferenceMessenger.Default.Send(new TitleUpdateMessage());
         }
 
         public async Task SaveFileAsync(string filename, bool suppressDebug = false)
@@ -478,6 +599,49 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
                 GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
                 GC.Collect();
+            }
+        }
+
+        [RelayCommand]
+        private void CopyItemToClipboard(ResourceNodeViewModel? node)
+        {
+            // TODO Add clipboard service
+        }
+
+        [RelayCommand]
+        private void AddNewItem(ResourceNodeViewModel? categoryNode)
+        {
+            if (categoryNode is null) return;
+
+            // Logic to add a new item based on the category
+            // For example:
+            if (categoryNode.Header == "Sounds")
+            {
+                var newSound = new UndertaleSound();
+                newSound.Name = AppConstants.Data.Strings.MakeString("new_sound");
+                AppConstants.Data.Sounds.Add(newSound);
+
+                // Add the new item to the tree view
+                categoryNode.Children.Add(new ResourceNodeViewModel(newSound.Name.Content, newSound, this, referenceFinderService));
+            }
+            // ... add logic for other categories
+        }
+
+        [RelayCommand]
+        private void DeleteItem(ResourceNodeViewModel? resourceNode)
+        {
+            if (resourceNode?.Model is not UndertaleResource resource) return;
+
+            // Find the parent node to remove the child from its collection
+            // (This requires having a reference to the parent in the child node, or searching the tree)
+
+            // Then, remove the item from the main data list
+            // For example:
+            if (resource is UndertaleSound sound)
+            {
+                AppConstants.Data.Sounds.Remove(sound);
+                // And also remove the ViewModel node from the tree
+                // ParentNode.Children.Remove(resourceNode);
             }
         }
 

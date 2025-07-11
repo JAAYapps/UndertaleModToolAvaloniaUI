@@ -1,24 +1,25 @@
-<Window xmlns="https://github.com/avaloniaui"
+<wnd:AppWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.StartPageViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:UndertaleModToolAvalonia.ViewModels"
+		xmlns:wnd="using:FluentAvalonia.UI.Windowing"
+		xmlns:ui="using:FluentAvalonia.UI.Controls"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="UndertaleModToolAvalonia.Views.MainWindow"
 		x:DataType="viewModels:MainWindowViewModel"
         Icon="/Assets/icon.ico" WindowStartupLocation="CenterScreen"
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
-		ExtendClientAreaToDecorationsHint="True"
-		Title="{Binding TitleMain}">
-	<Window.Title>
+		ExtendClientAreaToDecorationsHint="True">
+	<wnd:AppWindow.Title>
 		<MultiBinding StringFormat="{}{0} - {1} [{2}]">
 			<Binding Path="TitleMain"/>
 			<Binding Path="Data.GeneralInfo" FallbackValue="No game loaded"/>
 			<Binding Path="FilePath"/>
 		</MultiBinding>
-	</Window.Title>
+	</wnd:AppWindow.Title>
 	<Panel>
 		<ExperimentalAcrylicBorder IsHitTestVisible="False">
 			<ExperimentalAcrylicBorder.Material>
@@ -33,11 +34,11 @@
 			<Grid.RowDefinitions>
 				<RowDefinition Height="*"/>
 			</Grid.RowDefinitions>
-			<!-- <Border Grid.Row="0" Height="32" VerticalAlignment="Top"> -->
-			<!-- 	<TextBlock Grid.Row="0" Text="{Binding Title, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="7,5" /> -->
-			<!-- </Border> -->
+			 <Border Grid.Row="0" Height="32" VerticalAlignment="Top"> 
+			 	<TextBlock Grid.Row="0" Text="{Binding Title, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="7,5" /> 
+			 </Border> 
 
-			<SplitView Grid.Row="0" Margin="0,20,0,0" IsPaneOpen="{Binding IsPaneOpen}" OpenPaneLength="300" CompactPaneLength="46" DisplayMode="CompactInline" >
+			<SplitView Grid.Row="0" Margin="0,30,0,0" IsPaneOpen="{Binding IsPaneOpen}" OpenPaneLength="300" CompactPaneLength="46" DisplayMode="CompactInline" >
 				<SplitView.Pane>
 					<StackPanel Orientation="Vertical" Spacing="5" HorizontalAlignment="Stretch">
 						<Button Width="32" Height="32" Command="{Binding PaneOpenCommand}" Margin="7, 10">
@@ -68,4 +69,4 @@
 			</SplitView>
 		</Grid>
 	</Panel>
-</Window>
+</wnd:AppWindow>

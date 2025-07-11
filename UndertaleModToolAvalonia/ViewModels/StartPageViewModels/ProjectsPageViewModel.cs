@@ -126,6 +126,7 @@ public partial class ProjectsPageViewModel : ViewModelBase
     private void NewProject()
     {
         OnSelectedPageChanged(Pages[1]);
+        editorViewModel?.BuildTree(null);
         CanSave = Settings.Instance.CanSave;
     }
 

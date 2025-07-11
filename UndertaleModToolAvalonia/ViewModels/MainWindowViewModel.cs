@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.ObjectModel;
@@ -9,6 +10,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using UndertaleModLib;
+using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.Models;
 using UndertaleModToolAvalonia.Services.DialogService;
 using UndertaleModToolAvalonia.Services.ProfileService;
@@ -26,8 +28,8 @@ namespace UndertaleModToolAvalonia.ViewModels
         private readonly IProfileService profileService;
 
         [ObservableProperty] private string titleMain = string.Empty;
-        
-        [ObservableProperty] public UndertaleData? data = AppConstants.Data;
+
+        [ObservableProperty] public UndertaleData? data;
 
         [ObservableProperty] string? filePath = AppConstants.FilePath;
         
@@ -38,7 +40,12 @@ namespace UndertaleModToolAvalonia.ViewModels
             this.profileService = profileService;
             this.dialogService = dialogService;
             TitleMain = "UndertaleModTool by krzys_h, recreated by Joshua Vanderzee v:" + AppConstants.Version;
-            
+            Data = AppConstants.Data;
+            WeakReferenceMessenger.Default.Register<TitleUpdateMessage>(this, (r, m) =>
+            {
+                Data = AppConstants.Data;
+                FilePath = AppConstants.FilePath;
+            });
             Pages = new ObservableCollection<PageTemplate>()
             {
                 new PageTemplate(typeof(ProjectsPageViewModel), "Projects"),

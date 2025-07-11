@@ -33,7 +33,8 @@
 	</Application.Resources>
 	
     <Application.Styles>
-        <sty:FluentAvaloniaTheme PreferSystemTheme="True" PreferUserAccentColor="True" />
+		<!--<FluentTheme/>-->
+        <sty:FluentAvaloniaTheme PreferSystemTheme="True" PreferUserAccentColor="True"/>
         <StyleInclude Source="/Styles/MenuIcons.axaml"/>
 		<StyleInclude Source="/Styles/SideBar.axaml" />
     </Application.Styles>
