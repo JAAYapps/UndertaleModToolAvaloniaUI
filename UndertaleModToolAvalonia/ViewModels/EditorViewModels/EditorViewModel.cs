@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Controls.Converters;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,6 +10,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -28,9 +30,12 @@ using UndertaleModToolAvalonia.Models;
 using UndertaleModToolAvalonia.Models.EditorModels;
 using UndertaleModToolAvalonia.Models.UndertaleReferenceTypes;
 using UndertaleModToolAvalonia.Services.DialogService;
+using UndertaleModToolAvalonia.Services.FileService;
 using UndertaleModToolAvalonia.Services.LoadingDialogService;
+using UndertaleModToolAvalonia.Services.PlayerService;
 using UndertaleModToolAvalonia.Services.ProfileService;
 using UndertaleModToolAvalonia.Services.ReferenceFinderService;
+using UndertaleModToolAvalonia.Services.TextureCacheService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTypesDialog;
@@ -55,16 +60,35 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
         private IReferenceFinderService referenceFinderService;
 
-        public object Selected
-        {
-            get => null;// TODO Implement CurrentTab?.CurrentObject;
-            set
-            {
-                OnPropertyChanged();
-                OpenInTab(value);
-            } 
-        }
-        
+        private IPlayer playerService;
+
+        private IFileService fileService;
+
+        private ITextureCacheService textureCacheService;
+
+        [ObservableProperty]
+        private ObservableCollection<TabViewModel> tabs = new();
+
+        [ObservableProperty]
+        private TabViewModel? currentTab;
+
+        public List<TabViewModel> ClosedTabsHistory { get; } = new();
+
+        //partial void OnCurrentTabChanged(TabViewModel? value)
+        //{
+        //    Console.WriteLine($"--> OnCurrentTabChanged: New tab is '{value?.TabTitle}'.");
+        //}
+
+        /*        public object Selected
+                {
+                    get => null;// TODO Implement CurrentTab?.CurrentObject;
+                    set
+                    {
+                        OnPropertyChanged();
+                        OpenInTab(value);
+                    } 
+                }*/
+
         [ObservableProperty] private bool wasWarnedAboutTempRun = false;
         
         [ObservableProperty] private bool finishedMessageEnabled = true;
@@ -141,16 +165,23 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         public EditorViewModel()
         {
             BuildTree(null);
+            Highlighted = new Description("Welcome to UndertaleModTool!", "Open a data.win file to get started, then double click on the items on the left to view them.");
+            var asset = GetViewModelFromObject(Highlighted);
+            OpenInTab(asset, false, asset.MainText);
         }
 
-        public EditorViewModel(ILoadingDialogService loadingDialogService, IProfileService profileService, IDialogService dialogService, IReferenceFinderService referenceFinderService)
+        public EditorViewModel(ILoadingDialogService loadingDialogService, IProfileService profileService, IDialogService dialogService, IReferenceFinderService referenceFinderService, IPlayer playerService, IFileService fileService, ITextureCacheService textureCacheService)
         {
             this.loadingDialogService = loadingDialogService;
             this.profileService = profileService;
             this.dialogService = dialogService;
             this.referenceFinderService = referenceFinderService;
+            this.playerService = playerService;
+            this.fileService = fileService;
+            this.textureCacheService = textureCacheService;
             Highlighted = new Description("Welcome to UndertaleModTool!", "Open a data.win file to get started, then double click on the items on the left to view them.");
-            // TODO Implement OpenInTab(Highlighted);
+            var asset = GetViewModelFromObject(Highlighted);
+            OpenInTab(asset, false, asset.MainText);
 
             _ = new Settings();
 
@@ -649,14 +680,24 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         private void OpenAssetInTab(object asset)
         {
             if (asset == null) return;
-            // TODO I will adapt the old OpenInTab method here
+            var assetObject = GetViewModelFromObject(asset);
+            OpenInTab(assetObject, false, assetObject.MainText);
         }
 
         [RelayCommand]
         private void OpenAssetInNewTab(object asset)
         {
             if (asset == null) return;
-            // TODO I will adapt the old OpenInTab(asset, true) method here
+            var assetObject = GetViewModelFromObject(asset);
+            OpenInTab(assetObject, true, assetObject.MainText);
+        }
+
+        [RelayCommand]
+        private void CloseAssetTab(TabViewModel tab)
+        {
+            if (tab == null) return;
+                Console.WriteLine(tab.ToString());
+            // TODO I will adapt the old CloseTab(asset, true) method here
         }
 
         [RelayCommand]
@@ -698,10 +739,9 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         [RelayCommand]
         private async Task FindAllReferences(object sender)
         {
-            var obj = (sender as Control)?.DataContext;
-            if (obj is not UndertaleObject res)
+            if (sender is not UndertaleObject res)
             {
-                await App.Current!.ShowError("The selected object is not an \"UndertaleObject\".");
+                await App.Current!.ShowError($"The selected object is not an \"UndertaleObject\". {sender}");
                 return;
             }
 
@@ -721,13 +761,63 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             }
         }
 
-        internal void OpenInTab(object obj, bool isNewTab = false, string tabTitle = null)
+        private EditorContentViewModel GetViewModelFromObject(object asset)
+        {
+            if (asset is Description)
+                return new DescriptionViewModel(GetTitleForObject(asset), (Description)asset);
+            if (asset is UndertaleGeneralInfo)
+                return new UndertaleGeneralInfoEditorViewModel(GetTitleForObject(asset), (UndertaleGeneralInfo)asset, AppConstants.Data.Options, AppConstants.Data.Language);
+            if (asset is IList<UndertaleGlobalInit> globalInits)
+            {
+                string title = GetTitleForObject(asset);
+                if (title == "Global Init")
+                    return new UndertaleGlobalInitEditorViewModel(title, globalInits);
+                if (title == "Game End")
+                    return new UndertaleGameEndEditorViewModel(title, globalInits);
+            }
+            if (asset is UndertaleObject dataRes)
+            {
+                string name = GetTitleForObject(asset);
+                EditorContentViewModel? model = dataRes switch
+                {
+                    // UndertaleAudioGroup => "Audio Group",
+                    UndertaleSound => new UndertaleSoundEditorViewModel(name, (UndertaleSound)asset, playerService),
+                    //UndertaleSprite => "Sprite",
+                    UndertaleBackground => new UndertaleBackgroundEditorViewModel(name, (UndertaleBackground)asset),
+                    //UndertalePath => "Path",
+                    //UndertaleScript => "Script",
+                    //UndertaleShader => "Shader",
+                    //UndertaleFont => "Font",
+                    //UndertaleTimeline => "Timeline",
+                    //UndertaleGameObject => "Game Object",
+                    //UndertaleRoom => "Room",
+                    //UndertaleExtension => "Extension",
+                    //UndertaleTexturePageItem => "Texture Page Item",
+                    //UndertaleCode => "Code",
+                    //UndertaleVariable => "Variable",
+                    //UndertaleFunction => "Function",
+                    //UndertaleCodeLocals => "Code Locals",
+                    UndertaleEmbeddedTexture => new UndertaleEmbeddedTextureEditorViewModel(name, (UndertaleEmbeddedTexture)asset, this, fileService, textureCacheService),
+                    UndertaleEmbeddedAudio => new UndertaleEmbeddedAudioEditorViewModel(name, (UndertaleEmbeddedAudio)asset, playerService, fileService),
+                    //UndertaleTextureGroupInfo => "Texture Group Info",
+                    //UndertaleEmbeddedImage => "Embedded Image",
+                    //UndertaleSequence => "Sequence",
+                    //UndertaleAnimationCurve => "Animation Curve",
+                    //UndertaleParticleSystem => "Particle System",
+                    //UndertaleParticleSystemEmitter => "Particle System Emitter",
+                    _ => new EditorContentViewModel($"There is no Editor for {name}.")
+                };
+                return model;
+            }
+            return new EditorContentViewModel($"There is no Editor for {GetTitleForObject(asset)}.");
+        }
+
+        private void OpenInTab(object obj, bool isNewTab = false, string tabTitle = null)
         {
             if (obj is null)
                 return;
 
-            // TODO Implement tab opening
-            /*if (obj is DescriptionView && CurrentTab is not null && !CurrentTab.AutoClose)
+            if (obj is DescriptionViewModel && CurrentTab is not null && !CurrentTab.AutoClose)
                 return;
 
             // close auto-closing tab
@@ -737,15 +827,14 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             if (isNewTab || Tabs.Count == 0)
             {
                 int newIndex = Tabs.Count;
-                Tab newTab = new(obj, newIndex, tabTitle);
+                TabViewModel newTab = new(obj, newIndex, tabTitle, CloseAssetTabCommand);
 
                 Tabs.Add(newTab);
                 CurrentTabIndex = newIndex;
 
                 newTab.History.Add(obj);
 
-                if (!TabController.IsLoaded)
-                    CurrentTab = newTab;
+                CurrentTab = newTab;
             }
             else if (obj != CurrentTab?.CurrentObject)
             {
@@ -758,14 +847,223 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                 }
 
                 CurrentTab.CurrentObject = obj;
-                UpdateObjectLabel(obj);
-
+                CurrentTab.TabTitle = tabTitle;
                 CurrentTab.History.Add(obj);
                 CurrentTab.HistoryPosition++;
             }
+        }
 
-            if (DataEditor.IsLoaded)
-                GetNearestParent<ScrollViewer>(DataEditor)?.ScrollToTop();*/
+        public void CloseTab(bool addDefaultTab = true) // close the current tab
+        {
+            CloseTab(CurrentTabIndex, addDefaultTab);
+        }
+        public void CloseTab(int tabIndex, bool addDefaultTab = true)
+        {
+            if (tabIndex >= 0 && tabIndex < Tabs.Count)
+            {
+                TabViewModel closingTab = Tabs[tabIndex];
+
+                int currIndex = CurrentTabIndex;
+
+                Tabs.RemoveAt(tabIndex);
+
+                if (!closingTab.AutoClose)
+                    ClosedTabsHistory.Add(closingTab);
+
+                if (Tabs.Count == 0)
+                {
+                    /*if (!closingTab.AutoClose)
+                        CurrentTab.SaveTabContentState();*/ // TODO Needed to apply changes to code in code editor if tab is closed of not in view.
+
+                    CurrentTabIndex = -1;
+                    CurrentTab = null;
+
+                    if (addDefaultTab)
+                    {
+                        OpenInTab(new Description("Welcome to UndertaleModTool!",
+                                                      "Open a data.win file to get started, then double click on the items on the left to view them"));
+                        CurrentTab = Tabs[CurrentTabIndex];
+                    }
+                }
+                else
+                {
+                    bool tabIsChanged = false;
+
+                    for (int i = tabIndex; i < Tabs.Count; i++)
+                        Tabs[i].TabIndex = i;
+
+                    // if closing the currently open tab
+                    if (currIndex == tabIndex)
+                    {
+                        // and if that tab is not the last
+                        if (Tabs.Count > 1 && tabIndex < Tabs.Count - 1)
+                        {
+                            // switch to the last tab
+                            currIndex = Tabs.Count - 1;
+                        }
+                        else
+                        {
+                            if (currIndex != 0)
+                                currIndex -= 1;
+
+                            tabIsChanged = true;
+                            /*CurrentTab.SaveTabContentState();*/   // TODO Needed to apply changes to code in code editor if tab is closed of not in view.
+                        }
+                    }
+                    else if (currIndex > tabIndex)
+                    {
+                        currIndex -= 1;
+                    }
+
+                    CurrentTabIndex = currIndex;
+                    TabViewModel newTab = Tabs[CurrentTabIndex];
+
+                    if (tabIsChanged)
+                    {
+/*                        if (closingTab.CurrentObject != newTab.CurrentObject)
+                            newTab.PrepareCodeEditor();*/   // TODO Need to do this in viewmodel I think?
+                    }
+
+                    CurrentTab = newTab;
+
+/*                    if (tabIsChanged)
+                        CurrentTab.RestoreTabContentState();*/
+                }
+            }
+        }
+        public bool CloseTab(object obj, bool addDefaultTab = true)
+        {
+            if (obj is not null)
+            {
+                int tabIndex = Tabs.FirstOrDefault(x => x.CurrentObject == obj)?.TabIndex ?? -1;
+                if (tabIndex != -1)
+                {
+                    CloseTab(tabIndex, addDefaultTab);
+                    return true;
+                }
+            }
+            else
+                Debug.WriteLine("Can't close the tab - object is null.");
+
+            return false;
+        }
+
+        /// <summary>Generates a tab title depending on a type of the object.</summary>
+        public string GetTitleForObject(object obj)
+        {
+            if (obj is null)
+                return "No Valid Data";
+            if (obj is EditorContentViewModel editorContent)
+                return editorContent.MainText;
+            string title = null;
+            if (obj is Description view)
+            {
+                if (view.Heading.Contains("Welcome"))
+                {
+                    title = "Welcome!";
+                }
+                else
+                {
+                    title = view.Heading;
+                }
+            }
+            else if (obj is UndertaleNamedResource namedRes)
+            {
+                string content = namedRes.Name?.Content;
+
+                string header = obj switch
+                {
+                    UndertaleAudioGroup => "Audio Group",
+                    UndertaleSound => "Sound",
+                    UndertaleSprite => "Sprite",
+                    UndertaleBackground => "Background",
+                    UndertalePath => "Path",
+                    UndertaleScript => "Script",
+                    UndertaleShader => "Shader",
+                    UndertaleFont => "Font",
+                    UndertaleTimeline => "Timeline",
+                    UndertaleGameObject => "Game Object",
+                    UndertaleRoom => "Room",
+                    UndertaleExtension => "Extension",
+                    UndertaleTexturePageItem => "Texture Page Item",
+                    UndertaleCode => "Code",
+                    UndertaleVariable => "Variable",
+                    UndertaleFunction => "Function",
+                    UndertaleCodeLocals => "Code Locals",
+                    UndertaleEmbeddedTexture => "Embedded Texture",
+                    UndertaleEmbeddedAudio => "Embedded Audio",
+                    UndertaleTextureGroupInfo => "Texture Group Info",
+                    UndertaleEmbeddedImage => "Embedded Image",
+                    UndertaleSequence => "Sequence",
+                    UndertaleAnimationCurve => "Animation Curve",
+                    UndertaleParticleSystem => "Particle System",
+                    UndertaleParticleSystemEmitter => "Particle System Emitter",
+                    _ => null
+                };
+
+                if (header is not null)
+                    title = header + " - " + content;
+                else
+                    Debug.WriteLine($"Could not handle type {obj.GetType()}");
+            }
+            else if (obj is UndertaleString str)
+            {
+                string stringFirstLine = str.Content;
+                if (stringFirstLine is not null)
+                {
+                    if (stringFirstLine.Length == 0)
+                        stringFirstLine = "(empty string)";
+                    else
+                    {
+                        int stringLength = StringTitleConverter.NewLineRegex.Match(stringFirstLine).Index;
+                        if (stringLength != 0)
+                            stringFirstLine = stringFirstLine[..stringLength] + " ...";
+                    }
+                }
+
+                title = "String - " + stringFirstLine;
+            }
+            else if (obj is UndertaleExtensionFile file)
+            {
+                title = $"Extension file - {file.Filename}";
+            }
+            else if (obj is UndertaleExtensionFunction func)
+            {
+                title = $"Extension function - {func.Name}";
+            }
+            else if (obj is UndertaleChunkVARI)
+            {
+                title = "Variables Overview";
+            }
+            else if (obj is UndertaleGeneralInfo)
+            {
+                title = "General Info";
+            }
+            else if (obj is IList<UndertaleGlobalInit>)
+            {
+                title = "Global Init";
+            }
+            else if (obj is UndertaleGameEndEditorViewModel)    // TODO make this work correctly when testing on a supported win file.
+            {
+                title = "Game End";
+            }
+            else
+            {
+                title = obj.GetType().FullName ?? "Null Type";
+                Debug.WriteLine($"Could not handle type {obj.GetType()}");
+            }
+
+            if (title is not null)
+            {
+                // "\t" is displayed as 8 spaces.
+                // So, replace all "\t" with spaces,
+                // in order to properly shorten the title.
+                title = title.Replace("\t", "        ");
+
+                if (title.Length > 64)
+                    title = title[..64] + "...";
+            }
+            return title;
         }
     }
 }

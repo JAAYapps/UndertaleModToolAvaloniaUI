@@ -68,5 +68,7 @@ namespace UndertaleModToolAvalonia.Services.PlayerService
                 sound.Volume = value;
             }
         }
+
+        public bool IsPlaying => sound.Status == SoundStatus.Playing;
     }
 }

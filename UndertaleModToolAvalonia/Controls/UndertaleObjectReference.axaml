@@ -8,22 +8,13 @@
 			 x:Name="Self"
              x:Class="UndertaleModToolAvalonia.Controls.UndertaleObjectReference">
 	<UserControl.Resources>
-		<ContextMenu x:Key="contextMenu">
+		<MenuFlyout x:Key="contextFlyout">
 			<MenuItem Header="Open in new tab" Command="{Binding #Self.OpenInNewTabCommand}" CommandParameter="{Binding #Self.ObjectReference}"/>
 			<MenuItem Header="Find all references" IsVisible="{Binding #Self.IsTypeReferenceable}" Command="{Binding #Self.FindAllReferencesCommand}" CommandParameter="{Binding #Self.ObjectReference}"/>
-		</ContextMenu>
+		</MenuFlyout>
 		<converters:StringReferenceBackgroundConverter x:Key="StringRefBgConverter"/>
 		<converters:ObjectToStringConverter x:Key="ObjToStringConverter"/>
-		<VisualBrush x:Key="EmptyBrush" AlignmentX="Left" AlignmentY="Center" Stretch="None">
-			<VisualBrush.Visual>
-				<TextBlock Padding="4,0" Text="(empty)" Foreground="DarkGray"/>
-			</VisualBrush.Visual>
-		</VisualBrush>
-		<VisualBrush x:Key="NullBrush" AlignmentX="Left" AlignmentY="Center" Stretch="None">
-			<VisualBrush.Visual>
-				<TextBlock Padding="4,0" Text="(null)" Foreground="DarkGray"/>
-			</VisualBrush.Visual>
-		</VisualBrush>
+		<TextBlock x:Key="NullLabel" Padding="4,0" Foreground="DarkGray" Text="(null)"/>
 	</UserControl.Resources>
 	<Grid DataContext="{Binding $self}">
 		<Grid.ColumnDefinitions>
@@ -31,20 +22,20 @@
 			<ColumnDefinition Width="Auto"/>
 			<ColumnDefinition Width="Auto"/>
 		</Grid.ColumnDefinitions>
-		<TextBox Grid.Column="0" x:Name="ObjectText" IsReadOnly="True" Cursor="Arrow"
-                 Text="{Binding #Self.ObjectReference, Mode=OneWay, Converter={StaticResource ObjToStringConverter}}">
+		<TextBox Grid.Column="0" x:Name="ObjectText" IsReadOnly="True" Cursor="Arrow" DragDrop.AllowDrop="True"
+                 Text="{Binding #Self.ObjectReference, Mode=OneWay}">
 			<TextBox.Styles>
 				<Style Selector="local|UndertaleObjectReference[CanChange=True] > Grid > TextBox">
 					<Setter Property="ToolTip.Tip" Value="Self is an object reference. Drag and drop an object of matching type from the tree on the left to change it!" />
 				</Style>
-				<Style Selector="local|UndertaleObjectReference[ObjectReference={x:Null}] > Grid > TextBox">
-					<Setter Property="Background" Value="{StaticResource NullBrush}"/>
+				<Style Selector="local|UndertaleObjectReference:null-reference > Grid > TextBox[IsReadOnly=True]">
+					<Setter Property="Background">
+						<VisualBrush AlignmentX="Left" AlignmentY="Center" Stretch="None" Visual="{StaticResource NullLabel}"/>
+					</Setter>
 				</Style>
 			</TextBox.Styles>
 		</TextBox>
 		<Button Grid.Column="1" x:Name="DetailsButton"
-                Command="{Binding #Self.OpenInTabCommand}"
-                CommandParameter="{Binding #Self.ObjectReference}"
                 ToolTip.Tip="Open referenced object">
 			<Button.Content>
 				<TextBlock>...</TextBlock>

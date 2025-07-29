@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:controls="using:UndertaleModToolAvalonia.Controls"
+			 xmlns:undertaleModels="using:UndertaleModLib.Models"
+			 xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleGameEndEditorView"
+			 x:DataType="vm:UndertaleGameEndEditorViewModel">
+	<StackPanel>
+		<TextBlock Text="Game End scripts" FontWeight="Bold"/>
+		<Separator/>
+		<DataGrid Grid.Row="20" Grid.Column="1" Margin="3" ItemsSource="{Binding GameEnds}" AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
+			<DataGrid.Styles>
+				<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
+					<Setter Property="Background" Value="#FF26A0DA"/>
+					<Setter Property="Foreground" Value="White"/>
+				</Style>
+
+				<Style Selector="DataGridRow:empty DataGridCell">
+					<Setter Property="Template">
+						<ControlTemplate>
+							<TextBlock Margin="5" TextAlignment="Center" FontStyle="Italic">Double click to add</TextBlock>
+						</ControlTemplate>
+					</Setter>
+				</Style>
+			</DataGrid.Styles>
+			<!--<DataGrid.Resources>
+				<SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#FF26A0DA"/>
+				<Style TargetType="{x:Type DataGridCell}">
+					<Setter Property="Template">
+						<Setter.Value>
+							<ControlTemplate TargetType="{x:Type DataGridCell}">
+								<Grid Background="{TemplateBinding Background}">
+									<ContentPresenter VerticalAlignment="Center" />
+								</Grid>
+							</ControlTemplate>
+						</Setter.Value>
+					</Setter>
+					<Style.Triggers>
+						<DataTrigger Binding="{Binding DataContext, RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}}" Value="{x:Static CollectionView.NewItemPlaceholder}">
+							<Setter Property="Template">
+								<Setter.Value>
+									<ControlTemplate>
+										<TextBlock Margin="5" TextAlignment="Center" FontStyle="Italic">Double click to add</TextBlock>
+									</ControlTemplate>
+								</Setter.Value>
+							</Setter>
+						</DataTrigger>
+					</Style.Triggers>
+				</Style>
+			</DataGrid.Resources>-->
+			<DataGrid.Columns>
+				<DataGridTemplateColumn Width="*">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<controls:UndertaleObjectReference Margin="20,0,0,0" ObjectReference="{Binding Code, Mode=TwoWay}" ObjectType="{x:Type undertaleModels:UndertaleCode}" CanRemove="False"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+			</DataGrid.Columns>
+		</DataGrid>
+	</StackPanel>
+</UserControl>

@@ -11,6 +11,7 @@ using UndertaleModToolAvalonia.Models.UndertaleReferenceTypes;
 using UndertaleModToolAvalonia.Services.LoadingDialogService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
+using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents;
 using static UndertaleModLib.Models.UndertaleSequence;
 
 namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
@@ -535,14 +536,14 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
                                 bool genInfoMatches = data.GeneralInfo.Name == obj || data.GeneralInfo.FileName == obj
                                                       || data.GeneralInfo.Config == obj || data.GeneralInfo.DisplayName == obj;
                                 if (genInfoMatches)
-                                    outDict["General Info"] = new object[] { new GeneralInfo(data.GeneralInfo, data.Options, data.Language) };
+                                    outDict["General Info"] = new object[] { new UndertaleGeneralInfoEditorViewModel("General Info", data.GeneralInfo, data.Options, data.Language) };
                             }
 
                             if (types.Contains(typeof(UndertaleOptions.Constant)))
                             {
                                 bool constantsMatches = data.Options.Constants.Any(x => x.Name == obj || x.Value == obj);
                                 if (constantsMatches)
-                                    outDict["Game options constants"] = new object[] { new GeneralInfo(data.GeneralInfo, data.Options, data.Language) };
+                                    outDict["Game options constants"] = new object[] { new UndertaleGeneralInfoEditorViewModel("Game options constants", data.GeneralInfo, data.Options, data.Language) };
                             }
 
                             if (types.Contains(typeof(UndertalePath)))
@@ -625,7 +626,7 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
                                                                                     || x.Entries.Contains(obj));
 
                             if (langsMatches)
-                                return new() { { "Languages",  new object[] { new GeneralInfo(data.GeneralInfo, data.Options, data.Language) } } };
+                                return new() { { "Languages",  new object[] { new UndertaleGeneralInfoEditorViewModel("Languages", data.GeneralInfo, data.Options, data.Language) } } };
                             else
                                 return null;
                         }
@@ -1141,11 +1142,11 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
                             {
                                 bool matches = data.GlobalInitScripts?.Any(x => x.Code == obj) == true;
                                 if (matches)
-                                    outDict["Global init"] = new object[] { new GlobalInit(data.GlobalInitScripts) };
+                                    outDict["Global init"] = new object[] { new UndertaleGlobalInitEditorViewModel("Global init", data.GlobalInitScripts) };
 
                                 matches = data.GameEndScripts?.Any(x => x.Code == obj) == true;
                                 if (matches)
-                                    outDict["Game end scripts"] = new object[] { new GameEnd(data.GameEndScripts) };
+                                    outDict["Game end scripts"] = new object[] { new UndertaleGameEndEditorViewModel("Game end scripts", data.GameEndScripts) };
                             }
 
                             if (types.Contains(typeof(UndertaleScript)))

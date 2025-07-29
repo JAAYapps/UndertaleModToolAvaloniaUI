@@ -3,6 +3,9 @@
 			 xmlns:sty="using:FluentAvalonia.Styling"
              x:Class="UndertaleModToolAvalonia.App"
              xmlns:local="using:UndertaleModToolAvalonia"
+			 xmlns:components="using:UndertaleModToolAvalonia.Views.EditorViews.EditorComponents"
+			 xmlns:undertale="using:UndertaleModLib.Models"
+			 xmlns:vm="using:UndertaleModToolAvalonia.ViewModels"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 

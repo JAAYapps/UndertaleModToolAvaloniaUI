@@ -21,23 +21,23 @@ namespace UndertaleModToolAvalonia.Views.StartPageViews
 
         private void OnGotFocus(object? sender, GotFocusEventArgs e)
         {
-/*            Console.WriteLine("Got focus: " + e.Source);
+            //Console.WriteLine("Got focus: " + e.Source);
             if (e.Source is TextBox || e.Source is MenuItem)
             {
                 blockLostFocus = true;
                 ((Control)e.Source).Focus();
-            }*/
+            }
         }
 
         private void OnLostFocus(object? sender, RoutedEventArgs e)
         {
-/*            Console.WriteLine("Lost focus: " + e.Source);
+            //Console.WriteLine("Lost focus: " + e.Source);
             if (blockLostFocus)
             {
                 blockLostFocus = false;
                 return;
             }
-            this.Focus();*/
+            this.Focus();
         }
 
         private void OnLoaded(object? sender, RoutedEventArgs e)

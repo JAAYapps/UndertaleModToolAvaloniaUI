@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UndertaleModToolAvalonia.Utilities;
 
 namespace UndertaleModToolAvalonia.Converters.ControlConverters
 {

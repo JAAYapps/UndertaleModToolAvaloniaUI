@@ -2,7 +2,7 @@
 
 namespace UndertaleModToolAvalonia.Services.PlayerService
 {
-    internal interface IPlayer
+    public interface IPlayer
     {
         public void Stop();
 
@@ -15,5 +15,7 @@ namespace UndertaleModToolAvalonia.Services.PlayerService
         public float Pitch { get; set; }
 
         public float Volume { get; set; }
+
+        public bool IsPlaying { get; }
     }
 }

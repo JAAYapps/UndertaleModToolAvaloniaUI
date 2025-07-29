@@ -60,7 +60,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
                 return false;
             }
             
-            if (Data?.GeneralInfo is null)
+            if (parameters.data.GeneralInfo is null)
             {
                 await App.Current!.ShowError("Cannot determine GameMaker version - \"General Info\" is null.");
                 return false;

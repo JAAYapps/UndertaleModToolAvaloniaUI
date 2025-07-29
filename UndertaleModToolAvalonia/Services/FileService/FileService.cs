@@ -29,6 +29,24 @@ namespace UndertaleModToolAvalonia.Services.FileService
             });
         }
 
+        public async Task<IStorageFile?> SaveAudioFileAsync(IStorageProvider storageProvider, string path = "")
+        {
+            string directory = !string.IsNullOrEmpty(path) ? Path.GetFullPath(path) : "";
+            string name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : "";
+            return await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
+            {
+                Title = "Save Audio File",
+                FileTypeChoices = new List<FilePickerFileType>
+                {
+                    new FilePickerFileType("Audio files (.wav, .mp3, .ogg)") { Patterns = new List<string> { "*.wav;*.mp3;*.ogg;" } }
+                },
+                ShowOverwritePrompt = true,
+                SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "audio.ogg",
+                DefaultExtension = "*.ogg",
+                SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Music)
+            });
+        }
+
         public async Task<IStorageFile?> SaveTextFileAsync(IStorageProvider storageProvider, string path = "")
         {
             string directory = !string.IsNullOrEmpty(path) ? Path.GetFullPath(path) : "";
@@ -62,6 +80,23 @@ namespace UndertaleModToolAvalonia.Services.FileService
                 ],
                 SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "data.win",
                 SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Documents)
+            });
+        }
+
+        public async Task<IReadOnlyList<IStorageFile>> LoadAudioFileAsync(IStorageProvider storageProvider, string path = "")
+        {
+            string directory = !string.IsNullOrEmpty(path) ? Path.GetFullPath(path) : "";
+            string name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : "";
+            return await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+            {
+                AllowMultiple = false,
+                Title = "Load Audio File",
+                FileTypeFilter = [
+                    new FilePickerFileType("Audio files (.wav, .ogg)") { Patterns = new List<string> { "*.wav;*.ogg;" } },
+                    new FilePickerFileType("All files") { Patterns = new List<string> { "*" } }
+                ],
+                SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "audio.ogg",
+                SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Music)
             });
         }
 

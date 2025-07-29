@@ -13,6 +13,7 @@ using UndertaleModLib;
 using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.Models;
 using UndertaleModToolAvalonia.Services.DialogService;
+using UndertaleModToolAvalonia.Services.PlayerService;
 using UndertaleModToolAvalonia.Services.ProfileService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
@@ -26,6 +27,9 @@ namespace UndertaleModToolAvalonia.ViewModels
         private readonly EditorViewModel editorViewModel;
         private readonly IDialogService dialogService;
         private readonly IProfileService profileService;
+        
+        [ObservableProperty]
+        private IPlayer playerService;
 
         [ObservableProperty] private string titleMain = string.Empty;
 
@@ -33,12 +37,13 @@ namespace UndertaleModToolAvalonia.ViewModels
 
         [ObservableProperty] string? filePath = AppConstants.FilePath;
         
-        public MainWindowViewModel(IServiceProvider services, EditorViewModel editorViewModel, IProfileService profileService, IDialogService dialogService)
+        public MainWindowViewModel(IServiceProvider services, EditorViewModel editorViewModel, IProfileService profileService, IDialogService dialogService, IPlayer playerService)
         {
             this.services = services;
             this.editorViewModel = editorViewModel;
             this.profileService = profileService;
             this.dialogService = dialogService;
+            this.PlayerService = playerService;
             TitleMain = "UndertaleModTool by krzys_h, recreated by Joshua Vanderzee v:" + AppConstants.Version;
             Data = AppConstants.Data;
             WeakReferenceMessenger.Default.Register<TitleUpdateMessage>(this, (r, m) =>

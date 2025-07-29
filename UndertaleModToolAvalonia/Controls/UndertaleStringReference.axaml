@@ -23,10 +23,10 @@
 				<TextBlock Padding="4,0" Text="(null)" Foreground="DarkGray"/>
 			</VisualBrush.Visual>
 		</VisualBrush>
-		<ContextMenu x:Key="contextMenu">
+		<MenuFlyout x:Key="menuFlyout">
 			<MenuItem Header="Open in new tab" Command="{Binding #Self.OpenInNewTabCommand}" CommandParameter="{Binding #Self.ObjectReference}"/>
 			<MenuItem Header="Find all references" IsVisible="{Binding #Self.IsTypeReferenceable}" Command="{Binding #Self.FindAllReferencesCommand}" CommandParameter="{Binding #Self.ObjectReference}"/>
-		</ContextMenu>
+		</MenuFlyout>
 	</UserControl.Resources>
 	<Grid DataContext="{Binding $self}">
 		<Grid.ColumnDefinitions>
@@ -35,8 +35,7 @@
 		</Grid.ColumnDefinitions>
 		<TextBox Grid.Column="0" x:Name="ObjectText" DragDrop.AllowDrop="True"
                            ToolTip.Tip="This is an string reference. Change the value here to edit this just this value of all referenced values, or drag and drop another string instance from the tree on the left to change the reference"
-                           Text="{Binding #Self.ObjectReference, Mode=OneWay, Converter={StaticResource ObjToStringConverter}}"
-						   Background="{StaticResource EmptyBrush}">
+                           Text="{Binding #Self.ObjectReference.Content, Mode=OneWay}">
 			<TextBox.Styles>
 				<Style Selector="local|UndertaleStringReference:null-reference > Grid > TextBox">
 					<Setter Property="Background" Value="{StaticResource NullBrush}"/>

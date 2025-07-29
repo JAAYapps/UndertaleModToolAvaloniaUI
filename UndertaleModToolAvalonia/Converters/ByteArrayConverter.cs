@@ -8,7 +8,7 @@ namespace UndertaleModToolAvalonia.Converters
     {
         public byte[] loaded_for_edit = new byte[16];
         public byte[] bytes = new byte[16];
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
         {
             try
             {
@@ -20,7 +20,7 @@ namespace UndertaleModToolAvalonia.Converters
                 return "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00";
             }
         }
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
         {
             try
             {

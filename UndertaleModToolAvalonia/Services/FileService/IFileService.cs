@@ -9,9 +9,13 @@ namespace UndertaleModToolAvalonia.Services.FileService
     {
         Task<IStorageFile?> SaveFileAsync(IStorageProvider storageProvider, string path = "");
 
+        Task<IStorageFile?> SaveAudioFileAsync(IStorageProvider storageProvider, string path = "");
+
         Task<IStorageFile?> SaveTextFileAsync(IStorageProvider storageProvider, string path = "");
 
         Task<IReadOnlyList<IStorageFile>> LoadFileAsync(IStorageProvider storageProvider, string path = "");
+
+        Task<IReadOnlyList<IStorageFile>> LoadAudioFileAsync(IStorageProvider storageProvider, string path = "");
 
         Task<IReadOnlyList<IStorageFile>> LoadTextFileAsync(IStorageProvider storageProvider, string path = "");
     }

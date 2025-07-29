@@ -6,6 +6,7 @@
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
@@ -26,15 +27,17 @@
         <PackageReference Include="FluentAvalonia.BreadcrumbBar" Version="2.0.2" />
         <PackageReference Include="FluentAvalonia.FluentIcons" Version="1.1.201.1-preview7" />
         <PackageReference Include="FluentAvalonia.ProgressRing" Version="1.69.2" />
-        <PackageReference Include="FluentAvaloniaUI" Version="2.3.0" />
+        <PackageReference Include="FluentAvaloniaUI" Version="2.4.0" />
         <PackageReference Include="LibMpv.Avalonia" Version="1.0.0" />
         <PackageReference Include="LibMpv.MVVM" Version="1.0.0" />
         <PackageReference Include="log4net" Version="3.1.0" />
+        <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.7.0" />
         <PackageReference Include="MessageBox.Avalonia" Version="3.2.0" />
         <PackageReference Include="Microsoft.CodeAnalysis" Version="4.14.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" Version="4.14.0" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.6" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.7" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="PanAndZoom" Version="11.3.0.1" />
         <PackageReference Include="SFML.Audio" Version="2.6.1" />
         <PackageReference Include="SixLabors.ImageSharp" Version="3.1.10" />
     </ItemGroup>
@@ -54,8 +57,23 @@
         <HintPath>..\..\..\.nuget\packages\newtonsoft.json\13.0.3\lib\net6.0\Newtonsoft.Json.dll</HintPath>
       </Reference>
     </ItemGroup>
-
     <ItemGroup>
+      <Compile Update="Views\EditorViews\EditorComponents\UndertaleBackgroundEditorView.axaml.cs">
+        <DependentUpon>UndertaleBackgroundEditorView.axaml</DependentUpon>
+      </Compile>
+      <Compile Update="Views\EditorViews\EditorComponents\UndertaleGameEndEditorView.axaml.cs">
+        <DependentUpon>UndertaleGameEndEditorView.axaml</DependentUpon>
+      </Compile>
+      <Compile Update="Views\EditorViews\EditorComponents\UndertaleGeneralInfoEditorView.axaml.cs">
+        <DependentUpon>UndertaleGeneralInfoEditorView.axaml</DependentUpon>
+      </Compile>
+      <Compile Update="Views\EditorViews\EditorComponents\UndertaleGlobalInitEditorView.axaml.cs">
+        <DependentUpon>UndertaleGlobalInitEditorView.axaml</DependentUpon>
+		<SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\EditorViews\EditorComponents\UndertaleSoundEditorView.axaml.cs">
+        <DependentUpon>UndertaleSoundEditorView.axaml</DependentUpon>
+      </Compile>
       <Compile Update="Views\MainWindow.axaml.cs">
         <DependentUpon>MainWindow.axaml</DependentUpon>
         <SubType>Code</SubType>

@@ -98,15 +98,14 @@ public partial class UndertaleStringReference : UserControl
 
         if (undertaleString is not null)
         {
-            if (Resources.TryGetValue("contextMenu", out var menuResource) && menuResource is ContextMenu menu)
+            if (Resources.TryGetValue("menuFlyout", out var menuResource) && menuResource is MenuFlyout menu)
             {
-                menu.DataContext = undertaleString;
-                ObjectText.ContextMenu = menu;
+                ObjectText.ContextFlyout = menu;
             }
         }
         else
         {
-            ObjectText.ContextMenu = null;
+            ObjectText.ContextFlyout = null;
         }
     }
 

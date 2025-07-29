@@ -15,9 +15,11 @@ using UndertaleModToolAvalonia.Services.LoadingDialogService;
 using UndertaleModToolAvalonia.Services.PlayerService;
 using UndertaleModToolAvalonia.Services.ProfileService;
 using UndertaleModToolAvalonia.Services.ReferenceFinderService;
+using UndertaleModToolAvalonia.Services.TextureCacheService;
 using UndertaleModToolAvalonia.Services.UpdateService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
+using UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTypesDialog;
 using UndertaleModToolAvalonia.ViewModels.StartPageViewModels;
 using UndertaleModToolAvalonia.ViewModels.StartPageViewModels.DataItemViewModels;
 using UndertaleModToolAvalonia.ViewModels.StartPageViewModels.SettingsViewModels;
@@ -121,6 +123,8 @@ public partial class App : Application
         services.AddTransient<SettingsPageViewModel>();
         services.AddTransient<GMLSettingsViewModel>();
         services.AddTransient<RuntimePickerViewModel>();
+        services.AddTransient<FindReferencesTypesDialogViewModel>();
+        services.AddTransient<FindReferencesResultsViewModel>();
 
         services.AddSingleton<IProfileService, ProfileService>();
         services.AddSingleton<IDialogService, DialogService>();
@@ -128,6 +132,7 @@ public partial class App : Application
         services.AddSingleton<IUpdateService, UpdateService>();
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IReferenceFinderService, ReferenceFinderService>();
+        services.AddSingleton<ITextureCacheService, TextureCacheService>();
 
         services.AddTransient<MainWindow>(provider => new MainWindow
         {

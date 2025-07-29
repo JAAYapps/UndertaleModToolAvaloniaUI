@@ -8,9 +8,10 @@
 			xmlns:controlConverters="using:UndertaleModToolAvalonia.Converters.ControlConverters"
 			xmlns:controls="using:UndertaleModToolAvalonia.Controls"
 			xmlns:util="using:UndertaleModToolAvalonia.Utilities"
+			xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents"
             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-            x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleBackgroundEditor"
-			x:DataType="undertale:UndertaleBackground">
+            x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleBackgroundEditorView"
+			x:DataType="vm:UndertaleBackgroundEditorViewModel">
 	<UserControl.Resources>
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
@@ -36,17 +37,17 @@
 			<converters:IsVersionAtLeastConverter x:Key="IsVersionAtLeastConverter"/>
 		</Grid.Resources>
 		<TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Name</TextBlock>
-		<controls:UndertaleStringReference Grid.Row="0" Grid.Column="1" Margin="3" ObjectReference="{Binding Name}"/>
+		<controls:UndertaleStringReference Grid.Row="0" Grid.Column="1" Margin="3" ObjectReference="{Binding UndertaleBackground.Name}"/>
 
 		<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Transparent</TextBlock>
-		<CheckBox Grid.Row="1" Grid.Column="1" Margin="3" IsChecked="{Binding Transparent}"/>
+		<CheckBox Grid.Row="1" Grid.Column="1" Margin="3" IsChecked="{Binding UndertaleBackground.Transparent}"/>
 		<TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Smooth</TextBlock>
-		<CheckBox Grid.Row="2" Grid.Column="1" Margin="3" IsChecked="{Binding Smooth}"/>
+		<CheckBox Grid.Row="2" Grid.Column="1" Margin="3" IsChecked="{Binding UndertaleBackground.Smooth}"/>
 		<TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Preload</TextBlock>
-		<CheckBox Grid.Row="3" Grid.Column="1" Margin="3" IsChecked="{Binding Preload}"/>
+		<CheckBox Grid.Row="3" Grid.Column="1" Margin="3" IsChecked="{Binding UndertaleBackground.Preload}"/>
 
 		<TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Texture</TextBlock>
-		<local:UndertaleObjectReference Grid.Row="4" Grid.Column="1" Margin="3" ObjectReference="{Binding Texture}" ObjectType="{x:Type undertale:UndertaleTexturePageItem}"/>
+		<local:UndertaleObjectReference Grid.Row="4" Grid.Column="1" Margin="3" ObjectReference="{Binding UndertaleBackground.Texture}" ObjectType="{x:Type undertale:UndertaleTexturePageItem}"/>
 
 		<Grid Grid.Row="5" Grid.ColumnSpan="2" Margin="0" IsVisible="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2.0}">
 			<Grid.ColumnDefinitions>
@@ -69,38 +70,38 @@
 			</Grid.RowDefinitions>
 
 			<TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Unknown Always 2</TextBlock>
-			<TextBox Grid.Row="0" Grid.Column="1" Margin="3" Text="{Binding GMS2UnknownAlways2}"/>
+			<TextBox Grid.Row="0" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2UnknownAlways2}"/>
 
 			<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Tile Width</TextBlock>
-			<TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding GMS2TileWidth}"/>
+			<TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2TileWidth}"/>
 
 			<TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Tile Height</TextBlock>
-			<TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding GMS2TileHeight}"/>
+			<TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2TileHeight}"/>
 
 			<TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Output Border X</TextBlock>
-			<TextBox Grid.Row="3" Grid.Column="1" Margin="3" Text="{Binding GMS2OutputBorderX}"/>
+			<TextBox Grid.Row="3" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2OutputBorderX}"/>
 
 			<TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Output Border Y</TextBlock>
-			<TextBox Grid.Row="4" Grid.Column="1" Margin="3" Text="{Binding GMS2OutputBorderY}"/>
+			<TextBox Grid.Row="4" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2OutputBorderY}"/>
 
 			<TextBlock Grid.Row="5" Grid.Column="0" Margin="3">Tile Columns</TextBlock>
-			<TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding GMS2TileColumns}"/>
+			<TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2TileColumns}"/>
 
 			<TextBlock Grid.Row="6" Grid.Column="0" Margin="3">Items/frames per tile</TextBlock>
-			<TextBox Grid.Row="6" Grid.Column="1" Margin="3" Text="{Binding GMS2ItemsPerTileCount}"/>
+			<TextBox Grid.Row="6" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2ItemsPerTileCount}"/>
 
 			<TextBlock Grid.Row="7" Grid.Column="0" Margin="3">Tile Count</TextBlock>
-			<TextBox Grid.Row="7" Grid.Column="1" Margin="3" Text="{Binding GMS2TileCount}"/>
+			<TextBox Grid.Row="7" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2TileCount}"/>
 
 			<TextBlock Grid.Row="8" Grid.Column="0" Margin="3">Unknown Always Zero</TextBlock>
-			<TextBox Grid.Row="8" Grid.Column="1" Margin="3" Text="{Binding GMS2UnknownAlwaysZero}"/>
+			<TextBox Grid.Row="8" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2UnknownAlwaysZero}"/>
 
 			<TextBlock Grid.Row="9" Grid.Column="0" Margin="3">Frame Time (microseconds)</TextBlock>
-			<TextBox Grid.Row="9" Grid.Column="1" Margin="3" Text="{Binding GMS2FrameLength}"/>
+			<TextBox Grid.Row="9" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2FrameLength}"/>
 
 			<TextBlock Grid.Row="10" Grid.Column="0" Margin="3">Tile IDs</TextBlock>
 			<DataGrid Grid.Row="10" Grid.Column="1" x:Name="TileIdList"
-					  ItemsSource="{Binding GMS2TileIds}" MaxHeight="279" Margin="0,0,0,3"
+					  ItemsSource="{Binding UndertaleBackground.GMS2TileIds}" MaxHeight="279" Margin="0,0,0,3"
 					  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
 					  HeadersVisibility="Column" SelectionMode="Single" CanUserReorderColumns="True" CanUserResizeColumns="True">
 				<DataGrid.Styles>
@@ -127,12 +128,12 @@
 				<controlConverters:VersionToCursorConverter x:Key="versionToCursor" />
 			</Viewbox.Resources>
 			<Canvas Name="BGTexture"
-                    Width="{Binding Texture.BoundingWidth, Mode=OneWay}" Height="{Binding Texture.BoundingHeight, Mode=OneWay}"
+                    Width="{Binding UndertaleBackground.Texture.BoundingWidth, Mode=OneWay}" Height="{Binding UndertaleBackground.Texture.BoundingHeight, Mode=OneWay}"
 					Cursor="{Binding Converter={StaticResource versionToCursor}, ConverterParameter='2.0'}">
 				<Border Background="{DynamicResource TransparencyGridBrushBrush}">
-					<local:UndertaleTexturePageItemDisplay DataContext="{Binding Texture, Mode=OneWay}"/>
+					<local:UndertaleTexturePageItemDisplay DataContext="{Binding UndertaleBackground.Texture, Mode=OneWay}"/>
 				</Border>
-				<Rectangle Name="TileRectangle" Canvas.Left="0" Canvas.Top="0" Width="{Binding GMS2TileWidth, Mode=OneWay}" Height="{Binding GMS2TileHeight, Mode=OneWay}" Stroke="#FFB23131" ZIndex="50" StrokeThickness="2"
+				<Rectangle Name="TileRectangle" Canvas.Left="0" Canvas.Top="0" Width="{Binding UndertaleBackground.GMS2TileWidth, Mode=OneWay}" Height="{Binding UndertaleBackground.GMS2TileHeight, Mode=OneWay}" Stroke="#FFB23131" ZIndex="50" StrokeThickness="2"
                            IsVisible="{x:Static Member=util:UndertaleHelper.IsGMS2}">
 					<Rectangle.Fill>
 						<SolidColorBrush Color="Red" Opacity=".1"/>

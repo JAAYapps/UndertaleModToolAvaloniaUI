@@ -7,10 +7,11 @@ using System;
 using System.Windows.Input;
 using UndertaleModLib.Models;
 using UndertaleModToolAvalonia.Controls;
+using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents;
 
 namespace UndertaleModToolAvalonia.Views.EditorViews.EditorComponents;
 
-public partial class UndertaleBackgroundEditor : DataUserControl
+public partial class UndertaleBackgroundEditorView : DataUserControl
 {
     private readonly ContextMenu tileContextMenu = new();
 
@@ -23,7 +24,7 @@ public partial class UndertaleBackgroundEditor : DataUserControl
         set => SetValue(FindAllReferencesCommandProperty, value);
     }
 
-    public UndertaleBackgroundEditor()
+    public UndertaleBackgroundEditorView()
     {
         InitializeComponent();
         var item = new MenuItem()
@@ -51,8 +52,8 @@ public partial class UndertaleBackgroundEditor : DataUserControl
 
     private void FindAllTileReferencesItem_Click(object? sender, RoutedEventArgs e)
     {
-        var obj = (sender as Control)?.DataContext;
-        var tileSet = obj as UndertaleBackground;
+        var obj = (DataContext as UndertaleBackgroundEditorViewModel);
+        var tileSet = obj?.UndertaleBackground;
         if (tileSet is null || TileIdList.SelectedItem is not UndertaleBackground.TileID selectedID)
             return;
         if (FindAllReferencesCommand != null && FindAllReferencesCommand.CanExecute((tileSet, selectedID)))

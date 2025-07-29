@@ -34,5 +34,8 @@ namespace UndertaleModToolAvalonia
         public static bool CrashedWhileEditing = false;
 
         public static string ProfileHash = null;
+
+        public const string UndertaleStringFormat = "application/x-undertale-string";
+        public const string UndertaleObjectFormat = "application/x-undertale-object";
     }
 }

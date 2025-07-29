@@ -2,9 +2,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="using:UndertaleModToolAvalonia"
+        xmlns:local="using:UndertaleModToolAvalonia.Views.EditorViews"
         xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels"
 	    xmlns:vmComponents="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents"
+		xmlns:components="using:UndertaleModToolAvalonia.Views.EditorViews.EditorComponents"
+		xmlns:ui="using:FluentAvalonia.UI.Controls"
+		xmlns:undertale="using:UndertaleModLib.Models"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorView"
         x:DataType="vm:EditorViewModel" IsEnabled="{Binding IsEnabled}">
@@ -13,175 +16,170 @@
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
 		<vm:EditorViewModel/>
 	</Design.DataContext>
-  <Grid>
-    <DockPanel>
-      <Grid DockPanel.Dock="Bottom">
-        <TextBox x:Name="CommandBox" AcceptsReturn="True" Margin="0,0,55,0"/>
-        <Label Content="None" HorizontalAlignment="Right" VerticalAlignment="Top" VerticalContentAlignment="Top" Name="ObjectLabel" Margin="0,0,15,0"/>
-      </Grid>
-      <Grid>
-        <Grid.RowDefinitions>
-          <RowDefinition Height="Auto"/>
-          <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="1*"/>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="3*"/>
-        </Grid.ColumnDefinitions>
-        <Grid Grid.Column="0" Grid.Row="0" Margin="5,5,5,0">
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-          </Grid.RowDefinitions>
-          <StackPanel Grid.Row="0" Margin="0,0,0,5" Orientation="Horizontal">
-            <Button Margin="0,0,2,0" Name="BackButton" Height="26" Width="50">
-			  <Button.Styles>
-				<Style Selector="Button">
-			      <Setter Property="Background">
-				    <Setter.Value>
-				      <ImageBrush Source="/Assets/arrow_blue.png" Stretch="None"/>
-				    </Setter.Value>
-				  </Setter>
-			    </Style>
-			    <Style Selector="Button:pointerover /template/ ContentPresenter">
-				  <Setter Property="Background">
-				    <Setter.Value>
-				      <ImageBrush Source="/Assets/arrow_red.png" Stretch="None"/>
-				    </Setter.Value>
-				  </Setter>
-			    </Style>
-			  </Button.Styles>
-            </Button>
-            <Button Name="ForwardButton" Margin="0,0,2,0" Height="26" Width="50">
-			  <Button.Styles>
-				<Style Selector="Button">
-				  <Setter Property="Background">
-					<Setter.Value>
-					  <ImageBrush Source="/Assets/arrow_blue.png" Stretch="None" TransformOrigin="0.5,0.5">
-						  <ImageBrush.Transform>
-							  <RotateTransform Angle="180" CenterX="25" CenterY="12.4"/>
-						  </ImageBrush.Transform>
-					  </ImageBrush>
-					</Setter.Value>
-				  </Setter>
-				</Style>
-				  <Style Selector="Button:pointerover /template/ ContentPresenter">
-					<Setter Property="Background">
-					  <Setter.Value>
-						<ImageBrush Source="/Assets/arrow_red.png" Stretch="None" TransformOrigin="0.5,0.5">
-						  <ImageBrush.Transform>
-							<RotateTransform Angle="180" CenterX="25" CenterY="12.4"/>
-						  </ImageBrush.Transform>
-						</ImageBrush>
-					  </Setter.Value>
-					</Setter>
-				  </Style>
-				</Button.Styles>
-            </Button>
-          </StackPanel>
+	<Grid>
+		<DockPanel>
+			<Grid DockPanel.Dock="Bottom">
+				<TextBox x:Name="CommandBox" AcceptsReturn="True" Margin="0,0,55,0"/>
+				<Label Content="None" HorizontalAlignment="Right" VerticalAlignment="Top" VerticalContentAlignment="Top" Name="ObjectLabel" Margin="0,0,15,0"/>
+			</Grid>
+			<Grid>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="*"/>
+				</Grid.RowDefinitions>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="1*" MinWidth="250"/>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="3*"/>
+				</Grid.ColumnDefinitions>
+				<Grid Grid.Column="0" Grid.Row="0" Margin="5,5,5,0">
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+					</Grid.RowDefinitions>
+					<StackPanel Grid.Row="0" Margin="0,0,0,5" Orientation="Horizontal">
+						<Button Margin="0,0,2,0" Name="BackButton" Height="26" Width="50">
+							<Button.Styles>
+								<Style Selector="Button">
+									<Setter Property="Background">
+										<Setter.Value>
+											<ImageBrush Source="/Assets/arrow_blue.png" Stretch="None"/>
+										</Setter.Value>
+									</Setter>
+								</Style>
+								<Style Selector="Button:pointerover /template/ ContentPresenter">
+									<Setter Property="Background">
+										<Setter.Value>
+											<ImageBrush Source="/Assets/arrow_red.png" Stretch="None"/>
+										</Setter.Value>
+									</Setter>
+								</Style>
+							</Button.Styles>
+						</Button>
+						<Button Name="ForwardButton" Margin="0,0,2,0" Height="26" Width="50">
+							<Button.Styles>
+								<Style Selector="Button">
+									<Setter Property="Background">
+										<Setter.Value>
+											<ImageBrush Source="/Assets/arrow_blue.png" Stretch="None" TransformOrigin="0.5,0.5">
+												<ImageBrush.Transform>
+													<RotateTransform Angle="180" CenterX="25" CenterY="12.4"/>
+												</ImageBrush.Transform>
+											</ImageBrush>
+										</Setter.Value>
+									</Setter>
+								</Style>
+								<Style Selector="Button:pointerover /template/ ContentPresenter">
+									<Setter Property="Background">
+										<Setter.Value>
+											<ImageBrush Source="/Assets/arrow_red.png" Stretch="None" TransformOrigin="0.5,0.5">
+												<ImageBrush.Transform>
+													<RotateTransform Angle="180" CenterX="25" CenterY="12.4"/>
+												</ImageBrush.Transform>
+											</ImageBrush>
+										</Setter.Value>
+									</Setter>
+								</Style>
+							</Button.Styles>
+						</Button>
+					</StackPanel>
 
-          <TextBox Grid.Row="1" Name="SearchBox">
-            
-          </TextBox>
-        </Grid>
-		  <TreeView Grid.Column="0" Grid.Row="1" Name="MainTree" Margin="5" ItemsSource="{Binding FilteredRootNodes}">
-			  <TreeView.Styles>
-				  <Style Selector="TreeViewItem" x:DataType="vmComponents:ResourceNodeViewModel">
-					  <Setter Property="IsExpanded" Value="{Binding ExpandedByDefault, Mode=TwoWay}" />
-					  <Setter Property="ContextFlyout">
-						  <MenuFlyout>
-							  <MenuItem Header="Open in new tab"
-										Command="{Binding OpenInNewTabCommand}"
-										CommandParameter="{Binding Model}"
-										IsVisible="{Binding IsResourceItem}"/>
+					<TextBox Grid.Row="1" Name="SearchBox" Text="{Binding SearchText}">
 
-							  <MenuItem Header="Find all references"
-										Command="{Binding FindAllReferencesCommand}"
-										CommandParameter="{Binding Model}"
-										IsVisible="{Binding CanFindReferences}" />
+					</TextBox>
+				</Grid>
+				<TreeView Grid.Column="0" Grid.Row="1" Name="MainTree" Margin="5"
+						  ItemsSource="{Binding FilteredRootNodes}"
+						  SelectedItem="{Binding SelectedNode}">
+					<TreeView.Styles>
+						<Style Selector="TreeViewItem" x:DataType="vmComponents:ResourceNodeViewModel">
+							<Setter Property="IsExpanded" Value="{Binding ExpandedByDefault, Mode=TwoWay}" />
+							<Setter Property="ContextFlyout">
+								<MenuFlyout>
+									<MenuItem Header="Open in new tab"
+											  Command="{Binding OpenInNewTabCommand}"
+											  CommandParameter="{Binding Model}"
+											  IsVisible="{Binding IsResourceItem}"/>
 
-							  <MenuItem Header="Copy name to clipboard"
-										Command="{Binding CopyItemToClipboardCommand}"
-										CommandParameter="{Binding}"
-										IsVisible="{Binding IsResourceItem}" />
+									<MenuItem Header="Find all references"
+											  Command="{Binding FindAllReferencesCommand}"
+											  CommandParameter="{Binding Model}"
+											  IsVisible="{Binding CanFindReferences}" />
 
-							  <MenuItem Header="Add"
-										Command="{Binding AddItemCommand}"
-										CommandParameter="{Binding}"
-										IsVisible="{Binding IsCategory}" />
+									<MenuItem Header="Copy name to clipboard"
+											  Command="{Binding CopyItemToClipboardCommand}"
+											  CommandParameter="{Binding}"
+											  IsVisible="{Binding IsResourceItem}" />
 
-							  <MenuItem Header="Delete"
-										Command="{Binding DeleteItemCommand}"
-										CommandParameter="{Binding}"
-										IsVisible="{Binding IsResourceItem}" />
-						  </MenuFlyout>
-					  </Setter>
-				  </Style>
-			  </TreeView.Styles>
-			  <TreeView.DataTemplates>
-				  <TreeDataTemplate DataType="vmComponents:ResourceNodeViewModel"
-									ItemsSource="{Binding Children}">
+									<MenuItem Header="Add"
+											  Command="{Binding AddItemCommand}"
+											  CommandParameter="{Binding}"
+											  IsVisible="{Binding IsCategory}" />
 
-					  <Border Background="Transparent"
-							  Padding="4,2"
-							  CornerRadius="3">
-						  <TextBlock Text="{Binding Header}" IsHitTestVisible="False" />
-					  </Border>
-				  </TreeDataTemplate>
-			  </TreeView.DataTemplates>
-		  </TreeView>
-        <GridSplitter Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Center" VerticalAlignment="Stretch" ShowsPreview="True" Width="3"/>
+									<MenuItem Header="Delete"
+											  Command="{Binding DeleteItemCommand}"
+											  CommandParameter="{Binding}"
+											  IsVisible="{Binding IsResourceItem}" />
+								</MenuFlyout>
+							</Setter>
+						</Style>
+					</TreeView.Styles>
+					<TreeView.DataTemplates>
+						<TreeDataTemplate DataType="vmComponents:ResourceNodeViewModel"
+										  ItemsSource="{Binding Children}">
 
-        <Grid Grid.Column="2" Grid.RowSpan="2">
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-          </Grid.RowDefinitions>
+							<Border Background="Transparent"
+									Padding="4,2"
+									CornerRadius="3">
+								<TextBlock Text="{Binding Header}" IsHitTestVisible="False" />
+							</Border>
+						</TreeDataTemplate>
+					</TreeView.DataTemplates>
+				</TreeView>
+				
+				<GridSplitter Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Center" VerticalAlignment="Stretch" ShowsPreview="True" Width="3"/>
 
-          <Grid Grid.Row="0" Name="TabsGrid" UseLayoutRounding="True" Margin="0,0,0,3">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*"/>
-              <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <ScrollViewer Grid.Column="0" Name="TabScrollViewer" Height="26"
-                          HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden">
-              <TabControl Name="TabController" Height="22" TabStripPlacement="Top">
-                <TabControl.Resources>
-                  <ContextMenu x:Key="TabMenu">
-                    <MenuItem Header="Close" HotKey="Ctrl+W"/>
-                    <MenuItem Header="Close other tabs" >
-                      
-                    </MenuItem>
-                    <MenuItem Header="Close all tabs" HotKey="Ctrl+Shift+W"/>
-                  </ContextMenu>
-                </TabControl.Resources>
-                <TabControl.ItemTemplate>
-                  
-                </TabControl.ItemTemplate>
-                <TabControl.ContentTemplate>
-                  
-                </TabControl.ContentTemplate>
-              </TabControl>
-            </ScrollViewer>
-            <StackPanel Grid.Column="1" Margin="5,5,15,5" Orientation="Horizontal">
-              <Button Width="30" Height="20" MinWidth="30" MinHeight="20">
-                <Image Source="/Assets/tabs_left_button.png" Stretch="Uniform"/>
-              </Button>
-              <Button Width="30" Height="20" MinWidth="30" MinHeight="20">
-                <Image Source="/Assets/tabs_right_button.png" Stretch="Uniform"/>
-              </Button>
-            </StackPanel>
-          </Grid>
-          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <ContentControl Margin="10" Name="DataEditor">
-              <ContentControl.Resources>
+				<Grid Grid.Column="2" Grid.Row="0" Grid.RowSpan="2" Name="TabsGrid" UseLayoutRounding="True" Margin="10,0,0,3">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="auto"/>
+						<RowDefinition Height="*"/>
+					</Grid.RowDefinitions>
 
-              </ContentControl.Resources>
-            </ContentControl>
-          </ScrollViewer>
-        </Grid>
-      </Grid>
-    </DockPanel>
-  </Grid>
+					<ui:TabView Name="TabController" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,10,0" TabItems="{Binding Tabs}" SelectedItem="{Binding CurrentTab}"
+								CanDragTabs="True" IsAddTabButtonVisible="False" TabWidthMode="SizeToContent" VerticalAlignment="Stretch">
+						<ui:TabView.ContextFlyout>
+							<MenuFlyout>
+								<MenuItem Header="Close" HotKey="Ctrl+W"/>
+								<MenuItem Header="Close other tabs" >
+
+								</MenuItem>
+								<MenuItem Header="Close all tabs" HotKey="Ctrl+Shift+W"/>
+							</MenuFlyout>
+						</ui:TabView.ContextFlyout>
+						<ui:TabView.TabItemTemplate>
+							<DataTemplate x:DataType="vmComponents:TabViewModel">
+								<ui:TabViewItem Header="{Binding TabTitle}" IconSource="avares://UndertaleModToolAvalonia/Assets/icon.ico" />
+							</DataTemplate>
+						</ui:TabView.TabItemTemplate>
+
+					</ui:TabView>
+					<ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" Margin="0,0,10,0">
+						<ContentControl Margin="0,0,0,20" Content="{Binding CurrentTab.CurrentObject}" VerticalContentAlignment="Stretch"/>
+					</ScrollViewer>
+					<!--<StackPanel Grid.Column="1" Margin="5,10,15,5" VerticalAlignment="Top" Orientation="Horizontal">
+						<Button Width="30" Height="20" MinWidth="30" MinHeight="20">
+							<Image Source="/Assets/tabs_left_button.png" Stretch="Uniform"/>
+						</Button>
+						<Button Width="30" Height="20" MinWidth="30" MinHeight="20">
+							<Image Source="/Assets/tabs_right_button.png" Stretch="Uniform"/>
+						</Button>
+					</StackPanel>-->
+				</Grid>
+			</Grid>
+		</DockPanel>
+	</Grid>
 </UserControl>

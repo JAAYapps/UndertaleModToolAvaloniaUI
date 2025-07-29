@@ -15,6 +15,7 @@ namespace UndertaleModToolAvalonia.Converters.ControlConverters
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value == null) return AvaloniaProperty.UnsetValue;
+            Console.WriteLine(value);
             return value is string;
         }
 
