@@ -66,6 +66,25 @@ namespace UndertaleModToolAvalonia.Services.FileService
             });
         }
 
+        public async Task<IStorageFile?> SaveImageFileAsync(IStorageProvider storageProvider, string path = "")
+        {
+            string directory = !string.IsNullOrEmpty(path) ? Path.GetFullPath(path) : "";
+            string name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : "";
+            return await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
+            {
+                Title = "Save Text File",
+                FileTypeChoices = new List<FilePickerFileType>
+                {
+                    new FilePickerFileType("PNG files (.png)") { Patterns = new List<string> { "*.png" } },
+                    new FilePickerFileType("All files") { Patterns = new List<string> { "*" } }
+                },
+                ShowOverwritePrompt = true,
+                SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "image.png",
+                DefaultExtension = "*.png",
+                SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Pictures)
+            });
+        }
+
         public async Task<IReadOnlyList<IStorageFile>> LoadFileAsync(IStorageProvider storageProvider, string path = "")
         {
             string directory = !string.IsNullOrEmpty(path) ? Path.GetFullPath(path) : "";
@@ -114,6 +133,23 @@ namespace UndertaleModToolAvalonia.Services.FileService
                 ],
                 SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "data.txt",
                 SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Documents)
+            });
+        }
+
+        public async Task<IReadOnlyList<IStorageFile>> LoadImageFileAsync(IStorageProvider storageProvider, string path = "")
+        {
+            string directory = !string.IsNullOrEmpty(path) ? Path.GetFullPath(path) : "";
+            string name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : "";
+            return await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+            {
+                AllowMultiple = false,
+                Title = "Load Text File",
+                FileTypeFilter = [
+                    new FilePickerFileType("PNG files (.png)") { Patterns = new List<string> { "*.png" } },
+                    new FilePickerFileType("All files") { Patterns = new List<string> { "*" } }
+                ],
+                SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "image.png",
+                SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Pictures)
             });
         }
     }

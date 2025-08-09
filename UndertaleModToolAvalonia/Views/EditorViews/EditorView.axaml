@@ -93,7 +93,7 @@
 						  SelectedItem="{Binding SelectedNode}">
 					<TreeView.Styles>
 						<Style Selector="TreeViewItem" x:DataType="vmComponents:ResourceNodeViewModel">
-							<Setter Property="IsExpanded" Value="{Binding ExpandedByDefault, Mode=TwoWay}" />
+							<Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
 							<Setter Property="ContextFlyout">
 								<MenuFlyout>
 									<MenuItem Header="Open in new tab"

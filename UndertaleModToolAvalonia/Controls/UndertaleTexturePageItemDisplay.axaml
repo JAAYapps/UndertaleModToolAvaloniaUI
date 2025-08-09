@@ -4,19 +4,20 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:undertale="using:UndertaleModLib.Models"
 			 xmlns:converters="using:UndertaleModToolAvalonia.Converters"
+			 xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.Controls.UndertaleTexturePageItemDisplay"
-			 x:DataType="undertale:UndertaleTexturePageItem" UseLayoutRounding="True">
+			 x:DataType="vm:UndertaleTexturePageItemEditorViewModel" UseLayoutRounding="True">
 	<UserControl.Resources>
 		<converters:UndertaleCachedImageLoader x:Key="UndertaleCachedImageLoader"/>
 	</UserControl.Resources>
-	<Canvas Width="{Binding BoundingWidth, Mode=OneWay}" Height="{Binding BoundingHeight, Mode=OneWay}">
-		<Border Canvas.Left="{Binding TargetX, Mode=OneWay}" Canvas.Top="{Binding TargetY, Mode=OneWay}"
-                Width="{Binding TargetWidth, Mode=OneWay}" Height="{Binding TargetHeight, Mode=OneWay}"
-                BorderBrush="DarkCyan" BorderThickness="1" Name="RenderAreaBorder" RenderOptions.BitmapInterpolationMode="None">
+	<Canvas Width="{Binding BoundingWidth, Mode=TwoWay}" Height="{Binding BoundingHeight, Mode=TwoWay}">
+		<Border Canvas.Left="{Binding TargetX, Mode=TwoWay}" Canvas.Top="{Binding TargetY, Mode=TwoWay}"
+                Width="{Binding TargetWidth, Mode=TwoWay}" Height="{Binding TargetHeight, Mode=TwoWay}"
+                BorderBrush="DarkCyan" BorderThickness="1" BackgroundSizing="InnerBorderEdge" Name="RenderAreaBorder" RenderOptions.BitmapInterpolationMode="None">
 			<Border.Background>
 				<ImageBrush
-                    Source="{Binding ., Mode=OneWay, Converter={StaticResource UndertaleCachedImageLoader}, ConverterParameter=nocache}"
+                    Source="{Binding TexturePageItem, Mode=OneWay, Converter={StaticResource UndertaleCachedImageLoader}, ConverterParameter=nocache}"
                     TileMode="None" Stretch="None">
 				</ImageBrush>
 			</Border.Background>

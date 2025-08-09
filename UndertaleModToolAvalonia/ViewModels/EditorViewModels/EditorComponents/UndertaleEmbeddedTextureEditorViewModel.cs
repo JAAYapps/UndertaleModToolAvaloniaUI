@@ -51,7 +51,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
             }
 
             // Use the FileService to get a file path
-            var files = await fileService.LoadFileAsync(storageProvider);
+            var files = await fileService.LoadImageFileAsync(storageProvider);
             var filePath = files?.FirstOrDefault()?.Path.LocalPath;
 
             if (string.IsNullOrEmpty(filePath))
@@ -104,7 +104,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
                 return;
             }
             
-            var storage = await fileService.SaveFileAsync(storageProvider);
+            var storage = await fileService.SaveImageFileAsync(storageProvider);
 
             if (storage == null || string.IsNullOrEmpty(storage.Name))
                 return; // User cancelled

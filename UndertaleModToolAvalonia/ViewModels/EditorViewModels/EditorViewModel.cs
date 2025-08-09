@@ -46,7 +46,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 {
     public partial class EditorViewModel : ViewModelBase
     {
-        [ObservableProperty] private int currentTabIndex = 0;
+        // [ObservableProperty] private int currentTabIndex = 0;
 
         [ObservableProperty] private object highlighted;
 
@@ -164,7 +164,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
         public EditorViewModel()
         {
-            BuildTree(null);
+            ApplyFilter(null);
             Highlighted = new Description("Welcome to UndertaleModTool!", "Open a data.win file to get started, then double click on the items on the left to view them.");
             var asset = GetViewModelFromObject(Highlighted);
             OpenInTab(asset, false, asset.MainText);
@@ -205,18 +205,38 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
         partial void OnSearchTextChanged(string value)
         {
-            ApplyFilter();
+            ApplyFilter(AppConstants.Data!);
         }
 
-        private void BuildChildren(ResourceNodeViewModel root, string catagory, IEnumerable<UndertaleObject> children)
+        //private void BuildChildren(ResourceNodeViewModel root, string category, IEnumerable<UndertaleObject> children)
+        //{
+
+        //    if (children == null || !children.Any())
+        //        return;
+        //    var cat = new ResourceNodeViewModel(category, null, this, referenceFinderService, false, children);
+        //    root.Children.Add(cat);
+        //}
+
+        private void BuildChildren(ResourceNodeViewModel root, string category, IEnumerable<UndertaleObject> children, bool virtualize = true)
         {
-            var cat = new ResourceNodeViewModel(catagory, null, this, referenceFinderService);
-            if (children == null)
+            if (children == null || !children.Any())
                 return;
-            foreach (var child in children)
+
+            // We pass the children to the constructor only if we want virtualization.
+            var cat = new ResourceNodeViewModel(category, null, this, referenceFinderService, false, (virtualize ? children : null));
+
+            // If we are NOT virtualizing (i.e., showing search results),
+            // we create all the child nodes immediately.
+            if (!virtualize)
             {
-                cat.Children.Add(new ResourceNodeViewModel(child.ToString(), child, this, referenceFinderService));
+                foreach (var child in children)
+                {
+                    cat.Children.Add(new ResourceNodeViewModel(child.ToString(), child, this, referenceFinderService));
+                }
+
+                cat.MarkAsLoaded();
             }
+
             root.Children.Add(cat);
         }
 
@@ -257,17 +277,39 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             BuildChildren(dataNode, "Particle system emitters", data != null ? data.ParticleSystemEmitters : []);
             allNodes.Add(dataNode);
             unfilteredRootNodes = allNodes;
-
-            ApplyFilter();
         }
 
-        private void ApplyFilter()
+        //private void ApplyFilter()
+        //{
+        //    FilteredRootNodes.Clear();
+
+        //    if (string.IsNullOrWhiteSpace(SearchText))
+        //    {
+        //        // If search is empty, show the entire unfiltered tree
+        //        foreach (var node in unfilteredRootNodes)
+        //        {
+        //            FilteredRootNodes.Add(node);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        // If there is search text, build a new filtered tree
+        //        var filteredNodes = FilterNodeList(unfilteredRootNodes);
+        //        foreach (var node in filteredNodes)
+        //        {
+        //            FilteredRootNodes.Add(node);
+        //        }
+        //    }
+        //}
+
+        private void ApplyFilter(UndertaleData data)
         {
             FilteredRootNodes.Clear();
+            unfilteredRootNodes.Clear();
 
             if (string.IsNullOrWhiteSpace(SearchText))
             {
-                // If search is empty, show the entire unfiltered tree
+                BuildTree(data);
                 foreach (var node in unfilteredRootNodes)
                 {
                     FilteredRootNodes.Add(node);
@@ -275,12 +317,36 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             }
             else
             {
-                // If there is search text, build a new filtered tree
-                var filteredNodes = FilterNodeList(unfilteredRootNodes);
-                foreach (var node in filteredNodes)
+                // SEARCHING: Filter the raw data and build a new, non-virtualized result tree.
+                var searchRootNode = new ResourceNodeViewModel("Search Results", null, this, referenceFinderService, true);
+
+                if (AppConstants.Data != null)
                 {
-                    FilteredRootNodes.Add(node);
+                    // Filter each category of raw data using LINQ and build child nodes for the results.
+                    BuildChildren(searchRootNode, "Sounds", data != null ? data.Sounds?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : [], false);
+                    BuildChildren(searchRootNode, "Sprites", data != null ? data.Sprites?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : [], false);
+                    BuildChildren(searchRootNode, "Backgrounds & Tile sets", data != null ? data.Backgrounds?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : [], false);
+                    BuildChildren(searchRootNode, "Paths", data != null ? data.Paths?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : [], false);
+                    BuildChildren(searchRootNode, "Scripts", data != null ? data.Scripts?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : [], false);
+                    BuildChildren(searchRootNode, "Shaders", data != null ? data.Shaders?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : [], false);
+                    BuildChildren(searchRootNode, "Game objects", data != null ? data.GameObjects?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : [], false);
+                    BuildChildren(searchRootNode, "Rooms", data != null ? data.Rooms?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : [], false);
+                    BuildChildren(searchRootNode, "Extensions", data != null ? data.Extensions?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : []);
+                    BuildChildren(searchRootNode, "Texture page items", data != null ? data.TexturePageItems?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : []);
+                    BuildChildren(searchRootNode, "Code", data != null ? data.Code?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : []);
+                    BuildChildren(searchRootNode, "Variables", data != null ? data.Variables?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : []);
+                    BuildChildren(searchRootNode, "Functions", data != null ? data.Functions?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : []);
+                    BuildChildren(searchRootNode, "Code locals", data != null ? data.CodeLocals?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : []);
+                    BuildChildren(searchRootNode, "Strings", data != null ? data.Strings?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : []);
+                    BuildChildren(searchRootNode, "Embedded textures", data != null ? data.EmbeddedTextures?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : []);
+                    BuildChildren(searchRootNode, "Embedded audio", data != null ? data.EmbeddedAudio?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : []);
+                    BuildChildren(searchRootNode, "Texture group information", data != null ? data.TextureGroupInfo?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : []);
+                    BuildChildren(searchRootNode, "Embedded images", data != null ? data.EmbeddedImages?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : []);
+                    BuildChildren(searchRootNode, "Particle systems", data != null ? data.ParticleSystems?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : []);
+                    BuildChildren(searchRootNode, "Particle system emitters", data != null ? data.ParticleSystemEmitters?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : []);
                 }
+
+                FilteredRootNodes.Add(searchRootNode);
             }
         }
 
@@ -434,7 +500,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             // https://docs.microsoft.com/en-us/dotnet/api/system.runtime.gcsettings.largeobjectheapcompactionmode?view=net-6.0
             GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             GC.Collect();
-            BuildTree(AppConstants.Data);
+            ApplyFilter(AppConstants.Data);
             WeakReferenceMessenger.Default.Send(new TitleUpdateMessage());
         }
 
@@ -661,7 +727,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         [RelayCommand]
         private void DeleteItem(ResourceNodeViewModel? resourceNode)
         {
-            if (resourceNode?.Model is not UndertaleResource resource) return;
+            if (resourceNode?.Model is not UndertaleObject resource) return;
 
             // Find the parent node to remove the child from its collection
             // (This requires having a reference to the parent in the child node, or searching the tree)
@@ -695,9 +761,11 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         [RelayCommand]
         private void CloseAssetTab(TabViewModel tab)
         {
-            if (tab == null) return;
+            if (tab != null && Tabs.Count > 0)
+            {
                 Console.WriteLine(tab.ToString());
-            // TODO I will adapt the old CloseTab(asset, true) method here
+                CloseTab(tab, Tabs.Count == 1);
+            }
         }
 
         [RelayCommand]
@@ -764,12 +832,12 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         private EditorContentViewModel GetViewModelFromObject(object asset)
         {
             if (asset is Description)
-                return new DescriptionViewModel(GetTitleForObject(asset), (Description)asset);
+                return new DescriptionViewModel(GetTitleForObject(asset) ?? "Unknown", (Description)asset);
             if (asset is UndertaleGeneralInfo)
-                return new UndertaleGeneralInfoEditorViewModel(GetTitleForObject(asset), (UndertaleGeneralInfo)asset, AppConstants.Data.Options, AppConstants.Data.Language);
+                return new UndertaleGeneralInfoEditorViewModel(GetTitleForObject(asset) ?? "Unknown", (UndertaleGeneralInfo)asset, AppConstants.Data!.Options, AppConstants.Data.Language);
             if (asset is IList<UndertaleGlobalInit> globalInits)
             {
-                string title = GetTitleForObject(asset);
+                string? title = GetTitleForObject(asset);
                 if (title == "Global Init")
                     return new UndertaleGlobalInitEditorViewModel(title, globalInits);
                 if (title == "Game End")
@@ -777,7 +845,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             }
             if (asset is UndertaleObject dataRes)
             {
-                string name = GetTitleForObject(asset);
+                string name = GetTitleForObject(asset) ?? "Unknown";
                 EditorContentViewModel? model = dataRes switch
                 {
                     // UndertaleAudioGroup => "Audio Group",
@@ -792,7 +860,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     //UndertaleGameObject => "Game Object",
                     //UndertaleRoom => "Room",
                     //UndertaleExtension => "Extension",
-                    //UndertaleTexturePageItem => "Texture Page Item",
+                    UndertaleTexturePageItem => new UndertaleTexturePageItemEditorViewModel(name, (UndertaleTexturePageItem)asset, this, textureCacheService, fileService),
                     //UndertaleCode => "Code",
                     //UndertaleVariable => "Variable",
                     //UndertaleFunction => "Function",
@@ -800,7 +868,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     UndertaleEmbeddedTexture => new UndertaleEmbeddedTextureEditorViewModel(name, (UndertaleEmbeddedTexture)asset, this, fileService, textureCacheService),
                     UndertaleEmbeddedAudio => new UndertaleEmbeddedAudioEditorViewModel(name, (UndertaleEmbeddedAudio)asset, playerService, fileService),
                     //UndertaleTextureGroupInfo => "Texture Group Info",
-                    //UndertaleEmbeddedImage => "Embedded Image",
+                    UndertaleEmbeddedImage => new UndertaleEmbeddedImageEditorViewModel(name, (UndertaleEmbeddedImage)asset),
                     //UndertaleSequence => "Sequence",
                     //UndertaleAnimationCurve => "Animation Curve",
                     //UndertaleParticleSystem => "Particle System",
@@ -821,8 +889,8 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                 return;
 
             // close auto-closing tab
-            if (Tabs.Count > 0 && CurrentTabIndex >= 0 && CurrentTab.AutoClose)
-                CloseTab(CurrentTab.TabIndex, false);
+            if (Tabs.Count > 0 /*&& CurrentTabIndex >= 0*/ && CurrentTab.AutoClose)
+                CloseTab(CurrentTab, false);
 
             if (isNewTab || Tabs.Count == 0)
             {
@@ -830,7 +898,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                 TabViewModel newTab = new(obj, newIndex, tabTitle, CloseAssetTabCommand);
 
                 Tabs.Add(newTab);
-                CurrentTabIndex = newIndex;
+                // CurrentTabIndex = newIndex;
 
                 newTab.History.Add(obj);
 
@@ -855,7 +923,8 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
         public void CloseTab(bool addDefaultTab = true) // close the current tab
         {
-            CloseTab(CurrentTabIndex, addDefaultTab);
+            if (CurrentTab != null)
+                CloseTab(CurrentTab, addDefaultTab);
         }
         public void CloseTab(int tabIndex, bool addDefaultTab = true)
         {
@@ -863,7 +932,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             {
                 TabViewModel closingTab = Tabs[tabIndex];
 
-                int currIndex = CurrentTabIndex;
+                int currIndex = Tabs.IndexOf(CurrentTab);
 
                 Tabs.RemoveAt(tabIndex);
 
@@ -875,22 +944,18 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     /*if (!closingTab.AutoClose)
                         CurrentTab.SaveTabContentState();*/ // TODO Needed to apply changes to code in code editor if tab is closed of not in view.
 
-                    CurrentTabIndex = -1;
                     CurrentTab = null;
-
+                    
                     if (addDefaultTab)
                     {
-                        OpenInTab(new Description("Welcome to UndertaleModTool!",
-                                                      "Open a data.win file to get started, then double click on the items on the left to view them"));
-                        CurrentTab = Tabs[CurrentTabIndex];
+                        OpenInTab(GetViewModelFromObject(new Description("Welcome to UndertaleModTool!",
+                                                      "Open a data.win file to get started, then double click on the items on the left to view them")), false, "Welcome!");
+                        CurrentTab = Tabs[0];
                     }
                 }
                 else
                 {
                     bool tabIsChanged = false;
-
-                    for (int i = tabIndex; i < Tabs.Count; i++)
-                        Tabs[i].TabIndex = i;
 
                     // if closing the currently open tab
                     if (currIndex == tabIndex)
@@ -915,8 +980,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                         currIndex -= 1;
                     }
 
-                    CurrentTabIndex = currIndex;
-                    TabViewModel newTab = Tabs[CurrentTabIndex];
+                    TabViewModel newTab = Tabs[currIndex];
 
                     if (tabIsChanged)
                     {
@@ -935,10 +999,10 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         {
             if (obj is not null)
             {
-                int tabIndex = Tabs.FirstOrDefault(x => x.CurrentObject == obj)?.TabIndex ?? -1;
-                if (tabIndex != -1)
+                var tab = Tabs.FirstOrDefault(x => x == obj);
+                if (tab != null)
                 {
-                    CloseTab(tabIndex, addDefaultTab);
+                    CloseTab(Tabs.IndexOf(tab), addDefaultTab);
                     return true;
                 }
             }
@@ -949,13 +1013,13 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         }
 
         /// <summary>Generates a tab title depending on a type of the object.</summary>
-        public string GetTitleForObject(object obj)
+        public string? GetTitleForObject(object obj)
         {
             if (obj is null)
                 return "No Valid Data";
             if (obj is EditorContentViewModel editorContent)
                 return editorContent.MainText;
-            string title = null;
+            string? title = null;
             if (obj is Description view)
             {
                 if (view.Heading.Contains("Welcome"))
@@ -969,9 +1033,9 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             }
             else if (obj is UndertaleNamedResource namedRes)
             {
-                string content = namedRes.Name?.Content;
+                string? content = namedRes.Name?.Content;
 
-                string header = obj switch
+                string? header = obj switch
                 {
                     UndertaleAudioGroup => "Audio Group",
                     UndertaleSound => "Sound",

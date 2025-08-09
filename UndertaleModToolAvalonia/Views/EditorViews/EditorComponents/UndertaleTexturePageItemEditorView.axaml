@@ -1,0 +1,182 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents"
+			 xmlns:controls="using:UndertaleModToolAvalonia.Controls"
+			 xmlns:converters="using:UndertaleModToolAvalonia.Converters"
+			 xmlns:undertale="using:UndertaleModLib.Models"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleTexturePageItemEditorView"
+			 x:DataType="vm:UndertaleTexturePageItemEditorViewModel">
+	<UserControl.Resources>
+		<converters:DoubleToUshortConverter x:Key="DoubleToUshortConv"/>
+	</UserControl.Resources>
+	<Grid Margin="20">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="1*"/>
+			<ColumnDefinition Width="3*"/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+
+		<TextBlock Grid.Row="0" Grid.Column="0" Margin="3" VerticalAlignment="Center" FontWeight="ExtraBlack">Source position/size:</TextBlock>
+		<Grid Grid.Row="0" Grid.Column="1">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+			</Grid.RowDefinitions>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="20"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="20"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="50"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="50"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<TextBlock Grid.Column="0" Text="X:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+			<ButtonSpinner Name="SourceXSpinner" Grid.Column="1" Margin="3" AllowSpin="True" ButtonSpinnerLocation="Right" Content="{Binding SourceX, Mode=TwoWay}" Spin="OnSpinnerSpin" PointerWheelChanged="OnSpinnerMouseWheel"/>
+			<TextBlock Grid.Column="2" Text="Y:" VerticalAlignment="Center"  HorizontalAlignment="Right"/>
+			<ButtonSpinner Name="SourceYSpinner" Grid.Column="3" Margin="3" AllowSpin="True" ButtonSpinnerLocation="Right" Content="{Binding SourceY, Mode=TwoWay}" Spin="OnSpinnerSpin" PointerWheelChanged="OnSpinnerMouseWheel"/>
+			<TextBlock Grid.Column="4" Text="Width:" VerticalAlignment="Center"  HorizontalAlignment="Right"/>
+			<ButtonSpinner Name="SourceWidthSpinner" Grid.Column="5" Margin="3" AllowSpin="True" ButtonSpinnerLocation="Right" Content="{Binding SourceWidth, Mode=TwoWay}" Spin="OnSpinnerSpin" PointerWheelChanged="OnSpinnerMouseWheel"/>
+			<TextBlock Grid.Column="6" Text="Height:" VerticalAlignment="Center"  HorizontalAlignment="Right"/>
+			<ButtonSpinner Name="SourceHeightSpinner" Grid.Column="7" Margin="3" AllowSpin="True" ButtonSpinnerLocation="Right" Content="{Binding SourceHeight, Mode=TwoWay}" Spin="OnSpinnerSpin" PointerWheelChanged="OnSpinnerMouseWheel"/>
+
+			<Slider Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Name="SourceXSlider"
+					Value="{Binding SourceX, Mode=OneWay, Converter={StaticResource DoubleToUshortConv}}"
+					Minimum="0" Maximum="{Binding TexturePageWidth}"
+					IsSnapToTickEnabled="True" TickFrequency="1" AttachedToVisualTree="OnSliderAttached"/>
+			<Slider Grid.Row="1" Grid.Column="3" VerticalAlignment="Center" Name="SourceYSlider"
+					Value="{Binding SourceY, Mode=OneWay, Converter={StaticResource DoubleToUshortConv}}"
+					Minimum="0" Maximum="{Binding TexturePageHeight}"
+					IsSnapToTickEnabled="True" TickFrequency="1" AttachedToVisualTree="OnSliderAttached"/>
+			<Slider Grid.Row="1" Grid.Column="5" VerticalAlignment="Center" Name="SourceWidthSlider"
+					Value="{Binding SourceWidth, Mode=OneWay, Converter={StaticResource DoubleToUshortConv}}"
+					Minimum="0" Maximum="{Binding TexturePageWidth}"
+					IsSnapToTickEnabled="True" TickFrequency="1" AttachedToVisualTree="OnSliderAttached"/>
+			<Slider Grid.Row="1" Grid.Column="7" VerticalAlignment="Center" Name="SourceHeightSlider"
+					Value="{Binding SourceHeight, Mode=OneWay, Converter={StaticResource DoubleToUshortConv}}"
+					Minimum="0" Maximum="{Binding TexturePageHeight}"
+					IsSnapToTickEnabled="True" TickFrequency="1" AttachedToVisualTree="OnSliderAttached"/>
+		</Grid>
+
+		<TextBlock Grid.Row="1" Grid.Column="0" Margin="3" VerticalAlignment="Center" FontWeight="ExtraBlack">Target position/size:</TextBlock>
+		<Grid Grid.Row="1" Grid.Column="1">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+			</Grid.RowDefinitions>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="20"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="20"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="50"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="50"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<TextBlock Grid.Column="0" Text="X:" VerticalAlignment="Center"  HorizontalAlignment="Right"/>
+			<ButtonSpinner Name="TargetXSpinner" Grid.Column="1" Margin="3" AllowSpin="True" ButtonSpinnerLocation="Right" Content="{Binding TargetX, Mode=TwoWay}" Spin="OnSpinnerSpin" PointerWheelChanged="OnSpinnerMouseWheel"/>
+			<TextBlock Grid.Column="2" Text="Y:" VerticalAlignment="Center"  HorizontalAlignment="Right"/>
+			<ButtonSpinner Name="TargetYSpinner" Grid.Column="3" Margin="3" AllowSpin="True" ButtonSpinnerLocation="Right" Content="{Binding TargetY, Mode=TwoWay}" Spin="OnSpinnerSpin" PointerWheelChanged="OnSpinnerMouseWheel"/>
+			<TextBlock Grid.Column="4" Text="Width:" VerticalAlignment="Center"  HorizontalAlignment="Right"/>
+			<ButtonSpinner Name="TargetWidthSpinner" Grid.Column="5" Margin="3" AllowSpin="True" ButtonSpinnerLocation="Right" Content="{Binding TargetWidth, Mode=TwoWay}" Spin="OnSpinnerSpin" PointerWheelChanged="OnSpinnerMouseWheel"/>
+			<TextBlock Grid.Column="6" Text="Height:" VerticalAlignment="Center"  HorizontalAlignment="Right"/>
+			<ButtonSpinner Name="TargetHeightSpinner" Grid.Column="7" Margin="3" AllowSpin="True" ButtonSpinnerLocation="Right" Content="{Binding TargetHeight, Mode=TwoWay}" Spin="OnSpinnerSpin" PointerWheelChanged="OnSpinnerMouseWheel"/>
+			
+			<Slider Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Name="TargetXSlider"
+					Value="{Binding TargetX, Mode=OneWay, Converter={StaticResource DoubleToUshortConv}}"
+					Minimum="0" Maximum="{Binding TexturePageWidth}"
+					IsSnapToTickEnabled="True" TickFrequency="1" AttachedToVisualTree="OnSliderAttached"/>
+			<Slider Grid.Row="1" Grid.Column="3" VerticalAlignment="Center" Name="TargetYSlider"
+					Value="{Binding TargetY, Mode=OneWay, Converter={StaticResource DoubleToUshortConv}}"
+					Minimum="0" Maximum="{Binding TexturePageHeight}"
+					IsSnapToTickEnabled="True" TickFrequency="1" AttachedToVisualTree="OnSliderAttached"/>
+			<Slider Grid.Row="1" Grid.Column="5" VerticalAlignment="Center" Name="TargetWidthSlider"
+					Value="{Binding TargetWidth, Mode=OneWay, Converter={StaticResource DoubleToUshortConv}}"
+					Minimum="0" Maximum="{Binding TexturePageWidth}"
+					IsSnapToTickEnabled="True" TickFrequency="1" AttachedToVisualTree="OnSliderAttached"/>
+			<Slider Grid.Row="1" Grid.Column="7" VerticalAlignment="Center" Name="TargetHeightSlider"
+					Value="{Binding TargetHeight, Mode=OneWay, Converter={StaticResource DoubleToUshortConv}}"
+					Minimum="0" Maximum="{Binding TexturePageHeight}"
+					IsSnapToTickEnabled="True" TickFrequency="1" AttachedToVisualTree="OnSliderAttached"/>
+		</Grid>
+
+		<TextBlock Grid.Row="2" Grid.Column="0" Margin="3" VerticalAlignment="Center" FontWeight="ExtraBlack">Bounding size:</TextBlock>
+		<Grid Grid.Row="2" Grid.Column="1">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+			</Grid.RowDefinitions>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="50"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="50"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<TextBlock Grid.Column="0" Text="Width:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+			<ButtonSpinner Name="BoundingWidthSpinner" Grid.Column="1" Margin="3" AllowSpin="True" ButtonSpinnerLocation="Right" Content="{Binding BoundingWidth, Mode=TwoWay}" Spin="OnSpinnerSpin" PointerWheelChanged="OnSpinnerMouseWheel"/>
+			<TextBlock Grid.Column="2" Text="Height:" VerticalAlignment="Center"  HorizontalAlignment="Right"/>
+			<ButtonSpinner Name="BoundingHeightSpinner" Grid.Column="3" Margin="3" AllowSpin="True" ButtonSpinnerLocation="Right" Content="{Binding BoundingHeight, Mode=TwoWay}" Spin="OnSpinnerSpin" PointerWheelChanged="OnSpinnerMouseWheel"/>
+
+			<Slider Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Name="BoundingWidthSlider"
+					Value="{Binding BoundingWidth, Mode=OneWay, Converter={StaticResource DoubleToUshortConv}}"
+					Minimum="0" Maximum="{Binding TexturePageWidth}"
+					IsSnapToTickEnabled="True" TickFrequency="1" AttachedToVisualTree="OnSliderAttached"/>
+			<Slider Grid.Row="1" Grid.Column="3" VerticalAlignment="Center" Name="BoundingHeightSlider"
+					Value="{Binding BoundingHeight, Mode=OneWay, Converter={StaticResource DoubleToUshortConv}}"
+					Minimum="0" Maximum="{Binding TexturePageHeight}"
+					IsSnapToTickEnabled="True" TickFrequency="1" AttachedToVisualTree="OnSliderAttached"/>
+		</Grid>
+
+		<TextBlock Grid.Row="3" Grid.Column="0" Margin="3" VerticalAlignment="Center" FontWeight="ExtraBlack">Texture:</TextBlock>
+		<controls:UndertaleObjectReference Grid.Row="3" Grid.Column="1" Margin="3" ObjectReference="{Binding TexturePageItem.TexturePage}" ObjectType="{x:Type undertale:UndertaleEmbeddedTexture}"/>
+
+		<Button Grid.Row="4" Grid.ColumnSpan="2" Margin="3" HorizontalAlignment="Center" Command="{Binding Editor.FindAllReferencesCommand}">Find all references to this page item</Button>
+
+		<Viewbox Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Stretch="Uniform" StretchDirection="DownOnly" Margin="3">
+			<Border Background="{DynamicResource TransparencyGridBrush}">
+				<controls:UndertaleTexturePageItemDisplay x:Name="ItemDisplay"/>
+			</Border>
+		</Viewbox>
+
+		<Grid Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="3,3,3,25">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+
+			<Button Grid.Column="0" Content="Import" HorizontalAlignment="Stretch" Command="{Binding ImportCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=StorageProvider}"/>
+			<Button Grid.Column="3" Content="Export" HorizontalAlignment="Stretch" Command="{Binding ExportCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=StorageProvider}"/>
+		</Grid>
+
+		<Viewbox Name="ImageView" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Stretch="Uniform" StretchDirection="DownOnly">
+			<Grid Background="{DynamicResource TransparencyGridBrush}">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto"/>
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
+
+				<Image Grid.Row="0" Grid.Column="1" Name="ItemTextureBGImage" Opacity="0.2"/>
+
+				<Image Grid.Row="0" Grid.Column="1" Name="ItemTextureImage" Clip="{Binding SourceClipGeometry}">
+				</Image>
+			</Grid>
+		</Viewbox>
+	</Grid>
+</UserControl>
