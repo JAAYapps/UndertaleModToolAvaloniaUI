@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using System;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents;
 
 namespace UndertaleModToolAvalonia.Views.EditorViews.EditorComponents;
