@@ -4,9 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:undertale="using:UndertaleModLib.Models"
 			 xmlns:local="using:UndertaleModToolAvalonia.Controls"
+			 xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleAudioGroupEditor"
-		     x:DataType="undertale:UndertaleAudioGroup">
+             x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleAudioGroupEditorView"
+		     x:DataType="vm:UndertaleAudioGroupEditorViewModel">
 	<Grid>
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="1*"/>
@@ -18,9 +19,9 @@
 		</Grid.RowDefinitions>
 
 		<TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Name</TextBlock>
-		<local:UndertaleStringReference Grid.Row="0" Grid.Column="1" Margin="3" ObjectReference="{Binding Name}"/>
+		<local:UndertaleStringReference Grid.Row="0" Grid.Column="1" Margin="3" ObjectReference="{Binding UndertaleAudioGroup.Name}"/>
 
 		<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Path (GM 2024.14+)</TextBlock>
-		<local:UndertaleStringReference Grid.Row="1" Grid.Column="1" Margin="3" ObjectReference="{Binding Path}"/>
+		<local:UndertaleStringReference Grid.Row="1" Grid.Column="1" Margin="3" ObjectReference="{Binding UndertaleAudioGroup.Path}"/>
 	</Grid>
 </local:DataUserControl>

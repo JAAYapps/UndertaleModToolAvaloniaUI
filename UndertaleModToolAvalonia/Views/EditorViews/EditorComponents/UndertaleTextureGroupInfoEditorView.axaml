@@ -1,0 +1,161 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:controls="using:UndertaleModToolAvalonia.Controls"
+             xmlns:undertale="using:UndertaleModLib.Models"
+             xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleTextureGroupInfoEditorView"
+			 x:DataType="vm:UndertaleTextureGroupInfoEditorViewModel">
+	<StackPanel Margin="10">
+		<TextBlock Text="Texture Group" FontWeight="Bold"/>
+		<Separator/>
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="1*"/>
+				<ColumnDefinition Width="3*"/>
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+			</Grid.RowDefinitions>
+
+			<TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Group Name</TextBlock>
+			<controls:UndertaleStringReference Grid.Row="0" Grid.Column="1" Margin="3" ObjectReference="{Binding UndertaleTextureGroupInfo.Name}"/>
+
+			<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Texture Pages</TextBlock>
+			<Expander Grid.Row="1" Grid.Column="1" Margin="3" Name="TextureListExpander" Header="List">
+				<Grid RowDefinitions="*,*">
+					<DataGrid Grid.Row="0" ItemsSource="{Binding UndertaleTextureGroupInfo.TexturePages}" MaxHeight="370" x:Name="TextureListGrid"
+                          AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
+						<DataGrid.Styles>
+							<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
+								<Setter Property="Background" Value="{DynamicResource SystemAccentColorBrush}"/>
+							</Style>
+						</DataGrid.Styles>
+						<DataGrid.Columns>
+							<DataGridTemplateColumn Width="*">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<controls:UndertaleObjectReference Margin="20,0,0,0" ObjectReference="{Binding Resource, Mode=TwoWay}" ObjectType="{x:Type undertale:UndertaleEmbeddedTexture}" CanRemove="False"/>
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+						</DataGrid.Columns>
+					</DataGrid>
+					<Button Name="TexturePagesButton" Grid.Row="1" HorizontalAlignment="Stretch" Margin="5" DoubleTapped="Button_DoubleTapped">
+						<TextBlock Margin="5" TextAlignment="Center" FontStyle="Italic">Double click to add</TextBlock>
+					</Button>
+				</Grid>
+			</Expander>
+
+			<TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Sprites</TextBlock>
+			<Expander Grid.Row="2" Grid.Column="1" Margin="3" Name="SpriteListExpander" Header="List">
+				<Grid RowDefinitions="*,*">
+					<DataGrid Grid.Row="0" ItemsSource="{Binding UndertaleTextureGroupInfo.Sprites}" MaxHeight="370" x:Name="SpriteListGrid"
+                          AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
+						<DataGrid.Styles>
+							<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
+								<Setter Property="Background" Value="{DynamicResource SystemAccentColorBrush}"/>
+							</Style>
+						</DataGrid.Styles>
+						<DataGrid.Columns>
+							<DataGridTemplateColumn Width="*">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<controls:UndertaleObjectReference Margin="20,0,0,0" ObjectReference="{Binding Resource, Mode=TwoWay}" ObjectType="{x:Type undertale:UndertaleSprite}" CanRemove="False"/>
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+						</DataGrid.Columns>
+					</DataGrid>
+					<Button Name="SpritesButton" Grid.Row="1" HorizontalAlignment="Stretch" Margin="5" DoubleTapped="Button_DoubleTapped">
+						<TextBlock Margin="5" TextAlignment="Center" FontStyle="Italic">Double click to add</TextBlock>
+					</Button>
+				</Grid>
+			</Expander>
+
+			<TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Spine Sprites</TextBlock>
+			<Expander Grid.Row="3" Grid.Column="1" Margin="3" Name="SpineSprListExpander" Header="List">
+				<Grid RowDefinitions="*,*">
+					<DataGrid Grid.Row="0" ItemsSource="{Binding UndertaleTextureGroupInfo.SpineSprites}" MaxHeight="370" x:Name="SpineSprListGrid"
+                          AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
+						<DataGrid.Styles>
+							<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
+								<Setter Property="Background" Value="{DynamicResource SystemAccentColorBrush}"/>
+							</Style>
+						</DataGrid.Styles>
+						<DataGrid.Columns>
+							<DataGridTemplateColumn Width="*">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<controls:UndertaleObjectReference Margin="20,0,0,0" ObjectReference="{Binding Resource, Mode=TwoWay}" ObjectType="{x:Type undertale:UndertaleSprite}" CanRemove="False"/>
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+						</DataGrid.Columns>
+					</DataGrid>
+					<Button Name="SpineSpritesButton" Grid.Row="1" HorizontalAlignment="Stretch" Margin="5" DoubleTapped="Button_DoubleTapped">
+						<TextBlock Margin="5" TextAlignment="Center" FontStyle="Italic">Double click to add</TextBlock>
+					</Button>
+				</Grid>
+			</Expander>
+
+			<TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Fonts</TextBlock>
+			<Expander Grid.Row="4" Grid.Column="1" Margin="3" Name="FontListExpander" Header="List">
+				<Grid RowDefinitions="*,*">
+					<DataGrid Grid.Row="0" ItemsSource="{Binding UndertaleTextureGroupInfo.Fonts}" MaxHeight="370" x:Name="FontListGrid"
+                          AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
+						<DataGrid.Styles>
+							<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
+								<Setter Property="Background" Value="{DynamicResource SystemAccentColorBrush}"/>
+							</Style>
+						</DataGrid.Styles>
+						<DataGrid.Columns>
+							<DataGridTemplateColumn Width="*">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<controls:UndertaleObjectReference Margin="20,0,0,0" ObjectReference="{Binding Resource, Mode=TwoWay}" ObjectType="{x:Type undertale:UndertaleFont}" CanRemove="False"/>
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+						</DataGrid.Columns>
+					</DataGrid>
+					<Button Name="FontsButton" Grid.Row="1" HorizontalAlignment="Stretch" Margin="5" DoubleTapped="Button_DoubleTapped">
+						<TextBlock Margin="5" TextAlignment="Center" FontStyle="Italic">Double click to add</TextBlock>
+					</Button>
+				</Grid>
+			</Expander>
+
+			<TextBlock Grid.Row="5" Grid.Column="0" Margin="3">Tilesets</TextBlock>
+			<Expander Grid.Row="5" Grid.Column="1" Margin="3" Name="TilesetListExpander" Header="List">
+				<Grid RowDefinitions="*,*">
+					<DataGrid Grid.Row="0" ItemsSource="{Binding UndertaleTextureGroupInfo.Tilesets}" MaxHeight="370" x:Name="TilesetListGrid"
+                          AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
+						<DataGrid.Styles>
+							<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
+								<Setter Property="Background" Value="{DynamicResource SystemAccentColorBrush}"/>
+							</Style>
+						</DataGrid.Styles>
+						<DataGrid.Columns>
+							<DataGridTemplateColumn Width="*">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<controls:UndertaleObjectReference Margin="20,0,0,0" ObjectReference="{Binding Resource, Mode=TwoWay}" ObjectType="{x:Type undertale:UndertaleBackground}" CanRemove="False"/>
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+						</DataGrid.Columns>
+					</DataGrid>
+					<Button Name="TilesetsButton" Grid.Row="1" HorizontalAlignment="Stretch" Margin="5" DoubleTapped="Button_DoubleTapped">
+						<TextBlock Margin="5" TextAlignment="Center" FontStyle="Italic">Double click to add</TextBlock>
+					</Button>
+				</Grid>
+			</Expander>
+		</Grid>
+	</StackPanel>
+</UserControl>

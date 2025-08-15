@@ -36,10 +36,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
         /// <param name="tabTitle">The tab title.</param>
         public TabViewModel(object obj, int tabIndex, string tabTitle = null, ICommand closeCommand = null)
         {
-            Console.WriteLine(tabIndex + ": " + tabTitle);
-            Console.WriteLine(ToString());
             CurrentObject = obj;
-            //TabIndex = tabIndex;
             CloseCommand = closeCommand;
             AutoClose = obj is DescriptionViewModel;
 

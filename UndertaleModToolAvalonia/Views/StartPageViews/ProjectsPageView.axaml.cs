@@ -22,7 +22,7 @@ namespace UndertaleModToolAvalonia.Views.StartPageViews
         private void OnGotFocus(object? sender, GotFocusEventArgs e)
         {
             //Console.WriteLine("Got focus: " + e.Source);
-            if (e.Source is TextBox || e.Source is MenuItem)
+            if (e.Source is TextBox || e.Source is MenuItem || e.Source is DataGrid)
             {
                 blockLostFocus = true;
                 ((Control)e.Source).Focus();

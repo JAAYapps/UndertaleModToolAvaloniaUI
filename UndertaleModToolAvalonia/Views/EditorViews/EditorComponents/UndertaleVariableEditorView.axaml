@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents"
+			 xmlns:controls="using:UndertaleModToolAvalonia.Controls"
+			 xmlns:undertale="using:UndertaleModLib.Models"
+			 xmlns:utils="using:UndertaleModToolAvalonia.Utilities"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleVariableEditorView"
+			 x:DataType="vm:UndertaleVariableEditorViewModel">
+	<UserControl.Resources>
+		<ResourceDictionary>
+			<utils:EnumValues EnumType="undertale:UndertaleInstruction+InstanceType" x:Key="InstanceType" />
+		</ResourceDictionary>
+	</UserControl.Resources>
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="1*"/>
+			<ColumnDefinition Width="3*"/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+
+		<TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Name</TextBlock>
+		<controls:UndertaleStringReference Grid.Row="0" Grid.Column="1" Margin="3" ObjectReference="{Binding UndertaleVariable.Name}"/>
+
+		<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Instance type</TextBlock>
+		<ComboBox Grid.Row="1" Grid.Column="1" Margin="3" ItemsSource="{Binding Source={StaticResource InstanceType}}" SelectedItem="{Binding UndertaleVariable.InstanceType}" />
+
+		<TextBlock Grid.Row="2" Grid.Column="0" Margin="3">VarID</TextBlock>
+		<TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding UndertaleVariable.VarID}"/>
+
+		<TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Name string ID</TextBlock>
+		<TextBox Grid.Row="3" Grid.Column="1" Margin="3" Text="{Binding UndertaleVariable.NameStringID}"/>
+	</Grid>
+</UserControl>

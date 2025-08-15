@@ -40,6 +40,7 @@ using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTypesDialog;
 using UndertaleModToolAvalonia.Views.EditorViews;
+using UndertaleModToolAvalonia.Views.EditorViews.EditorComponents;
 using static UndertaleModLib.Models.UndertaleRoom;
 
 namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
@@ -73,21 +74,6 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         private TabViewModel? currentTab;
 
         public List<TabViewModel> ClosedTabsHistory { get; } = new();
-
-        //partial void OnCurrentTabChanged(TabViewModel? value)
-        //{
-        //    Console.WriteLine($"--> OnCurrentTabChanged: New tab is '{value?.TabTitle}'.");
-        //}
-
-        /*        public object Selected
-                {
-                    get => null;// TODO Implement CurrentTab?.CurrentObject;
-                    set
-                    {
-                        OnPropertyChanged();
-                        OpenInTab(value);
-                    } 
-                }*/
 
         [ObservableProperty] private bool wasWarnedAboutTempRun = false;
         
@@ -317,12 +303,10 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             }
             else
             {
-                // SEARCHING: Filter the raw data and build a new, non-virtualized result tree.
                 var searchRootNode = new ResourceNodeViewModel("Search Results", null, this, referenceFinderService, true);
 
                 if (AppConstants.Data != null)
                 {
-                    // Filter each category of raw data using LINQ and build child nodes for the results.
                     BuildChildren(searchRootNode, "Sounds", data != null ? data.Sounds?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : [], false);
                     BuildChildren(searchRootNode, "Sprites", data != null ? data.Sprites?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : [], false);
                     BuildChildren(searchRootNode, "Backgrounds & Tile sets", data != null ? data.Backgrounds?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : [], false);
@@ -356,19 +340,14 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
             foreach (var node in sourceList)
             {
-                // First, see if any children match the filter
                 var filteredChildren = FilterNodeList(node.Children);
 
-                // A node is a match if its own header contains the search text...
                 bool selfIsMatch = node.Header.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
 
-                // ...OR if it has any children that are matches.
                 if (selfIsMatch || filteredChildren.Any())
                 {
-                    // If it's a match, create a new node to represent it in the filtered tree
                     var newNode = new ResourceNodeViewModel(node.Header, node.Model, this, referenceFinderService);
 
-                    // Add the filtered children to the new node
                     foreach (var child in filteredChildren)
                     {
                         newNode.Children.Add(child);
@@ -384,7 +363,6 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         public async Task LoadFileAsync(string filename, bool preventClose = false, bool onlyGeneralInfo = false)
         {
             IsEnabled = false;
-            // --- Start Loading Process ---
             loadingDialogService.Show("Loading File", "Reading data.win, please wait...");
             await loadingDialogService.SetIndeterminateAsync(true);
 
@@ -763,7 +741,6 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         {
             if (tab != null && Tabs.Count > 0)
             {
-                Console.WriteLine(tab.ToString());
                 CloseTab(tab, Tabs.Count == 1);
             }
         }
@@ -848,9 +825,9 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                 string name = GetTitleForObject(asset) ?? "Unknown";
                 EditorContentViewModel? model = dataRes switch
                 {
-                    // UndertaleAudioGroup => "Audio Group",
+                    UndertaleAudioGroup => new UndertaleAudioGroupEditorViewModel(name, (UndertaleAudioGroup)asset),
                     UndertaleSound => new UndertaleSoundEditorViewModel(name, (UndertaleSound)asset, playerService),
-                    //UndertaleSprite => "Sprite",
+                    UndertaleSprite => new UndertaleSpriteEditorViewModel(name, (UndertaleSprite)asset, this, fileService, textureCacheService),
                     UndertaleBackground => new UndertaleBackgroundEditorViewModel(name, (UndertaleBackground)asset),
                     //UndertalePath => "Path",
                     //UndertaleScript => "Script",
@@ -862,12 +839,12 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     //UndertaleExtension => "Extension",
                     UndertaleTexturePageItem => new UndertaleTexturePageItemEditorViewModel(name, (UndertaleTexturePageItem)asset, this, textureCacheService, fileService),
                     //UndertaleCode => "Code",
-                    //UndertaleVariable => "Variable",
-                    //UndertaleFunction => "Function",
+                    UndertaleVariable => new UndertaleVariableEditorViewModel(name, (UndertaleVariable)asset),
+                    UndertaleFunction => new UndertaleFunctionEditorViewModel(name, (UndertaleFunction)asset),
                     //UndertaleCodeLocals => "Code Locals",
                     UndertaleEmbeddedTexture => new UndertaleEmbeddedTextureEditorViewModel(name, (UndertaleEmbeddedTexture)asset, this, fileService, textureCacheService),
                     UndertaleEmbeddedAudio => new UndertaleEmbeddedAudioEditorViewModel(name, (UndertaleEmbeddedAudio)asset, playerService, fileService),
-                    //UndertaleTextureGroupInfo => "Texture Group Info",
+                    UndertaleTextureGroupInfo => new UndertaleTextureGroupInfoEditorViewModel(name, (UndertaleTextureGroupInfo)asset),
                     UndertaleEmbeddedImage => new UndertaleEmbeddedImageEditorViewModel(name, (UndertaleEmbeddedImage)asset),
                     //UndertaleSequence => "Sequence",
                     //UndertaleAnimationCurve => "Animation Curve",

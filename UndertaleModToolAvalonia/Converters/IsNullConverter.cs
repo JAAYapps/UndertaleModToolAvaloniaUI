@@ -2,17 +2,19 @@
 using System;
 using System.Globalization;
 
-namespace UndertaleModTool
+namespace UndertaleModToolAvalonia.Converters
 {
     public class IsNullConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public static readonly IsNullConverter Instance = new();
+
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            bool invert = parameter is string par && par == "True";
-            return (value is null) ^ invert;
+            bool invert = parameter is string par && par == "Invert";
+            return value is null ^ invert;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }

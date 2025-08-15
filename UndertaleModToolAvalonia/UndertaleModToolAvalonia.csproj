@@ -60,6 +60,9 @@
       </Reference>
     </ItemGroup>
     <ItemGroup>
+      <Compile Update="Views\EditorViews\EditorComponents\UndertaleAudioGroupEditorView.axaml.cs">
+        <DependentUpon>UndertaleAudioGroupEditorView.axaml</DependentUpon>
+      </Compile>
       <Compile Update="Views\EditorViews\EditorComponents\UndertaleBackgroundEditorView.axaml.cs">
         <DependentUpon>UndertaleBackgroundEditorView.axaml</DependentUpon>
       </Compile>

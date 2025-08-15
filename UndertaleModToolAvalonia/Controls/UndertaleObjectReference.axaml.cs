@@ -65,6 +65,9 @@ public partial class UndertaleObjectReference : UserControl
     public static readonly StyledProperty<ICommand?> RemoveCommandProperty =
         AvaloniaProperty.Register<UndertaleObjectReference, ICommand?>(nameof(RemoveCommand));
 
+    public static readonly StyledProperty<object?> RemoveCommandParameterProperty =
+        AvaloniaProperty.Register<UndertaleObjectReference, object?>(nameof(RemoveCommandParameter));   
+
     public static readonly StyledProperty<ICommand?> OpenInTabCommandProperty =
         AvaloniaProperty.Register<UndertaleObjectReference, ICommand?>(nameof(OpenInTabCommand));
 
@@ -78,6 +81,12 @@ public partial class UndertaleObjectReference : UserControl
     { 
         get => GetValue(RemoveCommandProperty);
         set => SetValue(RemoveCommandProperty, value);
+    }
+
+    public object? RemoveCommandParameter
+    {
+        get => GetValue(RemoveCommandParameterProperty);
+        set => SetValue(RemoveCommandParameterProperty, value);
     }
 
     public ICommand? OpenInTabCommand
@@ -321,20 +330,10 @@ public partial class UndertaleObjectReference : UserControl
         // The TextBox is internally available 
         if (ObjectText == null) return;
 
-        Console.WriteLine("Check if undertaleObject is not null. " + undertaleObject?.GetType());
-        if (undertaleObject is not null)
-        {
-            Console.WriteLine("Checking if menu.");
-            if (this.Resources.TryGetValue("contextFlyout", out var menuResource) && menuResource is MenuFlyout menu)
-            {
-                Console.WriteLine("Menu Added.");
-                ObjectText.ContextFlyout = menu;
-            }
-        }
+        if (undertaleObject is not null && this.Resources.TryGetValue("contextFlyout", out var menuResource) && menuResource is MenuFlyout menu)
+            ObjectText.ContextFlyout = menu;
         else
-        {
             ObjectText.ContextFlyout = null;
-        }
     }
 
     private void Details_MouseDown(object sender, PointerPressedEventArgs e)

@@ -2,9 +2,9 @@ using UndertaleModToolAvalonia.Controls;
 
 namespace UndertaleModToolAvalonia.Views.EditorViews.EditorComponents;
 
-public partial class UndertaleAudioGroupEditor : DataUserControl
+public partial class UndertaleAudioGroupEditorView : DataUserControl
 {
-    public UndertaleAudioGroupEditor()
+    public UndertaleAudioGroupEditorView()
     {
         InitializeComponent();
     }
