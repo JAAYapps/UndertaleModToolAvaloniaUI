@@ -829,7 +829,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     UndertaleSound => new UndertaleSoundEditorViewModel(name, (UndertaleSound)asset, playerService),
                     UndertaleSprite => new UndertaleSpriteEditorViewModel(name, (UndertaleSprite)asset, this, fileService, textureCacheService),
                     UndertaleBackground => new UndertaleBackgroundEditorViewModel(name, (UndertaleBackground)asset),
-                    //UndertalePath => "Path",
+                    UndertalePath => new UndertalePathEditorViewModel(name, (UndertalePath)asset),
                     //UndertaleScript => "Script",
                     //UndertaleShader => "Shader",
                     //UndertaleFont => "Font",
