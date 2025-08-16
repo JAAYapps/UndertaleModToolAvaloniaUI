@@ -1,6 +1,4 @@
-﻿using Avalonia.Controls;
-using Avalonia.Controls.Converters;
-using Avalonia.Threading;
+﻿using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -830,7 +828,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     UndertaleSprite => new UndertaleSpriteEditorViewModel(name, (UndertaleSprite)asset, this, fileService, textureCacheService),
                     UndertaleBackground => new UndertaleBackgroundEditorViewModel(name, (UndertaleBackground)asset),
                     UndertalePath => new UndertalePathEditorViewModel(name, (UndertalePath)asset),
-                    //UndertaleScript => "Script",
+                    UndertaleScript => new UndertaleScriptEditorViewModel(name, (UndertaleScript)asset),
                     //UndertaleShader => "Shader",
                     //UndertaleFont => "Font",
                     //UndertaleTimeline => "Timeline",

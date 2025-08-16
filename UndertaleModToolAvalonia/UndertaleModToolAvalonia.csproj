@@ -59,31 +59,6 @@
         <HintPath>..\..\..\.nuget\packages\newtonsoft.json\13.0.3\lib\net6.0\Newtonsoft.Json.dll</HintPath>
       </Reference>
     </ItemGroup>
-    <ItemGroup>
-      <Compile Update="Views\EditorViews\EditorComponents\UndertaleAudioGroupEditorView.axaml.cs">
-        <DependentUpon>UndertaleAudioGroupEditorView.axaml</DependentUpon>
-      </Compile>
-      <Compile Update="Views\EditorViews\EditorComponents\UndertaleBackgroundEditorView.axaml.cs">
-        <DependentUpon>UndertaleBackgroundEditorView.axaml</DependentUpon>
-      </Compile>
-      <Compile Update="Views\EditorViews\EditorComponents\UndertaleGameEndEditorView.axaml.cs">
-        <DependentUpon>UndertaleGameEndEditorView.axaml</DependentUpon>
-      </Compile>
-      <Compile Update="Views\EditorViews\EditorComponents\UndertaleGeneralInfoEditorView.axaml.cs">
-        <DependentUpon>UndertaleGeneralInfoEditorView.axaml</DependentUpon>
-      </Compile>
-      <Compile Update="Views\EditorViews\EditorComponents\UndertaleGlobalInitEditorView.axaml.cs">
-        <DependentUpon>UndertaleGlobalInitEditorView.axaml</DependentUpon>
-		<SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\EditorViews\EditorComponents\UndertaleSoundEditorView.axaml.cs">
-        <DependentUpon>UndertaleSoundEditorView.axaml</DependentUpon>
-      </Compile>
-      <Compile Update="Views\MainWindow.axaml.cs">
-        <DependentUpon>MainWindow.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-    </ItemGroup>
 
     <ItemGroup>
       <AvaloniaResource Update="Assets\avalonia-logo.ico">
