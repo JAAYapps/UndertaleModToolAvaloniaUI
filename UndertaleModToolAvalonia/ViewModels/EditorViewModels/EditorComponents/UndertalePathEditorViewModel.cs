@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using Avalonia;
+using Avalonia.Media;
 using UndertaleModLib.Models;
 
 namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
@@ -10,6 +12,15 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
         [ObservableProperty]
         private UndertalePath undertalePath = undertalePath;
 
+        [ObservableProperty]
+        private ITransform? pathTransform;
+        
+        [ObservableProperty]
+        private double pathWidth;
+
+        [ObservableProperty]
+        private double pathHeight;
+        
         public void RefreshPathPreview()
         {
             OnPropertyChanged(nameof(PathDataString));
@@ -37,8 +48,17 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
                 var linePoints = string.Join(" ", points.Skip(1).Select(p => $"L {p.X.ToString(CultureInfo.InvariantCulture)},{p.Y.ToString(CultureInfo.InvariantCulture)}"));
                 string closing = isClosed ? " Z" : "";
 
+                UpdatePathProperties($"{startPoint} {linePoints}{closing}");
                 return $"{startPoint} {linePoints}{closing}";
             }
+        }
+        
+        private void UpdatePathProperties(string newPath)
+        {
+            Rect bounds = PathGeometry.Parse(newPath).Bounds;
+            PathTransform = new TranslateTransform(-bounds.X, -bounds.Y);
+            PathWidth = bounds.Width;
+            PathHeight = bounds.Height;
         }
     }
 }

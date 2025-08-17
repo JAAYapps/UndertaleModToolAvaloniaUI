@@ -37,46 +37,52 @@
 		<TextBox Grid.Row="3" Grid.Column="1" Margin="3" Text="{Binding UndertalePath.Precision}"/>
 
 		<TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Points</TextBlock>
-		<Grid Grid.Row="4" Grid.Column="1" Margin="3" RowDefinitions="*,*">
-			<DataGrid Grid.Row="0" ItemsSource="{Binding UndertalePath.Points}"
-                  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
-                  HeadersVisibility="Column" SelectionMode="Single">
-				<DataGrid.Styles>
-					<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
-						<Setter Property="Background" Value="{DynamicResource SystemAccentColorBrush}"/>
-					</Style>
-				</DataGrid.Styles>
-				<DataGrid.Columns>
-					<DataGridTemplateColumn Header="X" Width="*">
-						<DataGridTemplateColumn.CellTemplate>
-							<DataTemplate>
-								<TextBox Text="{Binding X, Mode=TwoWay}" Margin="20,0,0,0" LostFocus="Point_LostFocus"/>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellTemplate>
-					</DataGridTemplateColumn>
-					<DataGridTemplateColumn Header="Y" Width="*">
-						<DataGridTemplateColumn.CellTemplate>
-							<DataTemplate>
-								<TextBox Text="{Binding Y, Mode=TwoWay}" LostFocus="Point_LostFocus"/>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellTemplate>
-					</DataGridTemplateColumn>
-					<DataGridTemplateColumn Header="Speed" Width="*">
-						<DataGridTemplateColumn.CellTemplate>
-							<DataTemplate>
-								<TextBox Text="{Binding Speed, Mode=TwoWay}" LostFocus="Point_LostFocus"/>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellTemplate>
-					</DataGridTemplateColumn>
-				</DataGrid.Columns>
-			</DataGrid>
-			<Button Grid.Row="1" HorizontalAlignment="Stretch" Margin="5" DoubleTapped="Button_DoubleTapped">
-				<TextBlock Margin="5" TextAlignment="Center" FontStyle="Italic">Double click to add</TextBlock>
-			</Button>
-		</Grid>
-
-		<Viewbox Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" MaxWidth="300" MaxHeight="300" Margin="0,10,0,0">
-			<Path Stroke="Green" StrokeThickness="2" Fill="#0000FF00" Data="{Binding PathDataString}"/>
+		<ScrollViewer Grid.Row="4" Grid.Column="1" Margin="3" MaxHeight="400" MaxWidth="600">
+			<Grid  RowDefinitions="*,*">
+				<DataGrid Grid.Row="0" ItemsSource="{Binding UndertalePath.Points}"
+				          AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
+				          HeadersVisibility="Column" SelectionMode="Single">
+					<DataGrid.Styles>
+						<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
+							<Setter Property="Background" Value="{DynamicResource SystemAccentColorBrush}"/>
+						</Style>
+					</DataGrid.Styles>
+					<DataGrid.Columns>
+						<DataGridTemplateColumn Header="X" Width="*">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBox Text="{Binding X, Mode=TwoWay}" Margin="20,0,0,0" LostFocus="Point_LostFocus"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+						<DataGridTemplateColumn Header="Y" Width="*">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBox Text="{Binding Y, Mode=TwoWay}" LostFocus="Point_LostFocus"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+						<DataGridTemplateColumn Header="Speed" Width="*">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBox Text="{Binding Speed, Mode=TwoWay}" LostFocus="Point_LostFocus"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+					</DataGrid.Columns>
+				</DataGrid>
+				<Button Grid.Row="1" HorizontalAlignment="Stretch" Margin="5" DoubleTapped="Button_DoubleTapped">
+					<TextBlock Margin="5" TextAlignment="Center" FontStyle="Italic">Double click to add</TextBlock>
+				</Button>
+			</Grid>
+		</ScrollViewer>
+		
+		<Viewbox Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,10,0,0" UseLayoutRounding="False" MaxHeight="600" MaxWidth="600">
+			<Border Background="Gray" BorderBrush="Black" BorderThickness="1">
+				<Grid Width="{Binding PathWidth}" Height="{Binding PathHeight}" Margin="5">
+					<Path Stroke="Green" StrokeThickness="2" Fill="#0000FF00" Data="{Binding PathDataString}" RenderTransform="{Binding PathTransform}"/>
+				</Grid>
+			</Border>
 		</Viewbox>
 	</Grid>
 </UserControl>

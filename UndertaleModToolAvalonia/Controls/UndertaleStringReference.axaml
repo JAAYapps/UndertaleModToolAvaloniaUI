@@ -6,7 +6,6 @@
 			 xmlns:vm="using:UndertaleModToolAvalonia.Controls"
 			 xmlns:converters="using:UndertaleModToolAvalonia.Converters.ControlConverters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="30"
-			 xmlns:b="using:Avalonia.Xaml.Behaviors"
 			 x:Name="Self"
 			 x:DataType="vm:UndertaleStringReference"
              x:Class="UndertaleModToolAvalonia.Controls.UndertaleStringReference">
