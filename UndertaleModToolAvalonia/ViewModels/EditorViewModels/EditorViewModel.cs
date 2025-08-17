@@ -203,11 +203,15 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
         private void BuildChildren(ResourceNodeViewModel root, string category, IEnumerable<UndertaleObject> children, bool virtualize = true)
         {
-            if (children == null || !children.Any())
-                return;
-
             // We pass the children to the constructor only if we want virtualization.
             var cat = new ResourceNodeViewModel(category, null, this, referenceFinderService, false, (virtualize ? children : null));
+
+            if (children == null || !children.Any())
+            {
+                root.Children.Add(cat);
+                return;
+            }
+                
 
             // If we are NOT virtualizing (i.e., showing search results),
             // we create all the child nodes immediately.
@@ -829,7 +833,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     UndertaleBackground => new UndertaleBackgroundEditorViewModel(name, (UndertaleBackground)asset, this, textureCacheService, fileService),
                     UndertalePath => new UndertalePathEditorViewModel(name, (UndertalePath)asset),
                     UndertaleScript => new UndertaleScriptEditorViewModel(name, (UndertaleScript)asset),
-                    //UndertaleShader => "Shader",
+                    UndertaleShader => new UndertaleShaderEditorViewModel(name, (UndertaleShader)asset),
                     //UndertaleFont => "Font",
                     //UndertaleTimeline => "Timeline",
                     //UndertaleGameObject => "Game Object",
