@@ -167,9 +167,7 @@
 						</ui:TabView.TabItemTemplate>
 
 					</ui:TabView>
-					<ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" Margin="0,0,10,0">
-						<ContentControl Margin="0,0,0,20" Content="{Binding CurrentTab.CurrentObject}" VerticalContentAlignment="Stretch"/>
-					</ScrollViewer>
+					<ContentControl Grid.Row="1" Margin="0,0,0,10" Content="{Binding CurrentTab.CurrentObject}" VerticalContentAlignment="Stretch"/>
 					<!--<StackPanel Grid.Column="1" Margin="5,10,15,5" VerticalAlignment="Top" Orientation="Horizontal">
 						<Button Width="30" Height="20" MinWidth="30" MinHeight="20">
 							<Image Source="/Assets/tabs_left_button.png" Stretch="Uniform"/>

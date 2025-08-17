@@ -20,6 +20,16 @@
 			<Binding Path="FilePath"/>
 		</MultiBinding>
 	</wnd:AppWindow.Title>
+	<!--<wnd:AppWindow.KeyBindings>
+		<KeyBinding Gesture="Ctrl+O"
+                    Command="{Binding OpenFileCommand}"
+                    CommandParameter="{Binding StorageProvider, RelativeSource={RelativeSource AncestorType=Window}}"/>
+		<KeyBinding Gesture="Ctrl+S"
+                    Command="{Binding SaveFileCommand}"
+                    CommandParameter="{Binding StorageProvider, RelativeSource={RelativeSource AncestorType=Window}}"/>
+		<KeyBinding Gesture="F5"
+                    Command="{Binding RunGameCommand}"/>
+	</wnd:AppWindow.KeyBindings>-->
 	<Panel>
 		<ExperimentalAcrylicBorder IsHitTestVisible="False">
 			<ExperimentalAcrylicBorder.Material>
@@ -30,7 +40,7 @@
 					MaterialOpacity="0.65" />
 			</ExperimentalAcrylicBorder.Material>
 		</ExperimentalAcrylicBorder>
-		<Grid>
+		<Grid Name="MainContentGrid" Focusable="True">
 			<Grid.RowDefinitions>
 				<RowDefinition Height="*"/>
 			</Grid.RowDefinitions>

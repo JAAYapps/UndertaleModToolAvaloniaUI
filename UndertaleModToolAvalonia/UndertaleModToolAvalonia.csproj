@@ -12,11 +12,18 @@
     <ItemGroup>
         <AvaloniaResource Include="Assets\**" />
         <AvaloniaResource Remove="Assets\chime-notification.wav" />
+        <AvaloniaResource Remove="Assets\GML.xshd" />
+        <AvaloniaResource Remove="Assets\VMASM.xshd" />
         <EmbeddedResource Include="Assets\chime-notification.wav" CopyToOutputDirectory="Never" />
+        <EmbeddedResource Include="Assets\GML.xshd">
+          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </EmbeddedResource>
+        <EmbeddedResource Include="Assets\VMASM.xshd" />
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="11.3.4" />
+        <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.3.0" />
         <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.4" />
         <PackageReference Include="Avalonia.Controls.TreeDataGrid" Version="11.1.1" />
         <PackageReference Include="Avalonia.Desktop" Version="11.3.4" />
@@ -62,9 +69,6 @@
 
     <ItemGroup>
       <AvaloniaResource Update="Assets\avalonia-logo.ico">
-        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-      </AvaloniaResource>
-      <AvaloniaResource Update="Assets\GML.xshd">
         <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       </AvaloniaResource>
       <AvaloniaResource Update="Assets\icon.ico">

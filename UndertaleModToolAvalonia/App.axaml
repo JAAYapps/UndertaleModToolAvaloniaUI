@@ -39,6 +39,7 @@
 		<!--<FluentTheme/>-->
         <sty:FluentAvaloniaTheme PreferSystemTheme="True" PreferUserAccentColor="True"/>
 		<StyleInclude Source="avares://Avalonia.Controls.TreeDataGrid/Themes/Fluent.axaml"/>
+		<StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
         <StyleInclude Source="/Styles/MenuIcons.axaml"/>
 		<StyleInclude Source="/Styles/SideBar.axaml" />
     </Application.Styles>

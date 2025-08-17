@@ -9,6 +9,6 @@
 	<StackPanel>
 		<TextBlock Text="{Binding Heading, Mode=OneWay}" FontWeight="Bold"/>
 		<Separator/>
-		<TextBlock Text="{Binding Description, Mode=OneWay}"/>
+		<TextBlock Text="{Binding Description, Mode=OneWay}" TextWrapping="Wrap"/>
 	</StackPanel>
 </UserControl>

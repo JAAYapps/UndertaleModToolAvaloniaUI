@@ -16,87 +16,89 @@
 			<converters:IsVersionAtLeastConverter x:Key="IsVersionAtLeastConverter"/>
 		</ResourceDictionary>
 	</UserControl.Resources>
-	<Grid>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="1*"/>
-			<ColumnDefinition Width="3*"/>
-		</Grid.ColumnDefinitions>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-		</Grid.RowDefinitions>
-		<TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Scaled</TextBlock>
-		<TextBox Grid.Row="0" Grid.Column="1" Margin="3" Text="{Binding EmbeddedTexture.Scaled}"/>
-
-		<TextBlock Grid.Row="1" Grid.Column="0" Margin="3" Text="Generated EmbeddedTexture.mips"
-                   IsVisible="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2.0.6}"/>
-		<TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding EmbeddedTexture.GeneratedMips}"
-                 IsVisible="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2.0.6}"/>
-
-		<TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Size</TextBlock>
-		<Grid Grid.Row="2" Grid.Column="1">
+	<ScrollViewer VerticalScrollBarVisibility="Visible" AllowAutoHide="False">
+		<Grid Margin="15">
 			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="*"/>
-				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="1*"/>
+				<ColumnDefinition Width="3*"/>
 			</Grid.ColumnDefinitions>
-			<TextBox Grid.Column="0" x:Name="TexWidth" Margin="3" Text="{Binding EmbeddedTexture.TextureData.Width, Mode=OneWay}" IsReadOnly="True"/>
-			<TextBox Grid.Column="1" x:Name="TexHeight" Margin="3" Text="{Binding EmbeddedTexture.TextureData.Height, Mode=OneWay}" IsReadOnly="True"/>
-		</Grid>
-		<TextBlock Grid.Row="3" Grid.Column="4" Margin="3" Foreground="Red" Text="Warning: Texture failed to load!">
-			<TextBlock.IsVisible>
-				<MultiBinding Converter="{StaticResource TextureLoadedWrapperConverter}" Mode="OneWay">
-					<Binding Path="EmbeddedTexture.TextureLoaded" Mode="OneWay"/>
-					<Binding Path="EmbeddedTexture.TextureExternal" Mode="OneWay"/>
-				</MultiBinding>
-			</TextBlock.IsVisible>
-		</TextBlock>
-		<Grid Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="3">
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="*"/>
-				<ColumnDefinition Width="*"/>
-				<ColumnDefinition Width="*"/>
-			</Grid.ColumnDefinitions>
-
 			<Grid.RowDefinitions>
 				<RowDefinition Height="Auto"/>
 				<RowDefinition Height="Auto"/>
 				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
 			</Grid.RowDefinitions>
+			<TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Scaled</TextBlock>
+			<TextBox Grid.Row="0" Grid.Column="1" Margin="3" Text="{Binding EmbeddedTexture.Scaled}"/>
 
-			<TextBlock Grid.Row="0" Grid.ColumnSpan="3" Margin="3" HorizontalAlignment="Center" Foreground="DarkGray" FontStyle="Italic" TextWrapping="Wrap" TextAlignment="Center">
-				<Run>Hint: This image is mouse interactable.</Run>
-				<LineBreak/>
-				<Run Text="Left Click to go to texture item."/>
-				<LineBreak/>
-				<Run Text="Right Click for options."/>
-				<LineBreak/>
-				<Run Text="Middle Click to open a new tab for selected texture item."/>
-				<LineBreak/>
-				<Run Text="Hold Ctrl and Middle Click to pan view."/>
-				<LineBreak/>
-				<Run Text="Scroll to Zoom in and out."/>
+			<TextBlock Grid.Row="1" Grid.Column="0" Margin="3" Text="Generated EmbeddedTexture.mips"
+					   IsVisible="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2.0.6}"/>
+			<TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding EmbeddedTexture.GeneratedMips}"
+					 IsVisible="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2.0.6}"/>
+
+			<TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Size</TextBlock>
+			<Grid Grid.Row="2" Grid.Column="1">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+				<TextBox Grid.Column="0" x:Name="TexWidth" Margin="3" Text="{Binding EmbeddedTexture.TextureData.Width, Mode=OneWay}" IsReadOnly="True"/>
+				<TextBox Grid.Column="1" x:Name="TexHeight" Margin="3" Text="{Binding EmbeddedTexture.TextureData.Height, Mode=OneWay}" IsReadOnly="True"/>
+			</Grid>
+			<TextBlock Grid.Row="3" Grid.Column="4" Margin="3" Foreground="Red" Text="Warning: Texture failed to load!">
+				<TextBlock.IsVisible>
+					<MultiBinding Converter="{StaticResource TextureLoadedWrapperConverter}" Mode="OneWay">
+						<Binding Path="EmbeddedTexture.TextureLoaded" Mode="OneWay"/>
+						<Binding Path="EmbeddedTexture.TextureExternal" Mode="OneWay"/>
+					</MultiBinding>
+				</TextBlock.IsVisible>
 			</TextBlock>
-			<ScrollViewer Name="TextureScroll" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" MaxHeight="450" Margin="10"
-                          HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" AllowAutoHide="False">
-				<paz:ZoomBorder Name="ZoomBorder" Stretch="None" ZoomSpeed="1.2" ClipToBounds="True" Focusable="True"
-                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch" PanButton="Middle">
-					<Border Background="{StaticResource TransparencyGridBrushBrush}">
-						<Grid Name="TextureGrid" Cursor="Hand" Margin="10">
-							<Image Name="TexturePageImage"/>
-							<Canvas Width="{Binding #TexturePageImage.Bounds.Width}" Height="{Binding #TexturePageImage.Bounds.Height}">
-								<Border Name="PageItemBorder" Background="LightBlue" BorderThickness="2" BorderBrush="Blue" Opacity="0.65"
-										Width="0" Height="0"/>
-							</Canvas>
-						</Grid>
-					</Border>
-				</paz:ZoomBorder>
-			</ScrollViewer>
+			<Grid Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="3">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
+
+				<TextBlock Grid.Row="0" Grid.ColumnSpan="3" Margin="3" HorizontalAlignment="Center" Foreground="DarkGray" FontStyle="Italic" TextWrapping="Wrap" TextAlignment="Center">
+					<Run>Hint: This image is mouse interactable.</Run>
+					<LineBreak/>
+					<Run Text="Left Click to go to texture item."/>
+					<LineBreak/>
+					<Run Text="Right Click for options."/>
+					<LineBreak/>
+					<Run Text="Middle Click to open a new tab for selected texture item."/>
+					<LineBreak/>
+					<Run Text="Hold Ctrl and Middle Click to pan view."/>
+					<LineBreak/>
+					<Run Text="Scroll to Zoom in and out."/>
+				</TextBlock>
+				<ScrollViewer Name="TextureScroll" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" MaxHeight="450" Margin="10"
+							  HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" AllowAutoHide="False">
+					<paz:ZoomBorder Name="ZoomBorder" Stretch="None" ZoomSpeed="1.2" ClipToBounds="True" Focusable="True"
+								VerticalAlignment="Stretch" HorizontalAlignment="Stretch" PanButton="Middle">
+						<Border Background="{StaticResource TransparencyGridBrushBrush}">
+							<Grid Name="TextureGrid" Cursor="Hand" Margin="10">
+								<Image Name="TexturePageImage"/>
+								<Canvas Width="{Binding #TexturePageImage.Bounds.Width}" Height="{Binding #TexturePageImage.Bounds.Height}">
+									<Border Name="PageItemBorder" Background="LightBlue" BorderThickness="2" BorderBrush="Blue" Opacity="0.65"
+											Width="0" Height="0"/>
+								</Canvas>
+							</Grid>
+						</Border>
+					</paz:ZoomBorder>
+				</ScrollViewer>
 			
-			<Button Grid.Row="2" Grid.Column="0" Margin="0,2" Content="Import" HorizontalAlignment="Stretch" Command="{Binding ImportCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=StorageProvider}"/>
-			<Button Grid.Row="2" Grid.Column="3" Margin="0,2" Content="Export" HorizontalAlignment="Stretch" Command="{Binding ExportCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=StorageProvider}"/>
+				<Button Grid.Row="2" Grid.Column="0" Margin="0,2" Content="Import" HorizontalAlignment="Stretch" Command="{Binding ImportCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=StorageProvider}"/>
+				<Button Grid.Row="2" Grid.Column="3" Margin="0,2" Content="Export" HorizontalAlignment="Stretch" Command="{Binding ExportCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=StorageProvider}"/>
+			</Grid>
 		</Grid>
-	</Grid>
+	</ScrollViewer>
 </UserControl>

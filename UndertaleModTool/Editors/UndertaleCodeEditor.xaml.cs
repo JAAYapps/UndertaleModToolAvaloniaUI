@@ -371,6 +371,7 @@ namespace UndertaleModTool
             (linePos, columnPos, scrollPos) = tabState.DisassemblyCodePosition;
             RestoreCaretPosition(textEditor, linePos, columnPos, scrollPos);
         }
+
         private static void RestoreCaretPosition(TextEditor textEditor, int linePos, int columnPos, double scrollPos)
         {
             if (linePos <= textEditor.LineCount)

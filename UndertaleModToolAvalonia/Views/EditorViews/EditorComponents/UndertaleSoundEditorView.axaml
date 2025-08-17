@@ -8,66 +8,68 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
              x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleSoundEditorView"
 			 x:DataType="vm:UndertaleSoundEditorViewModel">
-	<Grid>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="1*"/>
-			<ColumnDefinition Width="3*"/>
-		</Grid.ColumnDefinitions>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="40"/>
-			<RowDefinition Height="Auto"/>
-		</Grid.RowDefinitions>
-
-		<TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Name</TextBlock>
-		<controls:UndertaleStringReference Grid.Row="0" Grid.Column="1" Margin="3" ObjectReference="{Binding Sound.Name}"/>
-
-		<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Flags</TextBlock>
-		<controls:FlagsBox Grid.Row="1" Grid.Column="1" Margin="3" Value="{Binding Sound.Flags}"/>
-
-		<TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Type</TextBlock>
-		<controls:UndertaleStringReference Grid.Row="2" Grid.Column="1" Margin="3" ObjectReference="{Binding Sound.Type}"/>
-
-		<TextBlock Grid.Row="3" Grid.Column="0" Margin="3">File</TextBlock>
-		<controls:UndertaleStringReference Grid.Row="3" Grid.Column="1" Margin="3" ObjectReference="{Binding Sound.File}"/>
-
-		<TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Effects</TextBlock>
-		<TextBox Grid.Row="4" Grid.Column="1" Margin="3" Text="{Binding Sound.Effects}"/>
-
-		<TextBlock Grid.Row="5" Grid.Column="0" Margin="3">Volume</TextBlock>
-		<TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding Sound.Volume}"/>
-
-		<TextBlock Grid.Row="6" Grid.Column="0" Margin="3">Pitch</TextBlock>
-		<TextBox Grid.Row="6" Grid.Column="1" Margin="3" Text="{Binding Sound.Pitch}"/>
-
-		<TextBlock Grid.Row="7" Grid.Column="0" Margin="3">Audio group</TextBlock>
-		<controls:UndertaleObjectReference Grid.Row="7" Grid.Column="1" Margin="3" ObjectReference="{Binding Sound.AudioGroup}" ObjectType="{x:Type undertale:UndertaleAudioGroup}"/>
-
-		<TextBlock Grid.Row="8" Grid.Column="0" Margin="3">Audio file</TextBlock>
-		<controls:AudioFileReference Grid.Row="8" Grid.Column="1" Margin="3" AudioReference="{Binding Sound.AudioFile}" GroupReference="{Binding Sound.AudioGroup}" AudioID="{Binding Sound.AudioID}" GroupID="{Binding Sound.GroupID}"/>
-
-		<TextBlock Grid.Row="9" Grid.Column="0" Margin="3">Preload (old audio system)</TextBlock>
-		<CheckBox Grid.Row="9" Grid.Column="1" Margin="3" IsChecked="{Binding Sound.Preload}"/>
-
-		<Grid Grid.Row="11" Grid.Column="1" Name="AudioPlayer">
+	<ScrollViewer VerticalScrollBarVisibility="Visible" AllowAutoHide="False">
+		<Grid Margin="15">
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="1*"/>
-				<ColumnDefinition Width="1*"/>
+				<ColumnDefinition Width="3*"/>
 			</Grid.ColumnDefinitions>
 			<Grid.RowDefinitions>
 				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="40"/>
+				<RowDefinition Height="Auto"/>
 			</Grid.RowDefinitions>
-			<Button Grid.Row="11" Grid.Column="0" x:Name="Play" Margin="3,0" HorizontalAlignment="Stretch" Command="{Binding PlayCommand}">Play</Button>
-			<Button Grid.Row="11" Grid.Column="1" x:Name="Stop" Margin="3,0" HorizontalAlignment="Stretch" Command="{Binding StopCommand}">Stop</Button>
+
+			<TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Name</TextBlock>
+			<controls:UndertaleStringReference Grid.Row="0" Grid.Column="1" Margin="3" ObjectReference="{Binding Sound.Name}"/>
+
+			<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Flags</TextBlock>
+			<controls:FlagsBox Grid.Row="1" Grid.Column="1" Margin="3" Value="{Binding Sound.Flags}"/>
+
+			<TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Type</TextBlock>
+			<controls:UndertaleStringReference Grid.Row="2" Grid.Column="1" Margin="3" ObjectReference="{Binding Sound.Type}"/>
+
+			<TextBlock Grid.Row="3" Grid.Column="0" Margin="3">File</TextBlock>
+			<controls:UndertaleStringReference Grid.Row="3" Grid.Column="1" Margin="3" ObjectReference="{Binding Sound.File}"/>
+
+			<TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Effects</TextBlock>
+			<TextBox Grid.Row="4" Grid.Column="1" Margin="3" Text="{Binding Sound.Effects}"/>
+
+			<TextBlock Grid.Row="5" Grid.Column="0" Margin="3">Volume</TextBlock>
+			<TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding Sound.Volume}"/>
+
+			<TextBlock Grid.Row="6" Grid.Column="0" Margin="3">Pitch</TextBlock>
+			<TextBox Grid.Row="6" Grid.Column="1" Margin="3" Text="{Binding Sound.Pitch}"/>
+
+			<TextBlock Grid.Row="7" Grid.Column="0" Margin="3">Audio group</TextBlock>
+			<controls:UndertaleObjectReference Grid.Row="7" Grid.Column="1" Margin="3" ObjectReference="{Binding Sound.AudioGroup}" ObjectType="{x:Type undertale:UndertaleAudioGroup}"/>
+
+			<TextBlock Grid.Row="8" Grid.Column="0" Margin="3">Audio file</TextBlock>
+			<controls:AudioFileReference Grid.Row="8" Grid.Column="1" Margin="3" AudioReference="{Binding Sound.AudioFile}" GroupReference="{Binding Sound.AudioGroup}" AudioID="{Binding Sound.AudioID}" GroupID="{Binding Sound.GroupID}"/>
+
+			<TextBlock Grid.Row="9" Grid.Column="0" Margin="3">Preload (old audio system)</TextBlock>
+			<CheckBox Grid.Row="9" Grid.Column="1" Margin="3" IsChecked="{Binding Sound.Preload}"/>
+
+			<Grid Grid.Row="11" Grid.Column="1" Name="AudioPlayer">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="1*"/>
+					<ColumnDefinition Width="1*"/>
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
+				<Button Grid.Row="11" Grid.Column="0" x:Name="Play" Margin="3,0" HorizontalAlignment="Stretch" Command="{Binding PlayCommand}">Play</Button>
+				<Button Grid.Row="11" Grid.Column="1" x:Name="Stop" Margin="3,0" HorizontalAlignment="Stretch" Command="{Binding StopCommand}">Stop</Button>
+			</Grid>
 		</Grid>
-	</Grid>
+	</ScrollViewer>
 </UserControl>

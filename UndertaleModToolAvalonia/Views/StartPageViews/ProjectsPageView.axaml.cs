@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 using System;
 using UndertaleModToolAvalonia.Utilities;
 
@@ -13,36 +14,18 @@ namespace UndertaleModToolAvalonia.Views.StartPageViews
         public ProjectsPageView()
         {
             InitializeComponent();
-
-            this.Loaded += OnLoaded;
-            this.LostFocus += OnLostFocus;
-            this.GotFocus += OnGotFocus;
+            this.Loaded += ProjectsPageView_Loaded;
         }
 
-        private void OnGotFocus(object? sender, GotFocusEventArgs e)
+        private void ProjectsPageView_Loaded(object? sender, RoutedEventArgs e)
         {
-            //Console.WriteLine("Got focus: " + e.Source);
-            if (e.Source is TextBox || e.Source is MenuItem || e.Source is DataGrid)
+            if (TopMenu == null) return;
+
+            var window = this.GetVisualRoot() as Window;
+            if (window != null)
             {
-                blockLostFocus = true;
-                ((Control)e.Source).Focus();
+                TopMenu.DataContext = window.DataContext;
             }
-        }
-
-        private void OnLostFocus(object? sender, RoutedEventArgs e)
-        {
-            //Console.WriteLine("Lost focus: " + e.Source);
-            if (blockLostFocus)
-            {
-                blockLostFocus = false;
-                return;
-            }
-            this.Focus();
-        }
-
-        private void OnLoaded(object? sender, RoutedEventArgs e)
-        {
-            this.Focus();
         }
     }
 }

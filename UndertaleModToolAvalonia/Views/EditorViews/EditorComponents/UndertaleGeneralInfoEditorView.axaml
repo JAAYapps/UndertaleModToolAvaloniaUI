@@ -17,148 +17,296 @@
 		<converters:ByteGUIDArrayConverter x:Key="byteGUIDArrayConverter"/>
 		<controlConverters:TimestampDateTimeConverter x:Key="TimestampDateTimeConverter"/>
 	</UserControl.Resources>
-	<StackPanel Margin="12">
-		<StackPanel IsVisible="{Binding Info, Converter={x:Static ObjectConverters.IsNotNull}}">
-			<TextBlock Text="General info" FontWeight="Bold"/>
-			<Separator/>
-			<Grid>
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="220"/>
-					<ColumnDefinition Width="2*"/>
-				</Grid.ColumnDefinitions>
-				<Grid.RowDefinitions>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-				</Grid.RowDefinitions>
-
-				<TextBlock Grid.Row="0" Grid.Column="0" Margin="3" Foreground="DarkRed">Disable GMS debugger</TextBlock>
-				<CheckBox Name="DebuggerCheckBox" Grid.Row="0" Grid.Column="1" Margin="3" IsChecked="{Binding Info.IsDebuggerDisabled}"/>
-
-				<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Bytecode version</TextBlock>
-				<TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding Info.BytecodeVersion}"/>
-
-				<TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Unknown</TextBlock>
-				<TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding Info.Unknown}"/>
-
-				<TextBlock Grid.Row="3" Grid.Column="0" Margin="3">FileName</TextBlock>
-				<controls:UndertaleStringReference Grid.Row="3" Grid.Column="1" Margin="3" ObjectReference="{Binding Info.FileName}"/>
-
-				<TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Config</TextBlock>
-				<controls:UndertaleStringReference Grid.Row="4" Grid.Column="1" Margin="3" ObjectReference="{Binding Info.Config}"/>
-
-				<TextBlock Grid.Row="5" Grid.Column="0" Margin="3">Last object ID</TextBlock>
-				<TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding Info.LastObj}"/>
-
-				<TextBlock Grid.Row="6" Grid.Column="0" Margin="3">Last tile ID</TextBlock>
-				<TextBox Grid.Row="6" Grid.Column="1" Margin="3" Text="{Binding Info.LastTile}"/>
-
-				<TextBlock Grid.Row="7" Grid.Column="0" Margin="3">Game ID</TextBlock>
-				<TextBox Grid.Row="7" Grid.Column="1" Margin="3" Text="{Binding Info.GameID}"/>
-
-				<TextBlock Grid.Row="8" Grid.Column="0" Margin="3">DirectPlay GUID</TextBlock>
-				<TextBox Grid.Row="8" Grid.Column="1" Margin="3" Text="{Binding Info.DirectPlayGuid}"/>
-
-				<TextBlock Grid.Row="9" Grid.Column="0" Margin="3">Name</TextBlock>
-				<controls:UndertaleStringReference Grid.Row="9" Grid.Column="1" Margin="3" ObjectReference="{Binding Info.Name}"/>
-
-				<TextBlock Grid.Row="10" Grid.Column="0" Margin="3">Version</TextBlock>
-				<Grid Grid.Row="10" Grid.Column="1">
+	<ScrollViewer VerticalScrollBarVisibility="Visible" AllowAutoHide="False">
+		<StackPanel Margin="15">
+			<StackPanel IsVisible="{Binding Info, Converter={x:Static ObjectConverters.IsNotNull}}">
+				<TextBlock Text="General info" FontWeight="Bold"/>
+				<Separator/>
+				<Grid>
 					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="*"/>
-						<ColumnDefinition Width="Auto"/>
-						<ColumnDefinition Width="*"/>
-						<ColumnDefinition Width="Auto"/>
-						<ColumnDefinition Width="*"/>
-						<ColumnDefinition Width="Auto"/>
-						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="220"/>
+						<ColumnDefinition Width="2*"/>
 					</Grid.ColumnDefinitions>
-					<TextBox Grid.Column="0" Margin="3" Text="{Binding Info.Major}"/>
-					<TextBlock Grid.Column="1" Margin="0,3" Text="."/>
-					<TextBox Grid.Column="2" Margin="3" Text="{Binding Info.Minor}"/>
-					<TextBlock Grid.Column="3" Margin="0,3" Text="."/>
-					<TextBox Grid.Column="4" Margin="3" Text="{Binding Info.Release}"/>
-					<TextBlock Grid.Column="5" Margin="0,3" Text="."/>
-					<TextBox Grid.Column="6" Margin="3" Text="{Binding Info.Build}"/>
-				</Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+					</Grid.RowDefinitions>
 
-				<TextBlock Grid.Row="11" Grid.Column="0" Margin="3">Default window size</TextBlock>
-				<Grid Grid.Row="11" Grid.Column="1">
+					<TextBlock Grid.Row="0" Grid.Column="0" Margin="3" Foreground="DarkRed">Disable GMS debugger</TextBlock>
+					<CheckBox Name="DebuggerCheckBox" Grid.Row="0" Grid.Column="1" Margin="3" IsChecked="{Binding Info.IsDebuggerDisabled}"/>
+
+					<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Bytecode version</TextBlock>
+					<TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding Info.BytecodeVersion}"/>
+
+					<TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Unknown</TextBlock>
+					<TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding Info.Unknown}"/>
+
+					<TextBlock Grid.Row="3" Grid.Column="0" Margin="3">FileName</TextBlock>
+					<controls:UndertaleStringReference Grid.Row="3" Grid.Column="1" Margin="3" ObjectReference="{Binding Info.FileName}"/>
+
+					<TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Config</TextBlock>
+					<controls:UndertaleStringReference Grid.Row="4" Grid.Column="1" Margin="3" ObjectReference="{Binding Info.Config}"/>
+
+					<TextBlock Grid.Row="5" Grid.Column="0" Margin="3">Last object ID</TextBlock>
+					<TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding Info.LastObj}"/>
+
+					<TextBlock Grid.Row="6" Grid.Column="0" Margin="3">Last tile ID</TextBlock>
+					<TextBox Grid.Row="6" Grid.Column="1" Margin="3" Text="{Binding Info.LastTile}"/>
+
+					<TextBlock Grid.Row="7" Grid.Column="0" Margin="3">Game ID</TextBlock>
+					<TextBox Grid.Row="7" Grid.Column="1" Margin="3" Text="{Binding Info.GameID}"/>
+
+					<TextBlock Grid.Row="8" Grid.Column="0" Margin="3">DirectPlay GUID</TextBlock>
+					<TextBox Grid.Row="8" Grid.Column="1" Margin="3" Text="{Binding Info.DirectPlayGuid}"/>
+
+					<TextBlock Grid.Row="9" Grid.Column="0" Margin="3">Name</TextBlock>
+					<controls:UndertaleStringReference Grid.Row="9" Grid.Column="1" Margin="3" ObjectReference="{Binding Info.Name}"/>
+
+					<TextBlock Grid.Row="10" Grid.Column="0" Margin="3">Version</TextBlock>
+					<Grid Grid.Row="10" Grid.Column="1">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*"/>
+							<ColumnDefinition Width="Auto"/>
+							<ColumnDefinition Width="*"/>
+							<ColumnDefinition Width="Auto"/>
+							<ColumnDefinition Width="*"/>
+							<ColumnDefinition Width="Auto"/>
+							<ColumnDefinition Width="*"/>
+						</Grid.ColumnDefinitions>
+						<TextBox Grid.Column="0" Margin="3" Text="{Binding Info.Major}"/>
+						<TextBlock Grid.Column="1" Margin="0,3" Text="."/>
+						<TextBox Grid.Column="2" Margin="3" Text="{Binding Info.Minor}"/>
+						<TextBlock Grid.Column="3" Margin="0,3" Text="."/>
+						<TextBox Grid.Column="4" Margin="3" Text="{Binding Info.Release}"/>
+						<TextBlock Grid.Column="5" Margin="0,3" Text="."/>
+						<TextBox Grid.Column="6" Margin="3" Text="{Binding Info.Build}"/>
+					</Grid>
+
+					<TextBlock Grid.Row="11" Grid.Column="0" Margin="3">Default window size</TextBlock>
+					<Grid Grid.Row="11" Grid.Column="1">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*"/>
+							<ColumnDefinition Width="Auto"/>
+							<ColumnDefinition Width="*"/>
+						</Grid.ColumnDefinitions>
+						<TextBox Grid.Column="0" Margin="3" Text="{Binding Info.DefaultWindowWidth}"/>
+						<TextBlock Grid.Column="1" Margin="0,3" Text="x"/>
+						<TextBox Grid.Column="2" Margin="3" Text="{Binding Info.DefaultWindowHeight}"/>
+					</Grid>
+
+					<TextBlock Grid.Row="12" Grid.Column="0" Margin="3">Flags</TextBlock>
+					<controls:FlagsBox Grid.Row="12" Grid.Column="1" Margin="3" Value="{Binding Info.Info}" HorizontalAlignment="Left"/>
+
+					<TextBlock Grid.Row="13" Grid.Column="0" Margin="3">License MD5</TextBlock>
+					<TextBox Grid.Row="13" Grid.Column="1" Margin="3" Text="{Binding Info.LicenseMD5, Mode=TwoWay, Converter={StaticResource byteArrayConverter}}"/>
+
+					<TextBlock Grid.Row="14" Grid.Column="0" Margin="3">License CRC32</TextBlock>
+					<TextBox Grid.Row="14" Grid.Column="1" Margin="3" Text="{Binding Info.LicenseCRC32, StringFormat={}{0:X8}}"/>
+
+					<TextBlock Grid.Row="15" Grid.Column="0" Margin="3">Timestamp</TextBlock>
+					<TextBox Grid.Row="15" Grid.Column="1" Margin="3" IsReadOnly="True"
+							 Text="{Binding Info.Timestamp, Mode=OneWay, Converter={StaticResource TimestampDateTimeConverter}}"
+							 ToolTip.Tip="{Binding Info.Timestamp, Mode=OneWay, Converter={StaticResource TimestampDateTimeConverter}, ConverterParameter=GMT}">
+						<TextBox.Background>
+							<VisualBrush AlignmentX="Right" AlignmentY="Center" Stretch="None">
+								<VisualBrush.Visual>
+									<Label Content="(local time, hover to see GMT+0)"
+										   Foreground="Gray" FontStyle="Italic" Margin="0,0,5,0"/>
+								</VisualBrush.Visual>
+							</VisualBrush>
+						</TextBox.Background>
+					</TextBox>
+
+					<TextBlock Grid.Row="16" Grid.Column="0" Margin="3">Display name</TextBlock>
+					<controls:UndertaleStringReference Grid.Row="16" Grid.Column="1" Margin="3" ObjectReference="{Binding Info.DisplayName}"/>
+
+					<TextBlock Grid.Row="17" Grid.Column="0" Margin="3">Active targets</TextBlock>
+					<TextBox Grid.Row="17" Grid.Column="1" Margin="3" Text="{Binding Info.ActiveTargets}"/>
+
+					<TextBlock Grid.Row="18" Grid.Column="0" Margin="3">Function classifications</TextBlock>
+					<controls:FlagsBox Grid.Row="18" Grid.Column="1" Margin="3" MaxWidth="800" Value="{Binding Info.FunctionClassifications}" HorizontalAlignment="Left"/>
+
+					<TextBlock Grid.Row="19" Grid.Column="0" Margin="3">Steam AppID</TextBlock>
+					<TextBox Grid.Row="19" Grid.Column="1" Margin="3" Text="{Binding Info.SteamAppID}"/>
+
+					<TextBlock Grid.Row="20" Grid.Column="0" Margin="3">Debugger port</TextBlock>
+					<TextBox Grid.Row="20" Grid.Column="1" Margin="3" Text="{Binding Info.DebuggerPort}"/>
+
+					<TextBlock Grid.Row="21" Grid.Column="0" Margin="3">Room order</TextBlock>
+					<Expander Grid.Row="21" Grid.Column="1" Margin="3" Header="List" Name="RoomListExpander">
+						<Grid RowDefinitions="*, auto">
+							<DataGrid Grid.Row="0" ItemsSource="{Binding Info.RoomOrder}" MaxWidth="600" MaxHeight="369" x:Name="RoomListGrid"
+											AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
+								<!--<DataGrid.Resources>
+								<SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#FF26A0DA"/>
+								<Style TargetType="{x:Type DataGridCell}">
+									<Setter Property="Template">
+										<Setter.Value>
+											<ControlTemplate TargetType="{x:Type DataGridCell}">
+												<Grid Background="{TemplateBinding Background}">
+													<ContentPresenter VerticalAlignment="Center" />
+												</Grid>
+											</ControlTemplate>
+										</Setter.Value>
+									</Setter>
+									<Style.Triggers>
+										<DataTrigger Binding="{Binding DataContext, RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}}" Value="{x:Static CollectionView.NewItemPlaceholder}">
+											<Setter Property="Template">
+												<Setter.Value>
+													<ControlTemplate>
+														<TextBlock Margin="5" TextAlignment="Center" FontStyle="Italic">Double click to add</TextBlock>
+													</ControlTemplate>
+												</Setter.Value>
+											</Setter>
+										</DataTrigger>
+									</Style.Triggers>
+								</Style>
+							</DataGrid.Resources>-->
+								<DataGrid.Styles>
+									<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
+										<Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
+									</Style>
+								</DataGrid.Styles>
+								<DataGrid.Columns>
+									<DataGridTemplateColumn Width="*">
+										<DataGridTemplateColumn.CellTemplate>
+											<DataTemplate>
+												<controls:UndertaleObjectReference Margin="20,0,0,0" ObjectReference="{Binding Resource, Mode=TwoWay}" ObjectType="{x:Type undertaleModels:UndertaleRoom}" CanRemove="False"/>
+											</DataTemplate>
+										</DataGridTemplateColumn.CellTemplate>
+									</DataGridTemplateColumn>
+								</DataGrid.Columns>
+							</DataGrid>
+							<Button Grid.Row="1" Name="AddRoomButton" Margin="20,5,0,0" Content="Add"/>
+						</Grid>
+					</Expander>
+
+					<Button Name="RoomSyncButton" Grid.Row="22" Grid.Column="1" Margin="3" Content="Sync with room list"/>
+
+					<Grid Grid.Row="23" Grid.ColumnSpan="2" Margin="0" IsVisible="{x:Static util:UndertaleHelper.IsGMS2}">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="1*"/>
+							<ColumnDefinition Width="3*"/>
+						</Grid.ColumnDefinitions>
+						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="Auto"/>
+						</Grid.RowDefinitions>
+
+						<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">FPS</TextBlock>
+						<TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding Info.GMS2FPS}"/>
+
+						<TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Allow statistics</TextBlock>
+						<CheckBox Grid.Row="2" Grid.Column="1" Margin="3" IsChecked="{Binding Info.GMS2AllowStatistics}"/>
+
+						<TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Game GUID</TextBlock>
+						<TextBox Grid.Row="13" Grid.Column="1" Margin="3" Text="{Binding Info.GMS2GameGUID, Mode=TwoWay, Converter={StaticResource byteGUIDArrayConverter}}"/>
+					</Grid>
+				</Grid>
+			</StackPanel>
+
+			<StackPanel IsVisible="{Binding Options, Converter={x:Static ObjectConverters.IsNotNull}}">
+				<TextBlock Text="Options" FontWeight="Bold"/>
+				<Separator/>
+				<Grid>
 					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="*"/>
-						<ColumnDefinition Width="Auto"/>
-						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="220"/>
+						<ColumnDefinition Width="2*"/>
 					</Grid.ColumnDefinitions>
-					<TextBox Grid.Column="0" Margin="3" Text="{Binding Info.DefaultWindowWidth}"/>
-					<TextBlock Grid.Column="1" Margin="0,3" Text="x"/>
-					<TextBox Grid.Column="2" Margin="3" Text="{Binding Info.DefaultWindowHeight}"/>
-				</Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+					</Grid.RowDefinitions>
 
-				<TextBlock Grid.Row="12" Grid.Column="0" Margin="3">Flags</TextBlock>
-				<controls:FlagsBox Grid.Row="12" Grid.Column="1" Margin="3" Value="{Binding Info.Info}" HorizontalAlignment="Left"/>
+					<TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Unknown</TextBlock>
+					<Grid Grid.Row="0" Grid.Column="1">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*"/>
+							<ColumnDefinition Width="*"/>
+						</Grid.ColumnDefinitions>
+						<TextBox Grid.Column="0" Margin="3" Text="{Binding Options.Unknown1}"/>
+						<TextBox Grid.Column="1" Margin="3" Text="{Binding Options.Unknown2}"/>
+					</Grid>
 
-				<TextBlock Grid.Row="13" Grid.Column="0" Margin="3">License MD5</TextBlock>
-				<TextBox Grid.Row="13" Grid.Column="1" Margin="3" Text="{Binding Info.LicenseMD5, Mode=TwoWay, Converter={StaticResource byteArrayConverter}}"/>
+					<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Flags</TextBlock>
+					<controls:FlagsBox Grid.Row="1" Grid.Column="1" Margin="3" Value="{Binding Options.Info}" HorizontalAlignment="Left"/>
 
-				<TextBlock Grid.Row="14" Grid.Column="0" Margin="3">License CRC32</TextBlock>
-				<TextBox Grid.Row="14" Grid.Column="1" Margin="3" Text="{Binding Info.LicenseCRC32, StringFormat={}{0:X8}}"/>
+					<TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Scale</TextBlock>
+					<TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding Options.Scale}"/>
 
-				<TextBlock Grid.Row="15" Grid.Column="0" Margin="3">Timestamp</TextBlock>
-				<TextBox Grid.Row="15" Grid.Column="1" Margin="3" IsReadOnly="True"
-                         Text="{Binding Info.Timestamp, Mode=OneWay, Converter={StaticResource TimestampDateTimeConverter}}"
-                         ToolTip.Tip="{Binding Info.Timestamp, Mode=OneWay, Converter={StaticResource TimestampDateTimeConverter}, ConverterParameter=GMT}">
-					<TextBox.Background>
-						<VisualBrush AlignmentX="Right" AlignmentY="Center" Stretch="None">
-							<VisualBrush.Visual>
-								<Label Content="(local time, hover to see GMT+0)"
-                                       Foreground="Gray" FontStyle="Italic" Margin="0,0,5,0"/>
-							</VisualBrush.Visual>
-						</VisualBrush>
-					</TextBox.Background>
-				</TextBox>
+					<TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Window color</TextBlock>
+					<controls:ColorPicker Grid.Row="3" Grid.Column="1" Margin="3" Color="{Binding Options.WindowColor}"/>
 
-				<TextBlock Grid.Row="16" Grid.Column="0" Margin="3">Display name</TextBlock>
-				<controls:UndertaleStringReference Grid.Row="16" Grid.Column="1" Margin="3" ObjectReference="{Binding Info.DisplayName}"/>
+					<TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Color depth</TextBlock>
+					<TextBox Grid.Row="4" Grid.Column="1" Margin="3" Text="{Binding Options.ColorDepth}"/>
 
-				<TextBlock Grid.Row="17" Grid.Column="0" Margin="3">Active targets</TextBlock>
-				<TextBox Grid.Row="17" Grid.Column="1" Margin="3" Text="{Binding Info.ActiveTargets}"/>
+					<TextBlock Grid.Row="5" Grid.Column="0" Margin="3">Resolution</TextBlock>
+					<TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding Options.Resolution}"/>
 
-				<TextBlock Grid.Row="18" Grid.Column="0" Margin="3">Function classifications</TextBlock>
-				<controls:FlagsBox Grid.Row="18" Grid.Column="1" Margin="3" MaxWidth="800" Value="{Binding Info.FunctionClassifications}" HorizontalAlignment="Left"/>
+					<TextBlock Grid.Row="6" Grid.Column="0" Margin="3">Frequency</TextBlock>
+					<TextBox Grid.Row="6" Grid.Column="1" Margin="3" Text="{Binding Options.Frequency}"/>
 
-				<TextBlock Grid.Row="19" Grid.Column="0" Margin="3">Steam AppID</TextBlock>
-				<TextBox Grid.Row="19" Grid.Column="1" Margin="3" Text="{Binding Info.SteamAppID}"/>
+					<TextBlock Grid.Row="7" Grid.Column="0" Margin="3">Vertex sync</TextBlock>
+					<TextBox Grid.Row="7" Grid.Column="1" Margin="3" Text="{Binding Options.VertexSync}"/>
 
-				<TextBlock Grid.Row="20" Grid.Column="0" Margin="3">Debugger port</TextBlock>
-				<TextBox Grid.Row="20" Grid.Column="1" Margin="3" Text="{Binding Info.DebuggerPort}"/>
+					<TextBlock Grid.Row="8" Grid.Column="0" Margin="3">Priority</TextBlock>
+					<TextBox Grid.Row="8" Grid.Column="1" Margin="3" Text="{Binding Options.Priority}"/>
 
-				<TextBlock Grid.Row="21" Grid.Column="0" Margin="3">Room order</TextBlock>
-				<Expander Grid.Row="21" Grid.Column="1" Margin="3" Header="List" Name="RoomListExpander">
-					<Grid RowDefinitions="*, auto">
-						<DataGrid Grid.Row="0" ItemsSource="{Binding Info.RoomOrder}" MaxWidth="600" MaxHeight="369" x:Name="RoomListGrid"
-                                        AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
-							<!--<DataGrid.Resources>
+					<TextBlock Grid.Row="9" Grid.Column="0" Margin="3">Back image</TextBlock>
+					<controls:UndertaleObjectReference Grid.Row="9" Grid.Column="1" Margin="3" ObjectReference="{Binding Options.BackImage.Texture, Mode=TwoWay}" ObjectType="{x:Type undertaleModels:UndertaleTexturePageItem}"/>
+
+					<TextBlock Grid.Row="10" Grid.Column="0" Margin="3">Front image</TextBlock>
+					<controls:UndertaleObjectReference Grid.Row="10" Grid.Column="1" Margin="3" ObjectReference="{Binding Options.FrontImage.Texture, Mode=TwoWay}" ObjectType="{x:Type undertaleModels:UndertaleTexturePageItem}"/>
+
+					<TextBlock Grid.Row="11" Grid.Column="0" Margin="3">Load image</TextBlock>
+					<controls:UndertaleObjectReference Grid.Row="11" Grid.Column="1" Margin="3" ObjectReference="{Binding Options.LoadImage.Texture, Mode=TwoWay}" ObjectType="{x:Type undertaleModels:UndertaleTexturePageItem}"/>
+
+					<TextBlock Grid.Row="12" Grid.Column="0" Margin="3">Load alpha</TextBlock>
+					<TextBox Grid.Row="12" Grid.Column="1" Margin="3" Text="{Binding Options.LoadAlpha}"/>
+
+					<TextBlock Grid.Row="13" Grid.Column="0" Margin="3">Constants</TextBlock>
+					<DataGrid Grid.Row="13" Grid.Column="1" Margin="3" ItemsSource="{Binding Options.Constants}"
+							  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray"
+							  VerticalGridLinesBrush="LightGray" HeadersVisibility="Column"
+							  SelectionMode="Single" HorizontalAlignment="Left">
+						<!--<DataGrid.Resources>
 							<SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#FF26A0DA"/>
 							<Style TargetType="{x:Type DataGridCell}">
 								<Setter Property="Template">
@@ -183,31 +331,39 @@
 								</Style.Triggers>
 							</Style>
 						</DataGrid.Resources>-->
-							<DataGrid.Styles>
-								<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
-									<Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
-								</Style>
-							</DataGrid.Styles>
-							<DataGrid.Columns>
-								<DataGridTemplateColumn Width="*">
-									<DataGridTemplateColumn.CellTemplate>
-										<DataTemplate>
-											<controls:UndertaleObjectReference Margin="20,0,0,0" ObjectReference="{Binding Resource, Mode=TwoWay}" ObjectType="{x:Type undertaleModels:UndertaleRoom}" CanRemove="False"/>
-										</DataTemplate>
-									</DataGridTemplateColumn.CellTemplate>
-								</DataGridTemplateColumn>
-							</DataGrid.Columns>
-						</DataGrid>
-						<Button Grid.Row="1" Name="AddRoomButton" Margin="20,5,0,0" Content="Add"/>
-					</Grid>
-				</Expander>
+						<DataGrid.Styles>
+							<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
+								<Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
+							</Style>
+						</DataGrid.Styles>
+						<DataGrid.Columns>
+							<DataGridTemplateColumn Width="auto" Header="Name">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<controls:UndertaleStringReference Margin="20,0,0,0" ObjectReference="{Binding Name, Mode=TwoWay}"/>
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+							<DataGridTemplateColumn Width="auto" Header="Value">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<controls:UndertaleStringReference ObjectReference="{Binding Value, Mode=TwoWay}"/>
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+						</DataGrid.Columns>
+					</DataGrid>
+					<Button Grid.Row="14" Grid.Column="1" Margin="5,10,0,0" Name="AddConstantsButton" Content="Add"/>
+				</Grid>
+			</StackPanel>
 
-				<Button Name="RoomSyncButton" Grid.Row="22" Grid.Column="1" Margin="3" Content="Sync with room list"/>
-
-				<Grid Grid.Row="23" Grid.ColumnSpan="2" Margin="0" IsVisible="{x:Static util:UndertaleHelper.IsGMS2}">
+			<StackPanel IsVisible="{Binding Language, Converter={x:Static ObjectConverters.IsNotNull}}">
+				<TextBlock Text="Language (?)" FontWeight="Bold"/>
+				<Separator/>
+				<Grid>
 					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="1*"/>
-						<ColumnDefinition Width="3*"/>
+						<ColumnDefinition Width="220"/>
+						<ColumnDefinition Width="2*"/>
 					</Grid.ColumnDefinitions>
 					<Grid.RowDefinitions>
 						<RowDefinition Height="Auto"/>
@@ -216,174 +372,20 @@
 						<RowDefinition Height="Auto"/>
 					</Grid.RowDefinitions>
 
-					<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">FPS</TextBlock>
-					<TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding Info.GMS2FPS}"/>
+					<TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Unknown</TextBlock>
+					<TextBox Grid.Row="0" Grid.Column="1" Margin="3" Text="{Binding Language.Unknown1}"/>
 
-					<TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Allow statistics</TextBlock>
-					<CheckBox Grid.Row="2" Grid.Column="1" Margin="3" IsChecked="{Binding Info.GMS2AllowStatistics}"/>
+					<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Language count</TextBlock>
+					<TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding Language.LanguageCount}"/>
 
-					<TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Game GUID</TextBlock>
-					<TextBox Grid.Row="13" Grid.Column="1" Margin="3" Text="{Binding Info.GMS2GameGUID, Mode=TwoWay, Converter={StaticResource byteGUIDArrayConverter}}"/>
+					<TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Entry count</TextBlock>
+					<TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding Language.EntryCount}"/>
+
+					<Border Grid.Row="3" Grid.Column="1" Margin="20" Background="LightPink" BorderBrush="Red" BorderThickness="3">
+						<TextBlock TextWrapping="Wrap" Margin="3" Foreground="Red">Note: the languages currently don't seem used, and so the editor for them has not yet been made.</TextBlock>
+					</Border>
 				</Grid>
-			</Grid>
+			</StackPanel>
 		</StackPanel>
-
-		<StackPanel IsVisible="{Binding Options, Converter={x:Static ObjectConverters.IsNotNull}}">
-			<TextBlock Text="Options" FontWeight="Bold"/>
-			<Separator/>
-			<Grid>
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="220"/>
-					<ColumnDefinition Width="2*"/>
-				</Grid.ColumnDefinitions>
-				<Grid.RowDefinitions>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-				</Grid.RowDefinitions>
-
-				<TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Unknown</TextBlock>
-				<Grid Grid.Row="0" Grid.Column="1">
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="*"/>
-						<ColumnDefinition Width="*"/>
-					</Grid.ColumnDefinitions>
-					<TextBox Grid.Column="0" Margin="3" Text="{Binding Options.Unknown1}"/>
-					<TextBox Grid.Column="1" Margin="3" Text="{Binding Options.Unknown2}"/>
-				</Grid>
-
-				<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Flags</TextBlock>
-				<controls:FlagsBox Grid.Row="1" Grid.Column="1" Margin="3" Value="{Binding Options.Info}" HorizontalAlignment="Left"/>
-
-				<TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Scale</TextBlock>
-				<TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding Options.Scale}"/>
-
-				<TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Window color</TextBlock>
-				<controls:ColorPicker Grid.Row="3" Grid.Column="1" Margin="3" Color="{Binding Options.WindowColor}"/>
-
-				<TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Color depth</TextBlock>
-				<TextBox Grid.Row="4" Grid.Column="1" Margin="3" Text="{Binding Options.ColorDepth}"/>
-
-				<TextBlock Grid.Row="5" Grid.Column="0" Margin="3">Resolution</TextBlock>
-				<TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding Options.Resolution}"/>
-
-				<TextBlock Grid.Row="6" Grid.Column="0" Margin="3">Frequency</TextBlock>
-				<TextBox Grid.Row="6" Grid.Column="1" Margin="3" Text="{Binding Options.Frequency}"/>
-
-				<TextBlock Grid.Row="7" Grid.Column="0" Margin="3">Vertex sync</TextBlock>
-				<TextBox Grid.Row="7" Grid.Column="1" Margin="3" Text="{Binding Options.VertexSync}"/>
-
-				<TextBlock Grid.Row="8" Grid.Column="0" Margin="3">Priority</TextBlock>
-				<TextBox Grid.Row="8" Grid.Column="1" Margin="3" Text="{Binding Options.Priority}"/>
-
-				<TextBlock Grid.Row="9" Grid.Column="0" Margin="3">Back image</TextBlock>
-				<controls:UndertaleObjectReference Grid.Row="9" Grid.Column="1" Margin="3" ObjectReference="{Binding Options.BackImage.Texture, Mode=TwoWay}" ObjectType="{x:Type undertaleModels:UndertaleTexturePageItem}"/>
-
-				<TextBlock Grid.Row="10" Grid.Column="0" Margin="3">Front image</TextBlock>
-				<controls:UndertaleObjectReference Grid.Row="10" Grid.Column="1" Margin="3" ObjectReference="{Binding Options.FrontImage.Texture, Mode=TwoWay}" ObjectType="{x:Type undertaleModels:UndertaleTexturePageItem}"/>
-
-				<TextBlock Grid.Row="11" Grid.Column="0" Margin="3">Load image</TextBlock>
-				<controls:UndertaleObjectReference Grid.Row="11" Grid.Column="1" Margin="3" ObjectReference="{Binding Options.LoadImage.Texture, Mode=TwoWay}" ObjectType="{x:Type undertaleModels:UndertaleTexturePageItem}"/>
-
-				<TextBlock Grid.Row="12" Grid.Column="0" Margin="3">Load alpha</TextBlock>
-				<TextBox Grid.Row="12" Grid.Column="1" Margin="3" Text="{Binding Options.LoadAlpha}"/>
-
-				<TextBlock Grid.Row="13" Grid.Column="0" Margin="3">Constants</TextBlock>
-				<DataGrid Grid.Row="13" Grid.Column="1" Margin="3" ItemsSource="{Binding Options.Constants}"
-						  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray"
-						  VerticalGridLinesBrush="LightGray" HeadersVisibility="Column"
-						  SelectionMode="Single" HorizontalAlignment="Left">
-					<!--<DataGrid.Resources>
-						<SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#FF26A0DA"/>
-						<Style TargetType="{x:Type DataGridCell}">
-							<Setter Property="Template">
-								<Setter.Value>
-									<ControlTemplate TargetType="{x:Type DataGridCell}">
-										<Grid Background="{TemplateBinding Background}">
-											<ContentPresenter VerticalAlignment="Center" />
-										</Grid>
-									</ControlTemplate>
-								</Setter.Value>
-							</Setter>
-							<Style.Triggers>
-								<DataTrigger Binding="{Binding DataContext, RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}}" Value="{x:Static CollectionView.NewItemPlaceholder}">
-									<Setter Property="Template">
-										<Setter.Value>
-											<ControlTemplate>
-												<TextBlock Margin="5" TextAlignment="Center" FontStyle="Italic">Double click to add</TextBlock>
-											</ControlTemplate>
-										</Setter.Value>
-									</Setter>
-								</DataTrigger>
-							</Style.Triggers>
-						</Style>
-					</DataGrid.Resources>-->
-					<DataGrid.Styles>
-						<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
-							<Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
-						</Style>
-					</DataGrid.Styles>
-					<DataGrid.Columns>
-						<DataGridTemplateColumn Width="auto" Header="Name">
-							<DataGridTemplateColumn.CellTemplate>
-								<DataTemplate>
-									<controls:UndertaleStringReference Margin="20,0,0,0" ObjectReference="{Binding Name, Mode=TwoWay}"/>
-								</DataTemplate>
-							</DataGridTemplateColumn.CellTemplate>
-						</DataGridTemplateColumn>
-						<DataGridTemplateColumn Width="auto" Header="Value">
-							<DataGridTemplateColumn.CellTemplate>
-								<DataTemplate>
-									<controls:UndertaleStringReference ObjectReference="{Binding Value, Mode=TwoWay}"/>
-								</DataTemplate>
-							</DataGridTemplateColumn.CellTemplate>
-						</DataGridTemplateColumn>
-					</DataGrid.Columns>
-				</DataGrid>
-				<Button Grid.Row="14" Grid.Column="1" Margin="5,10,0,0" Name="AddConstantsButton" Content="Add"/>
-			</Grid>
-		</StackPanel>
-
-		<StackPanel IsVisible="{Binding Language, Converter={x:Static ObjectConverters.IsNotNull}}">
-			<TextBlock Text="Language (?)" FontWeight="Bold"/>
-			<Separator/>
-			<Grid>
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="220"/>
-					<ColumnDefinition Width="2*"/>
-				</Grid.ColumnDefinitions>
-				<Grid.RowDefinitions>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-				</Grid.RowDefinitions>
-
-				<TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Unknown</TextBlock>
-				<TextBox Grid.Row="0" Grid.Column="1" Margin="3" Text="{Binding Language.Unknown1}"/>
-
-				<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Language count</TextBlock>
-				<TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding Language.LanguageCount}"/>
-
-				<TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Entry count</TextBlock>
-				<TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding Language.EntryCount}"/>
-
-				<Border Grid.Row="3" Grid.Column="1" Margin="20" Background="LightPink" BorderBrush="Red" BorderThickness="3">
-					<TextBlock TextWrapping="Wrap" Margin="3" Foreground="Red">Note: the languages currently don't seem used, and so the editor for them has not yet been made.</TextBlock>
-				</Border>
-			</Grid>
-		</StackPanel>
-	</StackPanel>
+	</ScrollViewer>
 </UserControl>
