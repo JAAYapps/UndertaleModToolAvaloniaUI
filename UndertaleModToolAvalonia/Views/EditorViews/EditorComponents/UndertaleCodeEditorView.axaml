@@ -1,0 +1,80 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:UndertaleModToolAvalonia.Controls"
+             xmlns:undertale="using:UndertaleModLib.Models"
+             xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents"
+			 xmlns:avedit="using:AvaloniaEdit"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleCodeEditorView"
+             x:DataType="vm:UndertaleCodeEditorViewModel">
+
+	<UserControl.KeyBindings>
+		<KeyBinding Gesture="Ctrl+K" Command="{Binding RunCompileCommand}"/>
+	</UserControl.KeyBindings>
+
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="1*"/>
+			<ColumnDefinition Width="3*"/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+
+		<TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Name</TextBlock>
+		<controls:UndertaleStringReference Grid.Row="0" Grid.Column="1" Margin="3" ObjectReference="{Binding UndertaleCode.Name}"/>
+
+		<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Locals count</TextBlock>
+		<TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding UndertaleCode.LocalsCount}"/>
+
+		<TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Arguments count</TextBlock>
+		<TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding UndertaleCode.ArgumentsCount}"/>
+
+		<TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Offset</TextBlock>
+		<TextBox Grid.Row="3" Grid.Column="1" Margin="3" Text="{Binding UndertaleCode.Offset}"/>
+
+		<TextBlock Grid.Row="4" Grid.Column="0" Margin="3" IsVisible="{Binding UndertaleCode.ParentEntry, Converter={x:Static ObjectConverters.IsNotNull}}">Parent entry</TextBlock>
+		<controls:UndertaleObjectReference Grid.Row="4" Grid.Column="1" Margin="3" IsVisible="{Binding UndertaleCode.ParentEntry, Converter={x:Static ObjectConverters.IsNotNull}}" ObjectReference="{Binding UndertaleCode.ParentEntry}" ObjectType="{x:Type undertale:UndertaleCode}" CanRemove="False" CanChange="False"/>
+
+		<TabControl Name="CodeModeTabs" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2"
+					VerticalContentAlignment="Stretch"
+					SelectedIndex="{Binding SelectedTabIndex}">
+			<TabItem Header="Decompiled" Name="DecompiledTab">
+				<avedit:TextEditor FontFamily="Consolas"
+								   Name="DecompiledEditor"
+								   IsReadOnly="{Binding IsReadOnly}"
+								   Background="#222222"
+								   LineNumbersForeground="#DBDBDB"
+								   Foreground="#C0C0C0"
+								   ShowLineNumbers="True"
+								   FontSize="10"
+								   Padding="4"
+								   Margin="2"
+								   ScrollViewer.HorizontalScrollBarVisibility="Visible" 
+								   ScrollViewer.VerticalScrollBarVisibility="Visible"
+								   ScrollViewer.AllowAutoHide="False"
+								   VerticalAlignment="Stretch"/>
+			</TabItem>
+			<TabItem Header="Disassembly" Name="DisassemblyTab">
+				<avedit:TextEditor FontFamily="Consolas"
+								   Name="DisassemblyEditor"
+								   IsReadOnly="{Binding IsReadOnly}"
+								   Background="#222222"
+								   Foreground="#C0C0C0"
+								   FontSize="10"
+								   Padding="4"
+								   Margin="5"
+								   ScrollViewer.HorizontalScrollBarVisibility="Visible" 
+								   ScrollViewer.VerticalScrollBarVisibility="Visible"
+								   ScrollViewer.AllowAutoHide="False"/>
+			</TabItem>
+		</TabControl>
+	</Grid>
+</UserControl>
