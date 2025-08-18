@@ -100,7 +100,7 @@
                                    DataContextChanged="TextEditor_DataContextChanged"/>
             </Expander>
 			<TextBlock Grid.Row="8" Grid.Column="0" Margin="3">Vertex shader attributes</TextBlock>
-			<Grid Grid.Row="8" Grid.Column="1" Margin="3">
+			<Grid Grid.Row="8" Grid.Column="1" Margin="3" RowDefinitions="*,*">
 			    <DataGrid Grid.Row="0" ItemsSource="{Binding Shader.VertexShaderAttributes}" AutoGenerateColumns="False">
 				    <DataGrid.Styles>
 					    <Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">

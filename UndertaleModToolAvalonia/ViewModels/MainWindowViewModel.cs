@@ -157,6 +157,7 @@ namespace UndertaleModToolAvalonia.ViewModels
             var args = Environment.GetCommandLineArgs();
             bool isLaunch = false;
             bool isSpecialLaunch = false;
+            bool loaded = false;
             if (args.Length > 1)
             {
                 if (args.Length > 2)
@@ -168,7 +169,7 @@ namespace UndertaleModToolAvalonia.ViewModels
                 string arg = args[1];
                 if (File.Exists(arg))
                 {
-                    await editorViewModel.LoadFileAsync(arg, true, isLaunch || isSpecialLaunch);
+                    loaded = await editorViewModel.LoadFileAsync(arg, true, isLaunch || isSpecialLaunch);
                 }
                 else if (arg == "deleteTempFolder") // if was launched from UndertaleModToolUpdater
                 {
@@ -298,8 +299,9 @@ namespace UndertaleModToolAvalonia.ViewModels
             if (string.IsNullOrEmpty(filePath))
                 return; // User cancelled
 
-            pvm.ChangePage(1);
-            await editorViewModel.LoadFileAsync(filePath);
+            
+            if (await editorViewModel.LoadFileAsync(filePath))
+                pvm.ChangePage(1);
             Console.WriteLine(Settings.Instance.CanSave);
             CanSave = Settings.Instance.CanSave;
             MenuEnabled = true;

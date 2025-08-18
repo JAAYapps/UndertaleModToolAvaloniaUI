@@ -211,7 +211,6 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                 root.Children.Add(cat);
                 return;
             }
-                
 
             // If we are NOT virtualizing (i.e., showing search results),
             // we create all the child nodes immediately.
@@ -362,7 +361,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             return filteredList;
         }
 
-        public async Task LoadFileAsync(string filename, bool preventClose = false, bool onlyGeneralInfo = false)
+        public async Task<bool> LoadFileAsync(string filename, bool preventClose = false, bool onlyGeneralInfo = false)
         {
             IsEnabled = false;
             loadingDialogService.Show("Loading File", "Reading data.win, please wait...");
@@ -370,7 +369,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
             GameSpecificResolver.BaseDirectory = Program.GetExecutableDirectory();
 
-            await Task.Run(async () =>
+            bool loaded = await Task.Run<bool>(async () =>
             {
                 bool hadImportantWarnings = false;
                 UndertaleData data = null;
@@ -396,7 +395,12 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 #if DEBUG
                     Debug.WriteLine(e);
 #endif
-                    await App.Current!.ShowError("An error occurred while trying to load:\n" + e.Message, "Load error");
+                    loadingDialogService.Hide();
+                    await Dispatcher.UIThread.InvokeAsync(async () =>
+                    {
+                        await App.Current!.ShowError("An error occurred while trying to load:\n" + e.Message, "Load error");
+                    });
+                    return false;
                 }
 
                 if (onlyGeneralInfo)
@@ -408,7 +412,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                         AppConstants.FilePath = filename;
                     });
 
-                    return;
+                    return true;
                 }
 
                 await Dispatcher.UIThread.Invoke(async () =>
@@ -472,8 +476,10 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                         UndertaleCodeEditor.gettextJSON = null;*/
                     }
                 });
+                return true;
             });
-
+            if (!loaded)
+                return false;
             loadingDialogService.Hide();
             IsEnabled = true;
             // Clear "GC holes" left in the memory in process of data unserializing
@@ -482,6 +488,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             GC.Collect();
             ApplyFilter(AppConstants.Data);
             WeakReferenceMessenger.Default.Send(new TitleUpdateMessage());
+            return true;
         }
 
         public async Task SaveFileAsync(string filename, bool suppressDebug = false)
@@ -835,7 +842,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     UndertaleScript => new UndertaleScriptEditorViewModel(name, (UndertaleScript)asset),
                     UndertaleShader => new UndertaleShaderEditorViewModel(name, (UndertaleShader)asset),
                     //UndertaleFont => "Font",
-                    //UndertaleTimeline => "Timeline",
+                    UndertaleTimeline => new UndertaleTimelineEditorViewModel(name, (UndertaleTimeline)asset),
                     //UndertaleGameObject => "Game Object",
                     //UndertaleRoom => "Room",
                     //UndertaleExtension => "Extension",
@@ -848,9 +855,9 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     UndertaleEmbeddedAudio => new UndertaleEmbeddedAudioEditorViewModel(name, (UndertaleEmbeddedAudio)asset, playerService, fileService),
                     UndertaleTextureGroupInfo => new UndertaleTextureGroupInfoEditorViewModel(name, (UndertaleTextureGroupInfo)asset),
                     UndertaleEmbeddedImage => new UndertaleEmbeddedImageEditorViewModel(name, (UndertaleEmbeddedImage)asset),
-                    //UndertaleSequence => "Sequence",
-                    //UndertaleAnimationCurve => "Animation Curve",
-                    //UndertaleParticleSystem => "Particle System",
+                    // TODO Figure out what this is. UndertaleSequence => "Sequence",
+                    // TODO Figure out what this is too. UndertaleAnimationCurve => "Animation Curve",
+                    UndertaleParticleSystem => new UndertaleParticleSystemEditorViewModel(name, (UndertaleParticleSystem)asset),
                     //UndertaleParticleSystemEmitter => "Particle System Emitter",
                     _ => new EditorContentViewModel($"There is no Editor for {name}.")
                 };

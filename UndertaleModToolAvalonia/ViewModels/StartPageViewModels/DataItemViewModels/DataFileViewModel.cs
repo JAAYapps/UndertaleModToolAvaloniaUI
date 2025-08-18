@@ -62,9 +62,8 @@ public partial class DataFileViewModel : ViewModelBase
             if (string.IsNullOrEmpty(filePath))
                 return; // User cancelled
 
-            await editorViewModel.LoadFileAsync(filePath);
-
-            FileLoaded?.Invoke(this, EventArgs.Empty);
+            if (await editorViewModel.LoadFileAsync(filePath))
+                FileLoaded?.Invoke(this, EventArgs.Empty);
         }
         else
         {
