@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents"
+			 xmlns:controls="using:UndertaleModToolAvalonia.Controls"
+			 xmlns:undertale="using:UndertaleModLib.Models"
+			 xmlns:utils="using:UndertaleModToolAvalonia.Utilities"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleTimelineEditorView"
+			 x:DataType="vm:UndertaleTimelineEditorViewModel">
+	<ScrollViewer VerticalScrollBarVisibility="Visible">
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="1*"/>
+				<ColumnDefinition Width="3*"/>
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+			</Grid.RowDefinitions>
+
+			<TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Name</TextBlock>
+			<controls:UndertaleStringReference Grid.Row="0" Grid.Column="1" Margin="3" ObjectReference="{Binding UndertaleTimeline.Name}"/>
+
+			<TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Moments</TextBlock>
+			<Grid Grid.Row="3" Grid.Column="1" Margin="3" RowDefinitions="*,*">
+				<DataGrid Grid.Row="0"
+						  ItemsSource="{Binding UndertaleTimeline.Moments}" AutoGenerateColumns="False" 
+						  HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" 
+						  HeadersVisibility="Column" SelectionMode="Single">
+					<DataGrid.Styles>
+						<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
+							<Setter Property="Background" Value="#FF26A0DA"/>
+						</Style>
+					</DataGrid.Styles>
+					<DataGrid.Columns>
+						<DataGridTemplateColumn Header="Step" Width="1*">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBox Text="{Binding Step, Mode=TwoWay}" Margin="20,0,0,0"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+						<DataGridTemplateColumn Header="Actions (Code Entries)" Width="3*">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<DataGrid ItemsSource="{Binding Event}" AutoGenerateColumns="False" 
+											  HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" 
+											  SelectionMode="Single">
+										<DataGrid.Columns>
+											<DataGridTemplateColumn Header="Code" Width="*">
+												<DataGridTemplateColumn.CellTemplate>
+													<DataTemplate>
+														<controls:UndertaleObjectReference ObjectReference="{Binding CodeId, Mode=TwoWay}" ObjectType="{x:Type undertale:UndertaleCode}" Margin="23,3,3,3" CanRemove="False"/>
+													</DataTemplate>
+												</DataGridTemplateColumn.CellTemplate>
+											</DataGridTemplateColumn>
+										</DataGrid.Columns>
+									</DataGrid>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+					</DataGrid.Columns>
+				</DataGrid>
+				<Button Grid.Row="1" HorizontalAlignment="Stretch" Margin="5" DoubleTapped="Button_DoubleTapped">
+					<TextBlock Margin="5" TextAlignment="Center" FontStyle="Italic">Double click to add</TextBlock>
+				</Button>
+			</Grid>
+		</Grid>
+	</ScrollViewer>
+</UserControl>
