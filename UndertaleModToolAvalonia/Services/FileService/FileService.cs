@@ -11,7 +11,7 @@ namespace UndertaleModToolAvalonia.Services.FileService
 {
     public class FileService : IFileService
     {
-        public async Task<IStorageFile?> SaveFileAsync(IStorageProvider storageProvider, string path = "")
+        public async Task<IStorageFile?> SaveFileAsync(IStorageProvider storageProvider, string path = "", string defaultExtension = "*.win")
         {
             string directory = !string.IsNullOrEmpty(path) ? Path.GetFullPath(path) : "";
             string name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : "";
@@ -24,12 +24,12 @@ namespace UndertaleModToolAvalonia.Services.FileService
                 },
                 ShowOverwritePrompt = true,
                 SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "data.win",
-                DefaultExtension = "*.win",
+                DefaultExtension = defaultExtension,
                 SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Documents)
             });
         }
 
-        public async Task<IStorageFile?> SaveAudioFileAsync(IStorageProvider storageProvider, string path = "")
+        public async Task<IStorageFile?> SaveAudioFileAsync(IStorageProvider storageProvider, string path = "", string defaultExtension = "*.ogg")
         {
             string directory = !string.IsNullOrEmpty(path) ? Path.GetFullPath(path) : "";
             string name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : "";
@@ -38,11 +38,11 @@ namespace UndertaleModToolAvalonia.Services.FileService
                 Title = "Save Audio File",
                 FileTypeChoices = new List<FilePickerFileType>
                 {
-                    new FilePickerFileType("Audio files (.wav, .mp3, .ogg)") { Patterns = new List<string> { "*.wav;*.mp3;*.ogg;" } }
+                    new FilePickerFileType("Audio files (.wav, .ogg)") { Patterns = new List<string> { "*.wav;*.ogg;" } }
                 },
                 ShowOverwritePrompt = true,
-                SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "audio.ogg",
-                DefaultExtension = "*.ogg",
+                SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "audio" + defaultExtension.Substring(1),
+                DefaultExtension = defaultExtension,
                 SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Music)
             });
         }

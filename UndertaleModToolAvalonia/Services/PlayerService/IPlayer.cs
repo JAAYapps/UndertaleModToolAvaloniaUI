@@ -4,9 +4,16 @@ namespace UndertaleModToolAvalonia.Services.PlayerService
 {
     public interface IPlayer
     {
+        public enum SoundStatus
+        {
+            Stopped,
+            Playing,
+            Paused
+        }
+
         public void Stop();
 
-        public SFML.Audio.SoundStatus GetPlayStatus();
+        public SoundStatus GetPlayStatus();
 
         public void Play(Stream audio);
 

@@ -64,6 +64,15 @@ public partial class App : Application
             {
                 desktop.MainWindow = desktop.MainWindow = Services.GetRequiredService<MainWindow>();
 
+                desktop.ShutdownRequested += (sender, args) =>
+                {
+                    var player = Services.GetRequiredService<IPlayer>();
+                    if (player is IDisposable disposablePlayer)
+                    {
+                        disposablePlayer.Dispose();
+                    }
+                };
+
                 WeakReferenceMessenger.Default.Register<SettingChangedMessage>(this, (recipient, message) =>
                 {
                     if (message.SettingName == "EnableDarkMode" && message.NewValue is bool isDark)
@@ -113,7 +122,8 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
 
-        services.AddSingleton<IPlayer, Player>();
+        // services.AddSingleton<IPlayer, Player>();
+        services.AddSingleton<IPlayer, SilkNetPlayer>();
         services.AddSingleton<IFileService, FileService>();
         services.AddTransient<LoaderDialogViewModel>();
         services.AddTransient<MainWindowViewModel>();

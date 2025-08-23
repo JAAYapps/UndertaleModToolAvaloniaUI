@@ -4,8 +4,6 @@ using System.Linq;
 using System.Threading;
 using Avalonia;
 using System.IO;
-using System.Runtime.InteropServices;
-using LibMpv.Client;
 using log4net;
 
 namespace UndertaleModToolAvalonia
@@ -71,36 +69,6 @@ namespace UndertaleModToolAvalonia
             ILog log = LogManager.GetLogger(typeof(Program)); //Log4NET
             log.Error(ex.Message + "\n" + ex.StackTrace);
             File.WriteAllText(Path.Combine(GetExecutableDirectory(), "crash3.txt"), (ex.Message + "\n" + ex.StackTrace));
-        }
-        
-        public static void InitMpv()
-        {
-            var platform = IntPtr.Size == 8 ? "x86_64" : "x86";
-            var platformId = FunctionResolverFactory.GetPlatformId();
-            Console.WriteLine("Check system.");
-            if (platformId == LibMpvPlatformID.Win32NT)
-            {
-                Console.WriteLine("Windows is the system.");
-                var path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, platform);
-                LibMpv.Client.LibMpv.UseLibMpv(2).UseLibraryPath(path);
-            }
-            else if (platformId == LibMpvPlatformID.Unix)
-            {
-                Console.WriteLine("Unix is the system.");
-                if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
-                {
-                    Console.WriteLine("arm64 is the system.");
-                    var path = $"/usr/lib/aarch64-linux-gnu/";
-                    LibMpv.Client.LibMpv.UseLibMpv(2).UseLibraryPath(path);
-                }
-                else if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
-                {
-                    Console.WriteLine("x64 is the system.");
-                    // var path = $"/usr/lib/{platform}-linux-gnu";
-                    var path = $"/usr/lib64/";
-                    LibMpv.Client.LibMpv.UseLibMpv(2).UseLibraryPath(path);
-                }
-            }
         }
         
         // Avalonia configuration, don't remove; also used by visual designer.

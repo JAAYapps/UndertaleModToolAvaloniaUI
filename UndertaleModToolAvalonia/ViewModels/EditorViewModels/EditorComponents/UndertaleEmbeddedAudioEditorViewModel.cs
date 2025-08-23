@@ -67,14 +67,14 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
                 return;
             }
 
-            var storage = await fileService.SaveAudioFileAsync(storageProvider);
+            var storage = await fileService.SaveAudioFileAsync(storageProvider, "", "*.wav");
 
             if (storage == null || string.IsNullOrEmpty(storage.Name))
                 return; // User cancelled
 
             try
             {
-                File.WriteAllBytes(storage.Name, EmbeddedAudio.Data);
+                File.WriteAllBytes(storage.Path.AbsolutePath, EmbeddedAudio.Data);
             }
             catch (Exception ex)
             {

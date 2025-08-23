@@ -7,9 +7,9 @@ namespace UndertaleModToolAvalonia.Services.FileService
 {
     public interface IFileService
     {
-        Task<IStorageFile?> SaveFileAsync(IStorageProvider storageProvider, string path = "");
+        Task<IStorageFile?> SaveFileAsync(IStorageProvider storageProvider, string path = "", string defaultExtension = "*.ogg");
 
-        Task<IStorageFile?> SaveAudioFileAsync(IStorageProvider storageProvider, string path = "");
+        Task<IStorageFile?> SaveAudioFileAsync(IStorageProvider storageProvider, string path = "", string defaultExtension = "*.win");
 
         Task<IStorageFile?> SaveTextFileAsync(IStorageProvider storageProvider, string path = "");
 
