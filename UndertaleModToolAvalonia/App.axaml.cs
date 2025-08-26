@@ -7,6 +7,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json.Linq;
 using System;
 using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.Services.DialogService;

@@ -41,7 +41,6 @@ namespace UndertaleModToolAvalonia.ViewModels.StartPageViewModels
                     UpdateAppCommand.NotifyCanExecuteChanged();
                 }
             };
-            Settings.Load();
 #if DEBUG
             IsUpdaterButtonVisible = true;
 #else
@@ -274,7 +273,10 @@ namespace UndertaleModToolAvalonia.ViewModels.StartPageViewModels
 
         public bool EnableDarkMode
         {
-            get => Settings.Instance.EnableDarkMode;
+            get
+            {
+                return App.Current!.RequestedThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
+            }
             set
             {
                 Settings.Instance.EnableDarkMode = value;
@@ -282,10 +284,6 @@ namespace UndertaleModToolAvalonia.ViewModels.StartPageViewModels
                 OnPropertyChanged();
 
                 WeakReferenceMessenger.Default.Send(new SettingChangedMessage("EnableDarkMode", value));
-
-                if (value)
-                    _ = App.Current.ShowWarning("The message boxes (like this one) aren't compatible with the dark mode.\n" +
-                                           "This will be fixed in future versions.");
             }
         }
 

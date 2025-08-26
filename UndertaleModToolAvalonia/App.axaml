@@ -6,7 +6,7 @@
 			 xmlns:components="using:UndertaleModToolAvalonia.Views.EditorViews.EditorComponents"
 			 xmlns:undertale="using:UndertaleModLib.Models"
 			 xmlns:vm="using:UndertaleModToolAvalonia.ViewModels"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Dark">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
@@ -42,5 +42,19 @@
 		<StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
         <StyleInclude Source="/Styles/MenuIcons.axaml"/>
 		<StyleInclude Source="/Styles/SideBar.axaml" />
+		<Style>
+			<Style.Resources>
+				<ResourceDictionary>
+					<ResourceDictionary.ThemeDictionaries>
+						<ResourceDictionary x:Key="Light">
+							<Color x:Key="AcrylicTintColor">White</Color>
+						</ResourceDictionary>
+						<ResourceDictionary x:Key="Dark">
+							<Color x:Key="AcrylicTintColor">Black</Color>
+						</ResourceDictionary>
+					</ResourceDictionary.ThemeDictionaries>
+				</ResourceDictionary>
+			</Style.Resources>
+		</Style>
     </Application.Styles>
 </Application>

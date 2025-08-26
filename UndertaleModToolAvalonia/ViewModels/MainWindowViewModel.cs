@@ -1,5 +1,7 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -38,6 +40,9 @@ namespace UndertaleModToolAvalonia.ViewModels
         private readonly ILoadingDialogService loadingDialogService;
 
         [ObservableProperty]
+        private StreamGeometry? toggleIconData;
+
+        [ObservableProperty]
         private IPlayer playerService;
 
         [ObservableProperty] private string titleMain = string.Empty;
@@ -47,6 +52,8 @@ namespace UndertaleModToolAvalonia.ViewModels
         [ObservableProperty] string? filePath = AppConstants.FilePath;
 
         [ObservableProperty] private bool menuEnabled = true;
+
+        [ObservableProperty] private bool isMaximized;
 
         private bool CanSave
         {
@@ -85,6 +92,19 @@ namespace UndertaleModToolAvalonia.ViewModels
             };
             OnSelectedPageChanged(Pages[0]);
             CanSave = Settings.Instance.CanSave;
+            UpdateToggleIcon();
+        }
+
+        public void UpdateToggleIcon()
+        {
+            // Find the correct icon resource from the application's resources
+            // based on the current state.
+            string iconKey = IsMaximized ? "RestoreIcon" : "MaximizeIcon";
+
+            if (Application.Current?.TryFindResource(iconKey, out object? resource) == true && resource is StreamGeometry geometry)
+            {
+                ToggleIconData = geometry;
+            }
         }
 
         [ObservableProperty] private bool isPaneOpen = false;
@@ -93,7 +113,7 @@ namespace UndertaleModToolAvalonia.ViewModels
 
         [ObservableProperty] private PageTemplate? selectedPage;
 
-        partial void OnSelectedPageChanged(PageTemplate value)
+        partial void OnSelectedPageChanged(PageTemplate? value)
         {
             if (value is null) return;
             var instance = services.GetRequiredService(value.PageType);
@@ -114,15 +134,13 @@ namespace UndertaleModToolAvalonia.ViewModels
         private async Task Startup(Window owner)
         {
             Console.WriteLine("Running startup");
+            // Load settings to see if we should associate files
+            Settings.Load();
+            WeakReferenceMessenger.Default.Send(new SettingChangedMessage("EnableDarkMode", Settings.Instance.EnableDarkMode));
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 try
                 {
-                    // Load settings to see if we should associate files
-                    if (Settings.Instance is null)
-                    {
-                        Settings.Load();
-                    }
                     bool shouldAssociate = true;
                     if (File.Exists("dna.txt"))
                     {
