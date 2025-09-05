@@ -27,8 +27,8 @@ public partial class DataFileViewModel : ViewModelBase
         OpenFile.Preview = "Open File";
         OpenFile.Name = "OpenFile";
         DataFileItem dataFile = new DataFileItem();
-        dataFile.Preview = "data.wim";
-        dataFile.Name = "Somepath/data.wim";
+        dataFile.Preview = "data.win";
+        dataFile.Name = "Somepath/data.win";
         dataFileItems.Add(OpenFile);
         dataFileItems.Add(dataFile);
         foreach (var item in dataFileItems)

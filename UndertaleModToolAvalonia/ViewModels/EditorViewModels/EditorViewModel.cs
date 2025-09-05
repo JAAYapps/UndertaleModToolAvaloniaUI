@@ -36,6 +36,7 @@ using UndertaleModToolAvalonia.Services.ReferenceFinderService;
 using UndertaleModToolAvalonia.Services.TextureCacheService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents;
+using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.UndertaleFontEditorViewModel;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTypesDialog;
 using UndertaleModToolAvalonia.Views.EditorViews;
 using UndertaleModToolAvalonia.Views.EditorViews.EditorComponents;
@@ -246,6 +247,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             BuildChildren(dataNode, "Paths", data != null ? data.Paths : []);
             BuildChildren(dataNode, "Scripts", data != null ? data.Scripts : []);
             BuildChildren(dataNode, "Shaders", data != null ? data.Shaders : []);
+            BuildChildren(dataNode, "Fonts", data != null ? data.Fonts: []);
             BuildChildren(dataNode, "Timelines", data != null ? data.Timelines : []);
             BuildChildren(dataNode, "Game objects", data != null ? data.GameObjects : []);
             BuildChildren(dataNode, "Rooms", data != null ? data.Rooms : []);
@@ -314,6 +316,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     BuildChildren(searchRootNode, "Paths", data != null ? data.Paths?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : [], false);
                     BuildChildren(searchRootNode, "Scripts", data != null ? data.Scripts?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : [], false);
                     BuildChildren(searchRootNode, "Shaders", data != null ? data.Shaders?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : [], false);
+                    BuildChildren(searchRootNode, "Fonts", data != null ? data.Fonts?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : [], false);
                     BuildChildren(searchRootNode, "Game objects", data != null ? data.GameObjects?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : [], false);
                     BuildChildren(searchRootNode, "Rooms", data != null ? data.Rooms?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : [], false);
                     BuildChildren(searchRootNode, "Extensions", data != null ? data.Extensions?.Where(x => x.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)) : []);
@@ -841,7 +844,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     UndertalePath => new UndertalePathEditorViewModel(name, (UndertalePath)asset),
                     UndertaleScript => new UndertaleScriptEditorViewModel(name, (UndertaleScript)asset),
                     UndertaleShader => new UndertaleShaderEditorViewModel(name, (UndertaleShader)asset),
-                    //UndertaleFont => "Font",
+                    UndertaleFont => new UndertaleFontEditorViewModel(name, (UndertaleFont)asset, this, textureCacheService, fileService, dialogService),
                     UndertaleTimeline => new UndertaleTimelineEditorViewModel(name, (UndertaleTimeline)asset),
                     //UndertaleGameObject => "Game Object",
                     //UndertaleRoom => "Room",

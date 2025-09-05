@@ -1,0 +1,148 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.UndertaleFontEditorViewModel"
+		xmlns:converters="using:UndertaleModToolAvalonia.Converters"
+		xmlns:controlConverters="using:UndertaleModToolAvalonia.Converters.ControlConverters"
+		xmlns:controls="using:UndertaleModToolAvalonia.Controls"
+		xmlns:paz="using:Avalonia.Controls.PanAndZoom"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleFontEditorView.EditGlyphRectangleView"
+		x:DataType="vm:EditGlyphRectangleViewModel"
+		Title="Edit a font glyph rectangle" Loaded="Window_Loaded">
+	<Window.Resources>
+		<converters:EqualityConverter x:Key="EqualityConverter"/>
+		<controlConverters:CharConverter x:Key="CharConverter"/>
+		<controlConverters:AdditionConverter x:Key="AdditionConverter"/>
+		<DataTemplate x:Key="glyphTemplate" x:DataType="vm:GlyphViewModel">
+			<Rectangle Width="{Binding SourceWidth}" Height="{Binding SourceHeight}"
+					   StrokeThickness="1" ZIndex="0">
+				<ToolTip.Tip>
+					<TextBlock Text="{Binding Character, Converter={StaticResource CharConverter}}"/>
+				</ToolTip.Tip>
+				<Rectangle.Stroke>
+					<SolidColorBrush Color="Yellow" Opacity="0.25"/>
+				</Rectangle.Stroke>
+				<Rectangle.Fill>
+					<SolidColorBrush Color="Yellow" Opacity="0.05"/>
+				</Rectangle.Fill>
+			</Rectangle>
+		</DataTemplate>
+		<DataTemplate x:Key="selectedGlyphTemplate" x:DataType="vm:GlyphViewModel">
+			<Canvas UseLayoutRounding="False">
+				<Canvas.Styles>
+					<Style Selector="Canvas">
+						<Style.Animations>
+							<Animation Duration="0:0:1" IterationCount="INFINITE">
+								<KeyFrame Cue="0%">
+									<Setter Property="Opacity" Value="1.0"/>
+								</KeyFrame>
+								<KeyFrame Cue="50%">
+									<Setter Property="Opacity" Value="0.0"/>
+								</KeyFrame>
+								<KeyFrame Cue="100%">
+									<Setter Property="Opacity" Value="1.0"/>
+								</KeyFrame>
+							</Animation>
+						</Style.Animations>
+					</Style>
+				</Canvas.Styles>
+
+				<Rectangle Width="{Binding SourceWidth}" Height="{Binding SourceHeight}"
+						   StrokeThickness="1" ZIndex="1" Stroke="OrangeRed" Fill="#19FF0000">
+					<ToolTip.Tip>
+						<TextBlock Text="{Binding Character, Converter={StaticResource CharConverter}}"/>
+					</ToolTip.Tip>
+				</Rectangle>
+
+				<Grid ZIndex="2">
+					<Rectangle Width="1" Height="{Binding SourceHeight}" StrokeThickness="0" Fill="Blue" Stroke="Blue" HorizontalAlignment="Left">
+						<Rectangle.RenderTransform>
+							<TranslateTransform X="{Binding Offset}"/>
+						</Rectangle.RenderTransform>
+					</Rectangle>
+
+					<Rectangle Width="{Binding Shift}" Height="1" StrokeThickness="0" Fill="LawnGreen" Stroke="LawnGreen" VerticalAlignment="Top">
+						<Rectangle.RenderTransform>
+							<TransformGroup>
+								<TranslateTransform Y="{Binding SourceHeight, Converter={StaticResource AdditionConverter}, ConverterParameter=-1}"/>
+							</TransformGroup>
+						</Rectangle.RenderTransform>
+					</Rectangle>
+					<Rectangle Width="1" Height="1" Stroke="#FF3E8080" Fill="#FF3E8080" StrokeThickness="0" VerticalAlignment="Top" HorizontalAlignment="Left">
+						<Rectangle.RenderTransform>
+							<TransformGroup>
+								<TranslateTransform Y="{Binding SourceHeight, Converter={StaticResource AdditionConverter}, ConverterParameter=-1}"/>
+							</TransformGroup>
+						</Rectangle.RenderTransform>
+					</Rectangle>
+				</Grid>
+			</Canvas>
+		</DataTemplate>
+	</Window.Resources>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="40"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+
+		<Button Grid.Row="0" Margin="3" FontSize="16" Width="100" Height="36" HorizontalAlignment="Center"
+                         Content="Get help" Command="{Binding HelpCommand}" Focusable="False"/>
+		<ScrollViewer Name="TextureScroll" Grid.Row="1" Margin="3" Background="LightGray"
+					  HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" AllowAutoHide="False">
+			<!--<Viewbox Grid.Row="1" Name="TextureViewbox"
+                     Stretch="Uniform" StretchDirection="DownOnly"
+					 UseLayoutRounding="True">-->
+			<paz:ZoomBorder Name="ZoomBorder" ClipToBounds="True" Stretch="None" ZoomSpeed="1.2" PanButton="Middle">
+				<Grid Name="ContentGrid" Background="Black" HorizontalAlignment="Center" VerticalAlignment="Center" PointerPressed="ContentGrid_MouseLeftButtonDown" PointerReleased="ContentGrid_MouseLeftButtonUp" Width="{Binding Font.Texture.SourceWidth}" Height="{Binding Font.Texture.SourceHeight}">
+					<controls:UndertaleTexturePageItemDisplay TextureItem="{Binding $parent[Window].DataContext.Font.Texture, Mode=OneWay}"
+																  Editor="{Binding $parent[Window].DataContext.Editor}"
+																  TextureCacheService="{Binding $parent[Window].DataContext.TextureCacheService}"
+																  FileService="{Binding $parent[Window].DataContext.FileService}" DisplayBorder="false"/>
+					<ItemsControl ItemsSource="{Binding Glyphs, Mode=OneWay}">
+						<ItemsControl.ItemsPanel>
+							<ItemsPanelTemplate>
+								<Canvas Loaded="Canvas_Loaded"/>
+							</ItemsPanelTemplate>
+						</ItemsControl.ItemsPanel>
+						<ItemsControl.Styles>
+							<Style Selector="ContentPresenter" x:DataType="vm:GlyphViewModel">
+								<Setter Property="Canvas.Left" Value="{Binding SourceX}"/>
+								<Setter Property="Canvas.Top" Value="{Binding SourceY}"/>
+							</Style>
+						</ItemsControl.Styles>
+						<ItemsControl.ItemTemplate>
+							<DataTemplate>
+								<Grid>
+									<ContentPresenter IsVisible="{Binding !IsSelected}"
+													  Content="{Binding}"
+													  ContentTemplate="{StaticResource glyphTemplate}" />
+
+									<ContentPresenter IsVisible="{Binding IsSelected}"
+													  Content="{Binding}"
+													  ContentTemplate="{StaticResource selectedGlyphTemplate}"/>
+								</Grid>
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+						
+					</ItemsControl>
+
+					<Rectangle Name="GlyphTopLine" VerticalAlignment="Top" HorizontalAlignment="Stretch"
+                               StrokeThickness="1" Height="1"
+                               IsVisible="False" Focusable="False">
+						<Rectangle.Stroke>
+							<SolidColorBrush Color="Gold" Opacity="0.6"/>
+						</Rectangle.Stroke>
+						<Rectangle.RenderTransform>
+							<TranslateTransform Y="{Binding SelectedGlyph.SourceY}"/>
+						</Rectangle.RenderTransform>
+					</Rectangle>
+				</Grid>
+			</paz:ZoomBorder>
+		</ScrollViewer>
+
+		<Button Grid.Row="2" Margin="3,9,3,12" HorizontalAlignment="Center" Command="{Binding SaveCommand}" Width="160" Height="50" FontSize="18">Save changes</Button>
+	</Grid>
+</Window>

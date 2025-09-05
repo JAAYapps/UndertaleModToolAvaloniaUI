@@ -6,7 +6,7 @@
 			 xmlns:components="using:UndertaleModToolAvalonia.Views.EditorViews.EditorComponents"
 			 xmlns:undertale="using:UndertaleModLib.Models"
 			 xmlns:vm="using:UndertaleModToolAvalonia.ViewModels"
-             RequestedThemeVariant="Dark">
+             RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
@@ -33,6 +33,10 @@
 				</DrawingGroup>
 			</DrawingBrush.Drawing>
 		</DrawingBrush>
+		<StreamGeometry x:Key="MinimizeIcon">M14 8v1H3V8h11z</StreamGeometry>
+		<StreamGeometry x:Key="RestoreIcon">M3 5v9h9V5H3zm8 8H4V6h7v7z M5 5h1V4h7v7h-1v1h2V3H5v2z</StreamGeometry>
+		<StreamGeometry x:Key="MaximizeIcon">M3 3v10h10V3H3zm9 9H4V4h8v8z</StreamGeometry>
+		<StreamGeometry x:Key="close">M 7.21875 5.78125 L 5.78125 7.21875 L 14.5625 16 L 5.78125 24.78125 L 7.21875 26.21875 L 16 17.4375 L 24.78125 26.21875 L 26.21875 24.78125 L 17.4375 16 L 26.21875 7.21875 L 24.78125 5.78125 L 16 14.5625 Z</StreamGeometry>
 	</Application.Resources>
 	
     <Application.Styles>

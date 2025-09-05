@@ -106,7 +106,6 @@ namespace UndertaleModToolAvalonia.Views
             {
                 vm.IsMaximized = WindowState == WindowState.Maximized;
                 vm.UpdateToggleIcon();
-                Console.WriteLine("Maximize was clicked.");
             }
         }
 
