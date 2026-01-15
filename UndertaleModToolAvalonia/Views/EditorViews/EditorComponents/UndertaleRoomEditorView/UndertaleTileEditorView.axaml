@@ -1,0 +1,326 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.UndertaleRoomEditorViewModel"
+		xmlns:converters="using:UndertaleModToolAvalonia.Converters"
+		xmlns:controls="using:UndertaleModToolAvalonia.Controls"
+		xmlns:paz="using:Avalonia.Controls.PanAndZoom"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleRoomEditorView.UndertaleTileEditorView"
+		x:DataType="vm:UndertaleTileEditorViewModel"
+		Title="Edit Tile Data"
+		Height="400" Width="800" MinHeight="300" MinWidth="300"
+		WindowStartupLocation="CenterOwner">
+	<Window.Resources>
+		<converters:CachedTileDataLoader x:Key="CachedTileDataLoader"/>
+	</Window.Resources>
+	<Window.KeyBindings>
+		<KeyBinding Gesture="X" Command="{Binding MirrorCommand}"/>
+		<KeyBinding Gesture="Y" Command="{Binding FlipCommand}"/>
+
+		<KeyBinding Gesture="Z" Command="{Binding FlipCommand}"/>
+
+		<KeyBinding Gesture="Q" Command="{Binding RotateCCWCommand}"/>
+		<KeyBinding Gesture="R" Command="{Binding RotateCWCommand}"/>
+		<KeyBinding Gesture="G" Command="{Binding ToggleGridCommand}"/>
+		<KeyBinding Gesture="B" Command="{Binding ToggleBrushTilingCommand}"/>
+		<KeyBinding Gesture="P" Command="{Binding TogglePreviewCommand}"/>
+
+		<KeyBinding Gesture="Ctrl+Z" Command="{Binding UndoCommand}"/>
+		<KeyBinding Gesture="Ctrl+Y" Command="{Binding RedoCommand}"/>
+		<KeyBinding Gesture="Ctrl+Shift+Z" Command="{Binding RedoCommand}"/>
+	</Window.KeyBindings>
+	<Grid Margin="10">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*"/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+
+		<Grid Grid.Row="0" Name="Editor">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="*"/>
+			</Grid.RowDefinitions>
+
+			<Grid Grid.Row="0" Grid.Column="0" Margin="0,0,8,0">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="Auto"/>
+				</Grid.ColumnDefinitions>
+
+				<StackPanel Grid.Column="0" Orientation="Horizontal">
+					<Button
+                        Margin="3,1" Padding="3,2" VerticalAlignment="Center"
+                        Content="🡘" Command="{Binding MirrorCommand}"
+                        Width="22"
+                        ToolTip.Tip="Mirror the brush around the X axis (X)"
+                    ></Button>
+					<Button
+                        Margin="3,1" Padding="3,2" VerticalAlignment="Center"
+                        Width="22"
+                        Content="🡙" Command="{Binding FlipCommand}"
+                        ToolTip.Tip="Flip the brush around the Y axis (Y/Z)"
+                    ></Button>
+					<Button
+                        Margin="3,1" Padding="3,2" VerticalAlignment="Center"
+                        Content="⟳" Command="{Binding RotateCWCommand}"
+                        Width="22"
+                        ToolTip.Tip="Rotate the brush 90 degrees (Q, R)"
+                    ></Button>
+				</StackPanel>
+				<StackPanel Grid.Column="2" Orientation="Horizontal">
+					<CheckBox
+                        ToolTip.Tip="Show the rest of the room behind the tilemap (P)"
+                        Margin="9,3,3,3" IsChecked="{Binding settings.RoomPreviewBool}"
+					>
+						<TextBlock VerticalAlignment="Center" HorizontalAlignment="Left">Preview</TextBlock>
+					</CheckBox>
+					<CheckBox
+                        ToolTip.Tip="Enable the &quot;tiling&quot; behavior when using multi-tile brushes (B)"
+                        Margin="9,3,3,3" IsChecked="{Binding settings.BrushTiling}"
+					>
+						<TextBlock VerticalAlignment="Center" HorizontalAlignment="Left">Brush Tiling</TextBlock>
+					</CheckBox>
+					<CheckBox ToolTip.Tip="Show the tile grid (G)" Margin="9,3,3,3" IsChecked="{Binding settings.ShowGridBool}">
+						<TextBlock VerticalAlignment="Center" HorizontalAlignment="Left">Grid</TextBlock>
+					</CheckBox>
+					<Button
+                        Margin="3,1" Padding="3,2" VerticalAlignment="Center"
+                        Content="↩" Command="{Binding UndoCommand}"
+                        Width="22"
+                        ToolTip.Tip="Undo (Ctrl+Z)" IsEnabled="{Binding UndoEnabled, Mode=OneWay}"
+                    ></Button>
+					<Button
+                        Margin="3,1" Padding="3,2" VerticalAlignment="Center"
+                        Content="↪" Command="{Binding RedoCommand}"
+                        Width="22"
+                        ToolTip.Tip="Redo (Ctrl+Y, Ctrl+Shift+Z)" IsEnabled="{Binding RedoEnabled, Mode=OneWay}"
+                    ></Button>
+				</StackPanel>
+			</Grid>
+			<ScrollViewer
+                Name="TilesScroll"
+                Grid.Row="1" Grid.Column="0" Margin="3,3,11,3"
+                HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible"
+                Background="DarkGray"
+            >
+				<paz:ZoomBorder Name="ZoomBorder" ClipToBounds="True" Stretch="None" ZoomSpeed="1.2" PanButton="Middle">
+					<Canvas	Name="TilesCanvas"
+							Width="{Binding EditWidth, Mode=OneWay}"
+							Height="{Binding EditHeight, Mode=OneWay}"
+							PointerPressed="Tiles_MouseDown"
+					>
+						<Image IsVisible="{Binding settings.RoomPreviewBool, Mode=OneWay}"
+							Canvas.Left="{Binding RoomPrevOffsetX, Mode=OneWay}"
+							Canvas.Top="{Binding RoomPrevOffsetY, Mode=OneWay}"
+							Source="{Binding RoomPreview, Mode=OneWay}"
+							Opacity="0.5"
+						/>
+
+						<controls:PixelPerfectImage
+							x:Name="LayerImage"
+							LayerTilesData="{Binding TilesData, Mode=OneWay}"
+							Width="{Binding EditWidth, Mode=OneWay}"
+							Height="{Binding EditHeight, Mode=OneWay}"
+							Stretch="None"
+							Source="{Binding TilesBitmap, Mode=OneWay}"
+							CheckTransparency="False"
+						>
+						</controls:PixelPerfectImage>
+						<controls:PixelPerfectImage
+							x:Name="BrushPreviewImage"
+							LayerTilesData="{Binding BrushTilesData, Mode=OneWay}"
+							Canvas.Left="{Binding BrushPreviewX, Mode=OneWay}"
+							Canvas.Top="{Binding BrushPreviewY, Mode=OneWay}"
+							Width="{Binding BrushWidth, Mode=OneWay}"
+							Height="{Binding BrushHeight, Mode=OneWay}"
+							Stretch="None" Opacity="0.5"
+							IsVisible="{Binding BrushPreviewVisibility, Mode=OneWay}"
+							CheckTransparency="False"
+						>
+							<Image.Source>
+								<MultiBinding Converter="{StaticResource CachedTileDataLoader}">
+									<Binding Path="BrushTilesData" Mode="OneWay"/>
+									<Binding Path="RefreshBrush" Mode="OneWay"/>
+								</MultiBinding>
+							</Image.Source>
+						</controls:PixelPerfectImage>
+						<Rectangle
+							Width="{Binding EditWidth, Mode=OneWay}"
+							Height="{Binding EditHeight, Mode=OneWay}"
+							IsVisible="{Binding settings.ShowGridBool, Mode=OneWay}"
+						>
+							<Rectangle.Fill>
+								<DrawingBrush
+									TileMode="Tile" Stretch="None"
+									SourceRect="{Binding GridRect, Mode=OneWay}"
+									DestinationRect="{Binding GridRect, Mode=OneWay}"
+                            >
+									<DrawingBrush.Drawing>
+										<GeometryDrawing Brush="LightBlue">
+											<GeometryDrawing.Geometry>
+												<GeometryGroup>
+													<LineGeometry
+														StartPoint="0,0"
+														EndPoint="{Binding GridPoint1, Mode=OneWay}"
+                                                />
+													<LineGeometry
+														StartPoint="0,0"
+														EndPoint="{Binding GridPoint2, Mode=OneWay}"
+                                                />
+												</GeometryGroup>
+											</GeometryDrawing.Geometry>
+											<GeometryDrawing.Pen>
+												<Pen Thickness="1" Brush="Gray" />
+											</GeometryDrawing.Pen>
+										</GeometryDrawing>
+									</DrawingBrush.Drawing>
+								</DrawingBrush>
+							</Rectangle.Fill>
+						</Rectangle>
+						<Rectangle
+							x:Name="BrushOutline"
+							Canvas.Left="{Binding BrushPreviewX, Mode=OneWay}"
+							Canvas.Top="{Binding BrushPreviewY, Mode=OneWay}"
+							Width="{Binding BrushWidth, Mode=OneWay}"
+							Height="{Binding BrushHeight, Mode=OneWay}"
+							IsVisible="{Binding BrushOutlineVisibility, Mode=OneWay}"
+							Stroke="DarkGray" Fill="Transparent"
+							ZIndex="50" StrokeThickness="2"
+						></Rectangle>
+						<Rectangle
+							x:Name="BrushPick"
+							Canvas.Left="{Binding BrushPreviewX, Mode=OneWay}"
+							Canvas.Top="{Binding BrushPreviewY, Mode=OneWay}"
+							Width="{Binding BrushWidth, Mode=OneWay}"
+							Height="{Binding BrushHeight, Mode=OneWay}"
+							IsVisible="{Binding BrushPickVisibility, Mode=OneWay}"
+							Stroke="#FFB23131" ZIndex="50" StrokeThickness="2"
+						>
+							<Rectangle.Fill>
+								<SolidColorBrush Color="Red" Opacity=".1"/>
+							</Rectangle.Fill>
+						</Rectangle>
+					</Canvas>
+				</paz:ZoomBorder>
+			</ScrollViewer>
+			<GridSplitter
+                Grid.Row="1" Grid.Column="1"
+                HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                ShowsPreview="True" Width="3"
+            />
+			<Grid Grid.Row="0" Grid.Column="2" Margin="8,0,0,0">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="96"/>
+				</Grid.ColumnDefinitions>
+				<TextBlock Grid.Column="0" Margin="3" TextAlignment="Right" VerticalAlignment="Center">Tileset columns</TextBlock>
+				<TextBox Grid.Column="1" Margin="3,1" Padding="0,2" Text="{Binding PaletteColumns}"
+                        ToolTip.Tip="Number of columns to use for the tile palette. Adjust if the tileset looks broken.
+Persists when the tile editor is closed, but not when the file is saved and reopened."/>
+			</Grid>
+
+			<ScrollViewer
+                Name="PaletteScroll"
+                Grid.Row="1" Grid.Column="2" Margin="11,3,3,3"
+                HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible"
+                Background="DarkGray"
+            >
+				<paz:ZoomBorder Name="PaletteZoomBorder" ClipToBounds="True" Stretch="None" ZoomSpeed="1.2" PanButton="Middle">
+					<Canvas
+						Name="PaletteCanvas"
+						Width="{Binding PaletteWidth, Mode=OneWay}"
+						Height="{Binding PaletteHeight, Mode=OneWay}"
+						PointerPressed="Tiles_MouseDown"
+					>
+						<Canvas.Background>
+							<DrawingBrush
+								Stretch="Fill" TileMode="Tile"
+								SourceRect="0,0,20,20"
+								DestinationRect="{Binding GridRect, Mode=OneWay}"
+                        >
+								<DrawingBrush.Drawing>
+									<DrawingGroup>
+										<GeometryDrawing Geometry="M0,0 L20,0 20,20, 0,20Z" Brush="White"/>
+										<GeometryDrawing Geometry="M0,10 L20,10 20,20, 10,20 10,0 0,0Z" Brush="LightGray"/>
+									</DrawingGroup>
+								</DrawingBrush.Drawing>
+							</DrawingBrush>
+						</Canvas.Background>
+						<controls:PixelPerfectImage
+							x:Name="PaletteLayerImage"
+							LayerTilesData="{Binding PaletteTilesData, Mode=OneWay}"
+							Width="{Binding PaletteWidth, Mode=OneWay}"
+							Height="{Binding PaletteHeight, Mode=OneWay}"
+							Stretch="None"
+							CheckTransparency="False"
+						>
+							<Image.Source>
+								<MultiBinding Converter="{StaticResource CachedTileDataLoader}">
+									<Binding Path="PaletteTilesData" Mode="OneWay"/>
+									<Binding Path="PaletteColumns" Mode="OneWay"/>
+								</MultiBinding>
+							</Image.Source>
+						</controls:PixelPerfectImage>
+						<Rectangle
+							Width="{Binding PaletteWidth, Mode=OneWay}"
+							Height="{Binding PaletteHeight, Mode=OneWay}"
+							IsVisible="{Binding settings.ShowGridBool, Mode=OneWay}"
+						>
+							<Rectangle.Fill>
+								<DrawingBrush
+									TileMode="Tile" Stretch="None"
+									SourceRect="{Binding GridRect, Mode=OneWay}"
+									DestinationRect="{Binding GridRect, Mode=OneWay}"
+								>
+									<DrawingBrush.Drawing>
+										<GeometryDrawing Brush="LightBlue">
+											<GeometryDrawing.Geometry>
+												<GeometryGroup>
+													<LineGeometry
+														StartPoint="0,0"
+														EndPoint="{Binding GridPoint1, Mode=OneWay}"
+                                                />
+													<LineGeometry
+														StartPoint="0,0"
+														EndPoint="{Binding GridPoint2, Mode=OneWay}"
+                                                />
+												</GeometryGroup>
+											</GeometryDrawing.Geometry>
+											<GeometryDrawing.Pen>
+												<Pen Thickness="1" Brush="Gray" />
+											</GeometryDrawing.Pen>
+										</GeometryDrawing>
+									</DrawingBrush.Drawing>
+								</DrawingBrush>
+							</Rectangle.Fill>
+						</Rectangle>
+						<Rectangle
+							x:Name="PaletteCursor"
+							Canvas.Left="{Binding PaletteCursorX, Mode=OneWay}"
+							Canvas.Top="{Binding PaletteCursorY, Mode=OneWay}"
+							Width="{Binding PaletteCursorWidth, Mode=OneWay}"
+							Height="{Binding PaletteCursorHeight, Mode=OneWay}"
+							IsVisible="{Binding PaletteCursorVisibility, Mode=OneWay}"
+							Stroke="#FFB23131" ZIndex="50" StrokeThickness="2"
+						>
+							<Rectangle.Fill>
+								<SolidColorBrush Color="Red" Opacity=".1"/>
+							</Rectangle.Fill>
+						</Rectangle>
+					</Canvas>
+				</paz:ZoomBorder>
+			</ScrollViewer>
+		</Grid>
+	</Grid>
+</Window>
