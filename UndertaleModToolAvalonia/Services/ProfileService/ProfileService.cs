@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Avalonia.Platform.Storage;
 using Underanalyzer.Decompiler;
 using UndertaleModLib;
 using UndertaleModLib.Decompiler;
@@ -134,7 +135,7 @@ namespace UndertaleModToolAvalonia.Services.ProfileService
             }
         }
 
-        public async Task CreateUMTLastEditedAsync(string filename)
+        public async Task CreateUMTLastEditedAsync(IStorageFolder folder)
         {
             if (!Settings.Instance.ProfileModeEnabled || AppConstants.ProfileHash is null)
             {
@@ -143,11 +144,11 @@ namespace UndertaleModToolAvalonia.Services.ProfileService
 
             try
             {
-                File.WriteAllText(Path.Combine(Settings.ProfilesFolder, "LastEdited.txt"), AppConstants.ProfileHash + "\n" + filename);
+                File.WriteAllText(Path.Combine(Settings.ProfilesFolder, "LastEdited.txt"), AppConstants.ProfileHash + "\n" + (await folder.GetFileAsync("data.win"))?.Path.AbsoluteUri);
             }
             catch (Exception exc)
             {
-                await App.Current.ShowError("CreateUMTLastEdited error! (Note that profile mode is highly experimental.)\n" + exc);
+                await App.Current!.ShowError("CreateUMTLastEdited error! (Note that profile mode is highly experimental.)\n" + exc);
             }
         }
 
@@ -191,7 +192,7 @@ namespace UndertaleModToolAvalonia.Services.ProfileService
                 await App.Current.ShowError("RevertProfile error! (Note that profile mode is highly experimental.)\n" + exc);
             }
         }
-        public async Task UpdateProfileAsync(UndertaleData data, string filename)
+        public async Task UpdateProfileAsync(UndertaleData data, IStorageFolder folder)
         {
             if (!Settings.Instance.ProfileModeEnabled)
             {
@@ -206,8 +207,10 @@ namespace UndertaleModToolAvalonia.Services.ProfileService
                 await Task.Run(() =>
                 {
                     using var md5Instance = MD5.Create();
-                    using var stream = File.OpenRead(filename);
-                    Settings.Instance.MD5CurrentlyLoaded = md5Instance.ComputeHash(stream);
+                    using var stream = folder.GetFileAsync("data.win");
+                    var inputStream = stream.Result?.OpenReadAsync().Result;
+                    if (inputStream == null) return;
+                    Settings.Instance.MD5CurrentlyLoaded = md5Instance.ComputeHash(inputStream);
                     Settings.Instance.MD5PreviouslyLoaded = Settings.Instance.MD5CurrentlyLoaded;
                     AppConstants.ProfileHash = BitConverter.ToString(Settings.Instance.MD5PreviouslyLoaded).Replace("-", "").ToLowerInvariant();
                 });
@@ -226,10 +229,10 @@ namespace UndertaleModToolAvalonia.Services.ProfileService
                         Directory.CreateDirectory(profDirTemp);
                         // Get the files in the directory and copy them to the new location.
                         FileInfo[] files = dir.GetFiles();
-                        foreach (FileInfo file in files)
+                        foreach (FileInfo fileItem in files)
                         {
-                            string tempPath = Path.Combine(profDirTemp, file.Name);
-                            file.CopyTo(tempPath, false);
+                            string tempPath = Path.Combine(profDirTemp, fileItem.Name);
+                            fileItem.CopyTo(tempPath, false);
                         }
                     }
                     else if (!Directory.Exists(profDirMain) && Directory.Exists(profDirTemp))
@@ -239,10 +242,10 @@ namespace UndertaleModToolAvalonia.Services.ProfileService
                         Directory.CreateDirectory(profDirMain);
                         // Get the files in the directory and copy them to the new location.
                         FileInfo[] files = dir.GetFiles();
-                        foreach (FileInfo file in files)
+                        foreach (FileInfo fileItem in files)
                         {
-                            string tempPath = Path.Combine(profDirMain, file.Name);
-                            file.CopyTo(tempPath, false);
+                            string tempPath = Path.Combine(profDirMain, fileItem.Name);
+                            fileItem.CopyTo(tempPath, false);
                         }
                     }
                 }
@@ -283,7 +286,7 @@ should you encounter any problems, please let us know or leave
 an issue on GitHub.");
                     Settings.Instance.ProfileMessageShown = true;
                 }
-                await CreateUMTLastEditedAsync(filename);
+                await CreateUMTLastEditedAsync(folder);
             }
             catch (Exception exc)
             {

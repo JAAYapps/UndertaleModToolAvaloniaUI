@@ -51,7 +51,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
                         player?.Play(File.OpenRead(audioPath));
                     }
                     else
-                        throw new Exception("Failed to find audio file.");
+                        throw new Exception("Failed to find audio file. " + audioPath);
                 }
                 catch (Exception ex)
                 {

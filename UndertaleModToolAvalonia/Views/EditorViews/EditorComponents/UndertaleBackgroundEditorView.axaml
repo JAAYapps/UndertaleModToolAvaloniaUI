@@ -87,8 +87,8 @@
 				<TextBlock Grid.Row="7" Grid.Column="0" Margin="3">Tile Count</TextBlock>
 				<TextBox Grid.Row="7" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2TileCount}"/>
 
-				<TextBlock Grid.Row="8" Grid.Column="0" Margin="3">Unknown Always Zero</TextBlock>
-				<TextBox Grid.Row="8" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2UnknownAlwaysZero}"/>
+				<TextBlock Grid.Row="8" Grid.Column="0" Margin="3">Exported Sprite Index</TextBlock>
+				<TextBox Grid.Row="8" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2ExportedSpriteIndex}"/>
 
 				<TextBlock Grid.Row="9" Grid.Column="0" Margin="3">Frame Time (microseconds)</TextBlock>
 				<TextBox Grid.Row="9" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2FrameLength}"/>
@@ -125,10 +125,10 @@
 						Width="{Binding UndertaleBackground.Texture.BoundingWidth, Mode=OneWay}" Height="{Binding UndertaleBackground.Texture.BoundingHeight, Mode=OneWay}"
 						Cursor="{Binding Converter={StaticResource versionToCursor}, ConverterParameter='2.0'}">
 					<Border Background="{DynamicResource TransparencyGridBrushBrush}">
-						<local:UndertaleTexturePageItemDisplay TextureItem="{Binding $parent[UserControl].DataContext.UndertaleBackground.Texture, Mode=OneWay}"
-															   Editor="{Binding $parent[UserControl].DataContext.Editor}"
-															   TextureCacheService="{Binding $parent[UserControl].DataContext.TextureCacheService}"
-															   FileService="{Binding $parent[UserControl].DataContext.FileService}"/>
+						<local:UndertaleTexturePageItemDisplay TextureItem="{Binding $parent[UserControl].DataContext.(vm:UndertaleBackgroundEditorViewModel).UndertaleBackground.Texture, Mode=OneWay}"
+															   Editor="{Binding $parent[UserControl].DataContext.(vm:UndertaleBackgroundEditorViewModel).Editor}"
+															   TextureCacheService="{Binding $parent[UserControl].DataContext.(vm:UndertaleBackgroundEditorViewModel).TextureCacheService}"
+															   FileService="{Binding $parent[UserControl].DataContext.(vm:UndertaleBackgroundEditorViewModel).FileService}"/>
 					</Border>
 					<Rectangle Name="TileRectangle" Canvas.Left="0" Canvas.Top="0" Width="{Binding UndertaleBackground.GMS2TileWidth, Mode=OneWay}" Height="{Binding UndertaleBackground.GMS2TileHeight, Mode=OneWay}" Stroke="#FFB23131" ZIndex="50" StrokeThickness="2"
 							   IsVisible="{x:Static Member=util:UndertaleHelper.IsGMS2}">

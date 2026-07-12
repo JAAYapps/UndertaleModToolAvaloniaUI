@@ -2,84 +2,129 @@ using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.VisualTree;
+using CommunityToolkit.Mvvm.Input;
+using FluentAvalonia.UI.Controls;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
 using UndertaleModToolAvalonia.Views.EditorViews;
 
 namespace UndertaleModToolAvalonia.Services.LoadingDialogService;
 
-public class LoadingDialogService(IServiceProvider services) : ILoadingDialogService
+public class LoadingDialogService : ILoadingDialogService
 {
-    private LoaderDialogView? dialogView;
-    private LoaderDialogViewModel? viewModel;
+    private ContentDialog? _dialog;
+    private readonly LoaderDialogView? _dialogView;
+    private readonly LoaderDialogViewModel? _viewModel;
+    private bool _isShowing = false;
+
+    public LoadingDialogService(IServiceProvider services)
+    {
+        _dialogView = new LoaderDialogView();
+        _viewModel = services.GetRequiredService<LoaderDialogViewModel>();
+    }
+
+    public void Initialize()
+    {
+        
+    }
 
     public void Show(string title = "Loading...", string message = "Please wait...")
     {
-        // Ensure we're on the UI thread before creating a window
-        Dispatcher.UIThread.Invoke(() =>
+        if (_isShowing) return; // Already shown
+        _isShowing = true;
+        
+        Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            if (dialogView is not null)
+            _dialog = new ContentDialog
             {
-                // If a dialog is already showing, just bring it to the front and update its text
-                viewModel!.MessageTitle = title;
-                viewModel!.Message = message;
-                dialogView.Activate();
-                return;
+                PrimaryButtonText = "OK",
+                CloseButtonText = "Cancel",
+                Content = _dialogView,
+                DataContext = _viewModel,
+                IsPrimaryButtonEnabled = false,
+                IsSecondaryButtonEnabled = false
+            };
+            _dialog.Closing += (sender, args) =>
+            {
+                if (_isShowing) args.Cancel = true;
+            };
+            _dialog.Opened += (sender, args) =>
+            {
+                sender.IsVisible = true;
+                foreach (var visual in _dialog.GetSelfAndVisualDescendants())
+                {
+                    if (visual is Button { Name: "PrimaryButton" or "CloseButton" } button)
+                        button.IsVisible = false;
+                    if (visual.Name == "BackgroundElement")
+                        (visual as Border).Height = 210;
+                    if (visual is Grid { Name: "DialogSpace" } space)
+                    {
+                        space.Margin = new Thickness(0, 50, 0, 0);
+                        space.Height = 270;
+                    }
+                }
+            };
+            _dialogView?.DataContext = _viewModel;
+            //.FindControl<Button>("PrimaryButton").IsVisible = false;
+            
+            if (_viewModel != null)
+            {
+                _viewModel.MessageTitle = title;
+                _viewModel.Message = message;
+                _dialog.Title = title;
+                _dialog.IsVisible = true;
             }
-
-            // Create the UI
-            dialogView = new LoaderDialogView();
-            viewModel = services.GetRequiredService<LoaderDialogViewModel>();
-
-            // Configure the ViewModel
-            viewModel.MessageTitle = title;
-            viewModel.Message = message;
-            dialogView.DataContext = viewModel;
-
-            // Show the window modelessly (doesn't block the UI)
-            dialogView.Show();
+            await _dialog.ShowAsync();
         });
+        
+        
     }
 
     public void Hide()
     {
-        Dispatcher.UIThread.Invoke(() =>
+        if (!_isShowing || _dialog == null) return;
+        
+        _isShowing = false; // Allow the Closing event to pass
+        
+        Dispatcher.UIThread.InvokeAsync(() =>
         {
-            dialogView?.Close();
-            dialogView = null;
-            viewModel = null;
+            _dialog.Hide(); // This actually removes it from the Visual Tree
+            _dialog = null; // Clean up
         });
     }
 
     public async Task UpdateStatusAsync(string status)
     {
-        if (viewModel is not null)
+        if (_viewModel is not null)
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                viewModel.StatusText = status;
+                _viewModel.StatusText = status;
             });
         }
     }
 
     public async Task UpdateProgressAsync(double value, double max)
     {
-        if (viewModel is not null)
+        if (_viewModel is not null)
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                viewModel.Maximum = max;
-                viewModel.Value = value;
+                _viewModel.Maximum = max;
+                _viewModel.Value = value;
             });
         }
     }
 
     public async Task SetIndeterminateAsync(bool isIndeterminate)
     {
-        if (viewModel is not null)
+        if (_viewModel is not null)
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                viewModel.IsIndeterminate = isIndeterminate;
+                _viewModel.IsIndeterminate = isIndeterminate;
             });
         }
     }

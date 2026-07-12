@@ -2,11 +2,15 @@
 using FluentAvalonia.UI.Windowing;
 using System;
 using System.Runtime.InteropServices;
+#if !__BROWSER__
+using System.Runtime.InteropServices;
+#endif
 
 namespace UndertaleModToolAvalonia.Views
 {
     public class UndertaleWindow : AppWindow
     {
+#if !__BROWSER__
         // Delegate for the new window procedure
         private delegate IntPtr WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
@@ -14,7 +18,7 @@ namespace UndertaleModToolAvalonia.Views
         private WndProcDelegate? _wndProcDelegate;
         private IntPtr _originalWndProc = IntPtr.Zero;
         private bool wasMaximizedBeforeMove = false;
-
+#endif
         protected override void OnLoaded(RoutedEventArgs e)
         {
             base.OnLoaded(e);
@@ -22,6 +26,7 @@ namespace UndertaleModToolAvalonia.Views
             // Subclass the window procedure only on Windows
             if (OperatingSystem.IsWindows())
             {
+#if !__BROWSER__
                 try
                 {
                     IntPtr hWnd = TryGetPlatformHandle().Handle;
@@ -36,9 +41,10 @@ namespace UndertaleModToolAvalonia.Views
                     SetWindowLongPtr(hWnd, GWLP_WNDPROC, Marshal.GetFunctionPointerForDelegate(_wndProcDelegate));
                 }
                 catch { }
+#endif
             }
         }
-
+#if !__BROWSER__
         private IntPtr CustomWndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
         {
             switch (msg)
@@ -156,5 +162,6 @@ namespace UndertaleModToolAvalonia.Views
         }
 
         #endregion
+#endif
     }
 }

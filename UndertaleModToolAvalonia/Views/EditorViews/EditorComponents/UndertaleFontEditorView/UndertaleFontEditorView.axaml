@@ -132,71 +132,10 @@
 						<Grid.Background>
 							<SolidColorBrush Color="Black"/>
 						</Grid.Background>
-						<controls:UndertaleTexturePageItemDisplay TextureItem="{Binding $parent[UserControl].DataContext.UndertaleFont.Texture, Mode=OneWay}"
-																  Editor="{Binding $parent[UserControl].DataContext.Editor}"
-																  TextureCacheService="{Binding $parent[UserControl].DataContext.TextureCacheService}"
-																  FileService="{Binding $parent[UserControl].DataContext.FileService}"/>
-						<!--<ItemsControl ItemsSource="{Binding UndertaleFont.Glyphs, Mode=OneWay}">
-							<ItemsControl.ItemsPanel>
-								<ItemsPanelTemplate>
-									<Canvas/>
-								</ItemsPanelTemplate>
-							</ItemsControl.ItemsPanel>
-							<ItemsControl.Styles>
-								<Style Selector="ContentPresenter" x:DataType="undertale:UndertaleFont+Glyph">
-									<Setter Property="Canvas.Left" Value="{Binding SourceX}"/>
-									<Setter Property="Canvas.Top" Value="{Binding SourceY}"/>
-								</Style>
-							</ItemsControl.Styles>
-							<ItemsControl.ItemTemplate>
-								<DataTemplate>
-									<Grid>
-										<Rectangle Name="GlyphRectangle" Stroke="#FFB23131" StrokeThickness="1"
-										   Width="{Binding SourceWidth, Mode=OneWay, FallbackValue=0}"
-										   Height="{Binding SourceHeight, Mode=OneWay, FallbackValue=0}">
-											<Rectangle.Fill>
-												<SolidColorBrush Color="Red" Opacity="0.2"/>
-											</Rectangle.Fill>
-										</Rectangle>
-										<Canvas Panel.ZIndex="1">
-											<Canvas.Styles>
-												<Style Selector="Canvas">
-													<Style.Animations>
-														<Animation Duration="0:0:1" IterationCount="INFINITE">
-															<KeyFrame Cue="0%">
-																<Setter Property="Opacity" Value="1.0" />
-															</KeyFrame>
-															<KeyFrame Cue="50%">
-																<Setter Property="Opacity" Value="0.0" />
-															</KeyFrame>
-															<KeyFrame Cue="100%">
-																<Setter Property="Opacity" Value="1.0" />
-															</KeyFrame>
-														</Animation>
-													</Style.Animations>
-												</Style>
-											</Canvas.Styles>
-
-											<Rectangle Width="1" Height="{Binding SourceHeight, Mode=OneWay, FallbackValue=0}" Stroke="Blue" StrokeThickness="1" HorizontalAlignment="Left">
-												<Rectangle.RenderTransform>
-													<TranslateTransform X="{Binding Offset, Mode=OneWay, FallbackValue=0}"/>
-												</Rectangle.RenderTransform>
-											</Rectangle>
-											<Rectangle Width="{Binding Shift, Mode=OneWay, FallbackValue=0}" Height="1" Stroke="LawnGreen" StrokeThickness="1" VerticalAlignment="Top">
-												<Rectangle.RenderTransform>
-													<TranslateTransform Y="{Binding SourceHeight, Mode=OneWay, FallbackValue=0, Converter={StaticResource AdditionConverter}, ConverterParameter=-1}"/>
-												</Rectangle.RenderTransform>
-											</Rectangle>
-											<Rectangle Width="1" Height="1" Stroke="#FF3E8080" StrokeThickness="1" VerticalAlignment="Top">
-												<Rectangle.RenderTransform>
-													<TranslateTransform Y="{Binding SourceHeight, Mode=OneWay, FallbackValue=0, Converter={StaticResource AdditionConverter}, ConverterParameter=-1}"/>
-												</Rectangle.RenderTransform>
-											</Rectangle>
-										</Canvas>
-									</Grid>
-								</DataTemplate>
-							</ItemsControl.ItemTemplate>
-						</ItemsControl>-->
+						<controls:UndertaleTexturePageItemDisplay TextureItem="{Binding $parent[UserControl].DataContext.(vm:UndertaleFontEditorViewModel).UndertaleFont.Texture, Mode=OneWay}"
+																  Editor="{Binding $parent[UserControl].DataContext.(vm:UndertaleFontEditorViewModel).Editor}"
+																  TextureCacheService="{Binding $parent[UserControl].DataContext.(vm:UndertaleFontEditorViewModel).TextureCacheService}"
+																  FileService="{Binding $parent[UserControl].DataContext.(vm:UndertaleFontEditorViewModel).FileService}"/>
 						<Canvas Name="GlyphsOverlayCanvas" DataContext="{Binding SelectedGlyph, Mode=OneWay}">
 							<Grid IsVisible="{Binding $parent.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}">
 
@@ -252,7 +191,7 @@
 				</Viewbox>
 			</ScrollViewer>
 			<StackPanel Grid.Row="16" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center">
-				<Button Margin="3" Width="220" Command="{Binding EditGlyphRectangleCommand}" CommandParameter="{Binding $parent[Window]}" IsEnabled="{Binding SelectedGlyph, Converter={x:Static ObjectConverters.IsNotNull}}">
+				<Button Margin="3" Width="220" Command="{Binding EditGlyphRectangleCommand}" IsEnabled="{Binding SelectedGlyph, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <TextBlock Text="{Binding EditRectangleButtonText}"/>
                 </Button>
 				<Button Margin="3" Width="200" Content="Create an empty glyph" Command="{Binding CreateGlyphCommand}"/>

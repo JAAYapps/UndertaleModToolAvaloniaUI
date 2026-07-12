@@ -83,7 +83,7 @@ public partial class UndertaleTexturePageItemDisplay : UserControl
     private void TryUpdateDataContext()
     {
         var currentItem = this.TextureItem;
-
+        
         if (this.DataContext is UndertaleTexturePageItemEditorViewModel vm && vm.TexturePageItem == currentItem)
             return;
 
@@ -104,6 +104,7 @@ public partial class UndertaleTexturePageItemDisplay : UserControl
                 this.TextureCacheService,
                 this.FileService
             );
+            Console.WriteLine("UndertaleTexturePageItemDisplay.");
         }
     }
 }

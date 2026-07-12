@@ -309,7 +309,7 @@ namespace UndertaleModToolAvalonia.ViewModels.StartPageViewModels
             }
         }
 
-        public DecompilerSettings DecompilerSettings => Settings.Instance.DecompilerSettings;
+        public DecompilerSettings? DecompilerSettings => Settings.Instance.DecompilerSettings;
 
         public string InstanceIdPrefix
         {
@@ -342,7 +342,7 @@ namespace UndertaleModToolAvalonia.ViewModels.StartPageViewModels
         [RelayCommand]
         private async Task OpenGmlSettingsAsync(Window owner)
         {
-            await dialogService.ShowDialogAsync<GMLSettingsViewModel, bool>(owner);
+            await dialogService.ShowDialogAsync<GMLSettingsViewModel, bool>();
             Settings.Save();
         }
     }

@@ -10,9 +10,11 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using UndertaleModLib.Models;
 using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.Models;
+using UndertaleModToolAvalonia.Services.DialogService;
 using UndertaleModToolAvalonia.Services.FileService;
 using UndertaleModToolAvalonia.Services.TextureCacheService;
 using UndertaleModToolAvalonia.Utilities;
@@ -86,40 +88,40 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
         }
     }
 
-    public partial class EditGlyphRectangleViewModel(EditorViewModel editor, ITextureCacheService textureCacheService, IFileService fileService) : ViewModelBase, IInitializable<UndertaleFontParameters>
+    public partial class EditGlyphRectangleViewModel(EditorViewModel editor, ITextureCacheService textureCacheService, IFileService fileService) : ViewModelBase, IInitializable<UndertaleFontParameters>, IDialogViewModel<UndertaleFont.Glyph>
     {
         [ObservableProperty]
-        EditorViewModel editor = editor;
+        private EditorViewModel _editor = editor;
 
         [ObservableProperty]
-        ITextureCacheService textureCacheService = textureCacheService;
+        private ITextureCacheService _textureCacheService = textureCacheService;
 
         [ObservableProperty]
-        IFileService fileService = fileService;
+        private IFileService _fileService = fileService;
 
         [ObservableProperty]
-        public UndertaleFont font;
+        private UndertaleFont? _font;
 
         [ObservableProperty]
-        public ObservableCollection<GlyphViewModel> glyphs;
+        private ObservableCollection<GlyphViewModel>? _glyphs;
 
         [ObservableProperty]
-        private GlyphViewModel selectedGlyph;
+        private GlyphViewModel? _selectedGlyph;
 
         [ObservableProperty]
-        private bool isSelected;
+        private bool _isSelected;
 
         [ObservableProperty]
-        private Point initPoint;
+        private Point _initPoint;
 
         [ObservableProperty]
-        private HitType initType;
+        private HitType _initType;
 
         [ObservableProperty]
-        private Rect selectedRect;
+        private Rect _selectedRect;
 
         [ObservableProperty]
-        private short initShift;
+        private short _initShift;
 
         public async Task<bool> InitializeAsync(UndertaleFontParameters parameters)
         {
@@ -139,7 +141,10 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
                                                        && x.Offset == parameters.selectedGlyph.Offset)!;
             if (SelectedGlyph is null)
             {
-                await App.Current!.ShowError("Cannot find the selected glyph.");
+                await Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    await App.Current!.ShowError("Cannot find the selected glyph.");
+                });
                 return false;
             }
 
@@ -157,22 +162,28 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
                 newValue.IsSelected = true;
             }
         }
-
-        [RelayCommand]
-        private void Save()
-        {
-            for (int i = 0; i < Font.Glyphs.Count; i++)
-                Font.Glyphs[i] = Glyphs[i].Model;
-            
-            WeakReferenceMessenger.Default.Send(new CloseDialogMessage());
-        }
         
         [RelayCommand]
         private async Task Help()
         {
-            await App.Current!.ShowMessage("1) Double-click an inactive rectangle to select it.\n" +
-                             "2) You can move the selected rectangle with the arrow keys (held Shift - resize).\n" +
-                             "3) Drag mouse on desired region if it's an empty glyph.", "Help");
+            await Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                await App.Current!.ShowMessage("1) Double-click an inactive rectangle to select it.\n" +
+                                               "2) You can move the selected rectangle with the arrow keys (held Shift - resize).\n" +
+                                               "3) Drag mouse on desired region if it's an empty glyph.", "Help");
+            });
+        }
+
+        public string Title => string.Empty;
+        public UndertaleFont.Glyph? Result { get; set; }
+        public void FinalizeResult(bool success)
+        {
+            if (Font != null)
+                for (int i = 0; i < Font.Glyphs.Count; i++)
+                    Font.Glyphs[i] = Glyphs?[i].Model;
+
+            Result = SelectedGlyph?.Model;
+            WeakReferenceMessenger.Default.Send(new CloseDialogMessage());
         }
     }
 }

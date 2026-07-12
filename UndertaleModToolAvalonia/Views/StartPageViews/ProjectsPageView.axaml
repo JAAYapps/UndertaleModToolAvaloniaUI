@@ -11,17 +11,17 @@
              x:DataType="vm:ProjectsPageViewModel"
 			 ><!--Focusable="True"-->
 	<DockPanel>
-		<Menu Name="TopMenu" DockPanel.Dock="Top" IsEnabled="{Binding MenuEnabled}" x:DataType="viewModels:MainWindowViewModel">
+		<Menu Name="TopMenu" DockPanel.Dock="Top" IsEnabled="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).MenuEnabled}">
 			<MenuItem Header="_File">
-				<MenuItem Header="_New" HotKey="Ctrl+N" Command="{Binding NewProjectCommand}"/>
-				<MenuItem Header="_Open" HotKey="Ctrl+O" Command="{Binding OpenFileCommand}" CommandParameter="{Binding $parent[Window].StorageProvider}"/>
-				<MenuItem Header="_Save" HotKey="Ctrl+S" Command="{Binding SaveFileCommand}" CommandParameter="{Binding $parent[Window].StorageProvider}"/>
+				<MenuItem Header="_New" HotKey="Ctrl+N" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).NewProjectCommand}"/>
+				<MenuItem Header="_Open" HotKey="Ctrl+O" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).OpenFileCommand}" CommandParameter="{Binding $parent[UserControl]}"/>
+				<MenuItem Header="_Save" HotKey="Ctrl+S" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).SaveFileCommand}" CommandParameter="{Binding $parent[UserControl]}"/>
 				<Separator/>
-				<MenuItem Header="_Temp run game" HotKey="F5" Command="{Binding RunGameCommand}" CommandParameter="{Binding $parent[Window].StorageProvider}"/>
-				<MenuItem Header="Run game under GMS _debugger" HotKey="Shift+F5" Command="{Binding RunDebugCommand}" CommandParameter="{Binding $parent[Window].StorageProvider}"/>
-				<MenuItem Header="Run game with other runner" HotKey="Alt+F5" Command="{Binding RunSpecialCommand}" CommandParameter="{Binding $parent[Window].StorageProvider}"/>
+				<MenuItem Header="_Temp run game" HotKey="F5" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).RunGameCommand}" CommandParameter="{Binding $parent[UserControl]}"/>
+				<MenuItem Header="Run game under GMS _debugger" HotKey="Shift+F5" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).RunDebugCommand}" CommandParameter="{Binding $parent[UserControl]}"/>
+				<MenuItem Header="Run game with other runner" HotKey="Alt+F5" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).RunSpecialCommand}" CommandParameter="{Binding $parent[UserControl]}"/>
 				<Separator/>
-				<MenuItem Header="Generate o_ffset map" Command="{Binding OffsetMapCommand}" CommandParameter="{Binding $parent[Window].StorageProvider}"/>
+				<MenuItem Header="Generate o_ffset map" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).OffsetMapCommand}" CommandParameter="{Binding $parent[UserControl]}"/>
 				<Separator/>
 				<MenuItem Header="_Close" HotKey="Ctrl+Q"/>
 			</MenuItem>
@@ -29,8 +29,8 @@
 				<MenuItem Header="(...loading...)" IsEnabled="False"/>
 			</MenuItem>
 			<MenuItem Header="_Help">
-				<MenuItem Header="_GitHub" Command="{Binding OpenGitHubCommand}"/>
-				<MenuItem Header="_About" Command="{Binding OpenAboutCommand}"/>
+				<MenuItem Header="_GitHub" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).OpenGitHubCommand}"/>
+				<MenuItem Header="_About" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).OpenAboutCommand}"/>
 			</MenuItem>
 		</Menu>
 		<Border Grid.Row="0" Margin="10" BorderBrush="DarkGray" BorderThickness="2">

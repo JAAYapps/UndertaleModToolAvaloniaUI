@@ -15,7 +15,7 @@ namespace UndertaleModToolAvalonia.Services.FileService
 
         Task<IStorageFile?> SaveImageFileAsync(IStorageProvider storageProvider, string path = "");
 
-        Task<IReadOnlyList<IStorageFile>> LoadFileAsync(IStorageProvider storageProvider, string path = "");
+        Task<IReadOnlyList<IStorageFolder>> LoadFileAsync(IStorageProvider storageProvider, string path = "");
 
         Task<IReadOnlyList<IStorageFile>> LoadAudioFileAsync(IStorageProvider storageProvider, string path = "");
 

@@ -22,7 +22,7 @@
 						<Button.CommandParameter>
 							<MultiBinding Converter="{x:Static converter:ObjectArrayConverter.Instance}">
 								<Binding Path="Name" />
-								<Binding Path="$parent[Window].StorageProvider" />
+								<Binding Path="$parent[UserControl]" />
 							</MultiBinding>
 						</Button.CommandParameter>
 						<Button.Styles>

@@ -1,12 +1,13 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-		xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels"
-        mc:Ignorable="d" d:DesignWidth="800"
-        x:Class="UndertaleModToolAvalonia.Views.EditorViews.DebugDataDialog"
-        Title="Debug data" Width="400" SizeToContent="Height" WindowStartupLocation="CenterOwner"
-		x:DataType="vm:DebugDataDialogViewModel">
+<controls:ContentDialog xmlns="https://github.com/avaloniaui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+               xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+               xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels"
+               xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+               mc:Ignorable="d" d:DesignWidth="800"
+               x:Class="UndertaleModToolAvalonia.Views.EditorViews.DebugDataDialog"
+               Title="Debug data" Width="400"
+               x:DataType="vm:DebugDataDialogViewModel">
 	<Grid Margin="10">
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
@@ -29,4 +30,4 @@
 		<TextBlock Grid.Row="7" Margin="3" TextWrapping="Wrap">Gave up after like 15 minutes of waiting, don't even try this</TextBlock>
 		<Button Grid.Row="8" Margin="3" Command="{Binding SetNoDebugCommand}">No debug data</Button>
 	</Grid>
-</Window>
+</controls:ContentDialog>

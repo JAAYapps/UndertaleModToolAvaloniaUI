@@ -3,9 +3,6 @@
 			 xmlns:sty="using:FluentAvalonia.Styling"
              x:Class="UndertaleModToolAvalonia.App"
              xmlns:local="using:UndertaleModToolAvalonia"
-			 xmlns:components="using:UndertaleModToolAvalonia.Views.EditorViews.EditorComponents"
-			 xmlns:undertale="using:UndertaleModLib.Models"
-			 xmlns:vm="using:UndertaleModToolAvalonia.ViewModels"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
@@ -40,9 +37,9 @@
 	</Application.Resources>
 	
     <Application.Styles>
-		<!--<FluentTheme/>-->
+		<!-- <FluentTheme/> -->
         <sty:FluentAvaloniaTheme PreferSystemTheme="True" PreferUserAccentColor="True"/>
-		<StyleInclude Source="avares://Avalonia.Controls.TreeDataGrid/Themes/Fluent.axaml"/>
+		<!--<StyleInclude Source="avares://Avalonia.Controls.TreeDataGrid/Themes/Fluent.axaml"/>-->
 		<StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
         <StyleInclude Source="/Styles/MenuIcons.axaml"/>
 		<StyleInclude Source="/Styles/SideBar.axaml" />

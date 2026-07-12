@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.StartPageViewModels"
-             xmlns:SettingItems="clr-namespace:UndertaleModToolAvalonia.Views.StartPageViews.SettingItem"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.Views.StartPageViews.SettingsPageView"
 			 x:DataType="vm:SettingsPageViewModel">
@@ -86,7 +85,7 @@
 					</StackPanel>
 
 					<StackPanel Grid.Column="1">
-						<Button Command="{Binding OpenGmlSettingsCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}}" Padding="8,2,8,2" HorizontalAlignment="Left" VerticalAlignment="Top">GML compiler/decompiler settings</Button>
+						<Button Command="{Binding OpenGmlSettingsCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}" Padding="8,2,8,2" HorizontalAlignment="Left" VerticalAlignment="Top">GML compiler/decompiler settings</Button>
 					</StackPanel>
 				</Grid>
 

@@ -4,19 +4,28 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Input;
 using UndertaleModLib;
 using UndertaleModToolAvalonia.Models;
+using UndertaleModToolAvalonia.Services.DialogService;
 using UndertaleModToolAvalonia.Utilities;
 
 namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 {
-    public partial class RuntimePickerViewModel : ViewModelBase, IInitializable<RuntimePickerParameters>
+    public partial class RuntimePickerViewModel : ViewModelBase, IInitializable<RuntimePickerParameters>, IDialogViewModel<RuntimeModel>
     {
         [ObservableProperty]
         public ObservableCollection<RuntimeModel> runtimes = new ObservableCollection<RuntimeModel>();
 
         [ObservableProperty]
         public RuntimeModel? selected = null;
+
+        public string Title { get; }
+        public RuntimeModel? Result { get; private set; }
+        public void FinalizeResult(bool success)
+        {
+            Result = success ? Selected : null;
+        }
 
         public async Task<bool> InitializeAsync(RuntimePickerParameters parameters)
         {

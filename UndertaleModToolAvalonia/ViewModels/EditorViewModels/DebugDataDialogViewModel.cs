@@ -7,10 +7,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UndertaleModToolAvalonia.Messages;
+using UndertaleModToolAvalonia.Services.DialogService;
 
 namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 {
-    public partial class DebugDataDialogViewModel : ViewModelBase
+    public partial class DebugDataDialogViewModel : ViewModelBase, IDialogViewModel<DebugDataDialogViewModel.DebugDataMode>
     {
         public enum DebugDataMode
         {
@@ -20,6 +21,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             NoDebug
         }
 
+        public string Title { get; }
         public DebugDataMode Result { get; private set; } = DebugDataMode.NoDebug;
 
         [RelayCommand]
@@ -48,6 +50,11 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         {
             Result = DebugDataMode.NoDebug;
             WeakReferenceMessenger.Default.Send(new CloseDialogMessage());
+        }
+        
+        public void FinalizeResult(bool success)
+        {
+            
         }
     }
 }

@@ -2,7 +2,152 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.UndertaleRoomEditorViewModel"
+             xmlns:undertale="using:UndertaleModLib.Models"
+             xmlns:converters="using:UndertaleModToolAvalonia.Converters"
+             xmlns:controlConverters="using:UndertaleModToolAvalonia.Converters.ControlConverters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleRoomEditorView.UndertaleRoomEditorView">
-    Welcome to Avalonia!
+             x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleRoomEditorView.UndertaleRoomEditorView"
+             x:DataType="vm:UndertaleRoomEditorViewModel">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <converters:GameObjectToStringConverter x:Key="GameObjectToStringConverter"/>
+            <controlConverters:IsGMS2Converter x:Key="IsGMS2Converter"/>
+            <controlConverters:NonexistentColorConverter x:Key="NonexistentColorConverter"/>
+            <controlConverters:EnabledColorConverter x:Key="EnabledColorConverter"/>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="342"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Column="0" Grid.Row="0" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TreeView Grid.Column="0" Margin="0,0,3,0">
+                <TreeView.DataTemplates>
+                    <DataTemplate DataType="{x:Type undertale:UndertaleRoom+GameObject}">
+                        <TextBlock Background="Transparent"
+                                   Foreground="{Binding Nonexistent, Converter={StaticResource NonexistentColorConverter}}">
+                            <TextBlock.Text>
+                                <MultiBinding Mode="OneWay" Converter="{StaticResource GameObjectToStringConverter}">
+                                    <Binding Path="." Mode="OneWay"/>
+                                    <Binding Path="InstanceID" Mode="OneWay"/>
+                                    <Binding Path="ObjectDefinition.Name.Content" Mode="OneWay" TargetNullValue="?" FallbackValue="EmptyInstance"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                            <TextBlock.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuItem Header="Copy object" Click="MenuItem_Copy_Click" InputGesture="Ctrl+C"/>
+                                    <MenuItem Header="Delete tile" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
+                                </MenuFlyout>
+                            </TextBlock.ContextFlyout>
+                        </TextBlock>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type undertale:UndertaleRoom+Tile}">
+                        <TextBlock>
+                            <TextBlock.Text>
+                                <MultiBinding Mode="OneWay" StringFormat="{}Tile {0} of {1}">
+                                    <Binding Path="InstanceID" Mode="OneWay"/>
+                                    <Binding Path="ObjectDefinition.Name.Content" Mode="OneWay" TargetNullValue="?" FallbackValue="EmptyTile"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                            <TextBlock.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuItem Header="Copy tile" Click="MenuItem_Copy_Click" InputGesture="Ctrl+C"/>
+                                    <MenuItem Header="Delete tile" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
+                                </MenuFlyout>
+                            </TextBlock.ContextFlyout>
+                        </TextBlock>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type undertale:UndertaleRoom+SpriteInstance}">
+                        <TextBlock>
+                            <TextBlock.Text>
+                                <MultiBinding Mode="OneWay" StringFormat="{}Sprite {0} of {1}">
+                                    <Binding Path="Name.Content" Mode="OneWay" TargetNullValue="?" FallbackValue="EmptyName"/>
+                                    <Binding Path="Sprite.Name.Content" Mode="OneWay" TargetNullValue="?" FallbackValue="EmptySprite"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                            <TextBlock.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuItem Header="Copy sprite instance" Click="MenuItem_Copy_Click" InputGesture="Ctrl+C"/>
+                                    <MenuItem Header="Delete sprite instance" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
+                                </MenuFlyout>
+                            </TextBlock.ContextFlyout>
+                        </TextBlock>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type undertale:UndertaleRoom+ParticleSystemInstance}">
+                        <TextBlock>
+                            <TextBlock.Text>
+                                <MultiBinding Mode="OneWay" StringFormat="{}Particle system {0} of {1}">
+                                    <Binding Path="Name.Content" Mode="OneWay" TargetNullValue="?" FallbackValue="EmptyName"/>
+                                    <Binding Path="ParticleSystem.Name.Content" Mode="OneWay" TargetNullValue="?" FallbackValue="EmptySystem"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                            <TextBlock.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuItem Header="Copy particle system instance" Click="MenuItem_Copy_Click" InputGesture="Ctrl+C"/>
+                                    <MenuItem Header="Delete particle system instance" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
+                                </MenuFlyout>
+                            </TextBlock.ContextFlyout>
+                        </TextBlock>
+                    </DataTemplate>
+                </TreeView.DataTemplates>
+                
+                <TreeViewItem Header="{Binding Room.Name.Content}" Name="RoomRootItem" IsExpanded="True" Background="Transparent">
+                    <TreeViewItem Name="BGItems" Header="Backgrounds" ItemsSource="{Binding Room.Backgrounds, Mode=OneWay}" IsVisible="{Binding Room.Flags, Mode=OneTime, Converter={StaticResource IsGMS2Converter}}" IsExpanded="True" Background="Transparent">
+                        <TreeViewItem.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuItem Header="Delete background" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
+                            </MenuFlyout>
+                        </TreeViewItem.ContextFlyout>
+                        <TreeViewItem.DataTemplates>
+                            <DataTemplate DataType="{x:Type undertale:UndertaleRoom+Background}">
+                                <TextBlock Text="{Binding BackgroundDefinition, Mode=OneWay, TargetNullValue='(no name)'}" Background="Transparent">
+                                    <TextBlock.Foreground>
+                                        <Binding Path="Enabled" Converter="{StaticResource EnabledColorConverter}"/>
+                                    </TextBlock.Foreground>
+                                    <TextBlock.ContextFlyout>
+                                        <MenuFlyout>
+                                            <MenuItem Header="Delete background" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
+                                        </MenuFlyout>
+                                    </TextBlock.ContextFlyout>
+                                </TextBlock>
+                            </DataTemplate>
+                        </TreeViewItem.DataTemplates>
+                    </TreeViewItem>
+                    <TreeViewItem Name="ViewItems" Header="Views" ItemsSource="{Binding Room.Views, Mode=OneWay}" IsExpanded="True" Background="Transparent">
+                        <TreeViewItem.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuItem Header="Disable view" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
+                            </MenuFlyout>
+                        </TreeViewItem.ContextFlyout>
+                        <TreeViewItem.DataTemplates>
+                            <DataTemplate DataType="{x:Type undertale:UndertaleRoom+View}">
+                                <TextBlock Text="View" Background="Transparent">
+                                    <TextBlock.Foreground>
+                                        <Binding Path="Enabled" Converter="{StaticResource EnabledColorConverter}"/>
+                                    </TextBlock.Foreground>
+                                    <TextBlock.ContextFlyout>
+                                        <MenuFlyout>
+                                            <MenuItem Header="Disable view" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
+                                        </MenuFlyout>
+                                    </TextBlock.ContextFlyout>
+                                </TextBlock>
+                            </DataTemplate>
+                        </TreeViewItem.DataTemplates>
+                    </TreeViewItem>
+                </TreeViewItem>
+            </TreeView>
+        </Grid>
+    </Grid>
 </UserControl>

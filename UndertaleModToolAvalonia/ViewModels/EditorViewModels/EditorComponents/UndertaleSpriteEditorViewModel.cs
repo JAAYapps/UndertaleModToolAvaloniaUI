@@ -30,6 +30,15 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
         [ObservableProperty]
         private UndertaleSprite undertaleSprite = undertaleSprite;
 
+        public UndertaleSprite.SpriteType[] SpriteTypes { get; } = 
+            Enum.GetValues<UndertaleSprite.SpriteType>();
+
+        public UndertaleSprite.SepMaskType[] SepMaskTypes { get; } = 
+            Enum.GetValues<UndertaleSprite.SepMaskType>();
+
+        public AnimSpeedType[] AnimSpeedTypes { get; } = 
+            Enum.GetValues<AnimSpeedType>();
+        
         [ObservableProperty]
         private TextureEntry selectedItem;
 

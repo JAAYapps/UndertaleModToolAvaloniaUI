@@ -1,24 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
-using System.Windows.Data;
+using Avalonia.Data.Converters;
 using static UndertaleModLib.Models.UndertaleRoom;
 
-namespace UndertaleModTool
+namespace UndertaleModToolAvalonia.Converters
 {
     public sealed class GameObjectToStringConverter : IMultiValueConverter
     {
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
         {
             if (values[0] is not GameObject gameObject)
             {
                 return "(null)";
             }
             return gameObject.ToString();
-        }
-
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-        {
-            return null;
         }
     }
 }

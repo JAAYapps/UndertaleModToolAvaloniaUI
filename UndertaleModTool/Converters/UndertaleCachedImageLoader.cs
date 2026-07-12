@@ -389,7 +389,7 @@ namespace UndertaleModTool
             bool cache = parameter is string par && par == "cache";
 
             Layer.LayerTilesData tilesData = values[0] as Layer.LayerTilesData;
-            UndertaleBackground tilesBG = tilesData.Background;
+            UndertaleBackground tilesBG = tilesData?.Background;
 
             if (tilesBG is null)
                 return null;

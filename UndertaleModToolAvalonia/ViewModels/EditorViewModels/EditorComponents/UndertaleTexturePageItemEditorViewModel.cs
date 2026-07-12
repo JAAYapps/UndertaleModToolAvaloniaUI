@@ -10,6 +10,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using UndertaleModLib.Models;
 using UndertaleModLib.Util;
 using UndertaleModToolAvalonia.Services.FileService;
@@ -168,7 +169,10 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
         {
             if (storageProvider is null)
             {
-                await App.Current!.ShowError("The dialog could not be opened.");
+                await Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    await App.Current!.ShowError("The dialog could not be opened.");
+                });
                 return;
             }
 
@@ -187,7 +191,10 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
             }
             catch (Exception ex)
             {
-                await App.Current!.ShowError(ex.Message, "Failed to import image");
+                await Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    await App.Current!.ShowError(ex.Message, "Failed to import image");
+                });
             }
         }
 
@@ -196,7 +203,10 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
         {
             if (storageProvider is null)
             {
-                await App.Current!.ShowError("The dialog could not be opened.");
+                await Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    await App.Current!.ShowError("The dialog could not be opened.");
+                });
                 return;
             }
 
@@ -212,7 +222,10 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
             }
             catch (Exception ex)
             {
-                await App.Current!.ShowError("Failed to export file: " + ex.Message, "Failed to export file");
+                await Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    await App.Current!.ShowError("Failed to export file: " + ex.Message, "Failed to export file");
+                });
             }
         }
     }

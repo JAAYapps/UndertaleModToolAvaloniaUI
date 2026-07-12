@@ -14,6 +14,19 @@ namespace UndertaleModToolAvalonia.Utilities
     {
         private BitmapInfo() { }
 
+        public static int GetBitsPerPixel(Bitmap bitmap)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                bitmap.Save(memoryStream);
+                memoryStream.Seek(0, SeekOrigin.Begin);
+                using (var image = SixLabors.ImageSharp.Image.Load(memoryStream))
+                {
+                    return image.PixelType.BitsPerPixel;
+                }
+            }
+        }
+
         public static int GetDepth(Bitmap bitmap)
         {
             using (var memoryStream = new MemoryStream())

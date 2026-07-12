@@ -1,12 +1,13 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:vm="clr-namespace:UndertaleModToolAvalonia.ViewModels.EditorViewModels"
-        mc:Ignorable="d" d:DesignWidth="800"
-        x:Class="UndertaleModToolAvalonia.Views.EditorViews.ProfileView"
-        Title="Profiler" Width="800" SizeToContent="Height"
-        x:DataType="vm:ProfileViewModel">
+<controls:ContentDialog xmlns="https://github.com/avaloniaui"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                  xmlns:vm="clr-namespace:UndertaleModToolAvalonia.ViewModels.EditorViewModels"
+                  xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+                  mc:Ignorable="d" d:DesignWidth="800"
+                  x:Class="UndertaleModToolAvalonia.Views.EditorViews.ProfileView"
+                  Title="Profiler" Width="800"
+                  x:DataType="vm:ProfileViewModel">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <Grid Margin="10">
       <Grid.ColumnDefinitions>
@@ -87,4 +88,4 @@
       <Button Grid.Row="17" Grid.Column="2" Grid.ColumnSpan="2" Margin="5" Name="UpdateAppButton" HorizontalAlignment="Right" Width="223">Update app to latest commit</Button>
     </Grid>
   </ScrollViewer>
-</Window>
+</controls:ContentDialog>

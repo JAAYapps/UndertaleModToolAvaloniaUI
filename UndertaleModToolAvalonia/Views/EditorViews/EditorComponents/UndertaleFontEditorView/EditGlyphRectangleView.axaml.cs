@@ -9,6 +9,7 @@ using Avalonia.Media;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Messaging;
 using System;
+using FluentAvalonia.UI.Controls;
 using UndertaleModLib.Models;
 using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.UndertaleFontEditorViewModel;
@@ -16,7 +17,7 @@ using static UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponen
 
 namespace UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleFontEditorView;
 
-public partial class EditGlyphRectangleView : Window
+public partial class EditGlyphRectangleView : UserControl
 {
     private bool isNewCharacter;
     private bool dragInProgress = false;
@@ -32,9 +33,8 @@ public partial class EditGlyphRectangleView : Window
         {
             if (DataContext is EditGlyphRectangleViewModel vm)
             {
-                Close(vm.SelectedGlyph.Model);
+
             }
-            Close();
         });
     }
 

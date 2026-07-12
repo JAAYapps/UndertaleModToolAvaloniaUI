@@ -1,25 +1,77 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <!--If you are willing to use Windows/MacOS native APIs you will need to create 3 projects.
-    One for Windows with net9.0-windows TFM, one for MacOS with net9.0-macos and one with net9.0 TFM for Linux.-->
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <RootNamespace>UndertaleModToolAvalonia.Desktop</RootNamespace>
+    <BuiltInComInteropSupport>false</BuiltInComInteropSupport>
+    <NativeLibPath>$(MSBuildProjectDirectory)/libs</NativeLibPath>
+    <NativeSrc>miniaudio.c</NativeSrc>
+    <NativeOut>miniaudio.o</NativeOut>
   </PropertyGroup>
-
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <PublishAot>true</PublishAot>
+    <PublishTrimmed>true</PublishTrimmed>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <TrimmerRootAssembly Include="UndertaleModToolAvalonia" />
+    <TrimmerRootAssembly Include="UndertaleModLib" />
+  </ItemGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
+  <Target Name="CompileNativeWindows" BeforeTargets="BeforeBuild;Build;Publish" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">
+    <Message Text="[AudioLib] Compiling for Windows (MSVC)..." Importance="high" />
+    <MakeDir Directories="$(NativeLibPath)" />
+
+    <Exec Command="cl.exe /c $(NativeSrc) /Fo$(NativeLibPath)/miniaudio.obj /O2"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+
+    <Exec Command="lib.exe /OUT:$(NativeLibPath)/miniaudio.lib $(NativeLibPath)/miniaudio.obj"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+
+    <Exec Command="cl.exe /LD $(NativeSrc) /Fe$(NativeLibPath)/AudioLib.dll /O2"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+
+    <Copy SourceFiles="$(NativeLibPath)/AudioLib.dll"
+          DestinationFolder="$(OutputPath)"
+          Condition="'$(PublishAot)' != 'true' And Exists('$(NativeLibPath)/AudioLib.dll')" />
+  </Target>
+
+  <Target Name="CompileNativeLinux" BeforeTargets="BeforeBuild;Build;Publish" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">
+    <Message Text="[AudioLib] Compiling for Linux (GCC)..." Importance="high" />
+    <MakeDir Directories="$(NativeLibPath)" />
+
+    <Exec Command="gcc -g -c $(NativeSrc) -o $(NativeLibPath)/miniaudio.o -O3 -fPIC"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+
+    <Exec Command="gcc -shared -o $(NativeLibPath)/libAudioLib.so $(NativeLibPath)/miniaudio.o"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+
+    <Copy SourceFiles="$(NativeLibPath)/libAudioLib.so"
+          DestinationFolder="$(OutputPath)"
+          Condition="'$(PublishAot)' != 'true' And Exists('$(NativeLibPath)/libAudioLib.so')" />
+  </Target>
+
   <ItemGroup>
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.6" />
+    <NativeLibrary Include="$(NativeLibPath)/miniaudio.o" Condition="'$(PublishAot)' == 'true'">
+      <LinkerArg>-Wl,--whole-archive</LinkerArg>
+    </NativeLibrary>
+
+    <DirectPInvoke Include="AudioLib" Condition="'$(PublishAot)' == 'true'" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.11" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.6">
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.11">
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Avalonia.LinuxFramebuffer" Version="11.3.11" />
   </ItemGroup>
 
   <ItemGroup>

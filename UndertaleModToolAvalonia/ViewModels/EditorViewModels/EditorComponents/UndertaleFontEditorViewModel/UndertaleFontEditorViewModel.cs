@@ -133,20 +133,30 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
             IsKerningViewVisible = false;
         }
 
-        [RelayCommand]
-        private async Task EditGlyphRectangle(Window owner)
+        [RelayCommand(AllowConcurrentExecutions = false)]
+        private async Task EditGlyphRectangle()
         {
-            var parameters = new UndertaleFontParameters(UndertaleFont, SelectedGlyph);
-
-            var result = await dialogService.ShowDialogAsync<EditGlyphRectangleViewModel, UndertaleFontParameters, UndertaleFont.Glyph>(owner, parameters);
-
-            SelectedGlyph = UndertaleFont.Glyphs.FirstOrDefault(x => x.SourceX == result?.SourceX
-                                                       && x.SourceY == result.SourceY
-                                                       && x.SourceWidth == result.SourceWidth
-                                                       && x.SourceHeight == result.SourceHeight
-                                                       && x.Character == result.Character
-                                                       && x.Shift == result.Shift
-                                                       && x.Offset == result.Offset)!;//UndertaleFont.Glyphs.FirstOrDefault(x => x == SelectedGlyph);
+            if (SelectedGlyph != null)
+            {
+                Console.WriteLine("Get parameters.");
+                var parameters = new UndertaleFontParameters(UndertaleFont, SelectedGlyph);
+                try
+                {
+                    Console.WriteLine("Getting Edit Glyph Rectangle editor.");
+                    var result = await dialogService.ShowDialogAsync<EditGlyphRectangleViewModel, UndertaleFontParameters, UndertaleFont.Glyph>(parameters);
+                    SelectedGlyph = UndertaleFont.Glyphs.FirstOrDefault(x => x.SourceX == result?.SourceX
+                                                                             && x.SourceY == result.SourceY
+                                                                             && x.SourceWidth == result.SourceWidth
+                                                                             && x.SourceHeight == result.SourceHeight
+                                                                             && x.Character == result.Character
+                                                                             && x.Shift == result.Shift
+                                                                             && x.Offset == result.Offset)!;//UndertaleFont.Glyphs.FirstOrDefault(x => x == SelectedGlyph);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
         }
     }
 }

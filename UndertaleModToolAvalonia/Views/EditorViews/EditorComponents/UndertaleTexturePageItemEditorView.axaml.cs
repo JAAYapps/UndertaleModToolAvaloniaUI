@@ -42,6 +42,7 @@ public partial class UndertaleTexturePageItemEditorView : UserControl
 
     private void SwitchDataContext(object? sender, EventArgs e)
     {
+        if((DataContext as UndertaleTexturePageItemEditorViewModel) is null) return;
         Console.WriteLine("Data Context Changed.");
         UndertaleTexturePageItem item = (DataContext as UndertaleTexturePageItemEditorViewModel).TexturePageItem;
         if (item is null)

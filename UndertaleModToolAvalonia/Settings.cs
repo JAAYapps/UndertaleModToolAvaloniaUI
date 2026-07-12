@@ -12,9 +12,12 @@ namespace UndertaleModToolAvalonia
 {
     public class Settings
     {
+        public static bool completeFail = false;
+        public static string failMessage = string.Empty;
+        public static string? GetExecutableDirectory() => Path.GetDirectoryName(Environment.ProcessPath);
         public static string AppDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "UndertaleModTool");
         public static string ProfilesFolder = Path.Combine(AppDataFolder, "Profiles");
-        public static string CorrectionsFolder { get; } = Path.Combine(Program.GetExecutableDirectory(), "Corrections");
+        public static string CorrectionsFolder { get; } = Path.Combine(GetExecutableDirectory() ?? string.Empty, "Corrections");
 
         /// <summary>
         /// Whether file associations settings should be prompted for on startup.
@@ -25,7 +28,7 @@ namespace UndertaleModToolAvalonia
         public byte[] MD5PreviouslyLoaded = new byte[13];
         public byte[] MD5CurrentlyLoaded = new byte[15];
         
-        public string Version { get; set; } = Assembly.GetEntryAssembly().GetName().Version.ToString();
+        public string? Version { get; set; } = Assembly.GetEntryAssembly().GetName().Version.ToString();
         public string GameMakerStudioPath { get; set; } = "%appdata%\\GameMaker-Studio";
         public string GameMakerStudio2RuntimesPath { get; set; } = "%systemdrive%\\ProgramData\\GameMakerStudio2\\Cache\\runtimes"; /* Using %systemdrive% here fixes the runtimes not being found when the system drive is not C:\\ */
         public bool AssetOrderSwappingEnabled { get; set; } = false;
@@ -66,7 +69,7 @@ namespace UndertaleModToolAvalonia
 
         public bool EnableDarkMode { get; set; } = false;
         public bool ShowDebuggerOption { get; set; } = false;
-        public DecompilerSettings DecompilerSettings { get; set; }
+        public DecompilerSettings? DecompilerSettings { get; set; }
         public const string DefaultInstanceIdPrefix = "inst_";
         public string InstanceIdPrefix { get; set; } = DefaultInstanceIdPrefix;
 
@@ -79,13 +82,14 @@ namespace UndertaleModToolAvalonia
         public bool CanSafelySave { get; set; } = false;
         
         public static Settings Instance;
-
+        
         public static JsonSerializerOptions JsonOptions = new JsonSerializerOptions
         {
             WriteIndented = true,
             AllowTrailingCommas = true,
             ReadCommentHandling = JsonCommentHandling.Skip,
-            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            TypeInfoResolver = SettingsJsonContext.Default // Links the Source Generator
         };
 
         public Settings()
@@ -105,23 +109,26 @@ namespace UndertaleModToolAvalonia
                     return;
                 }
                 byte[] bytes = File.ReadAllBytes(path);
-                JsonSerializer.Deserialize<Settings>(bytes, JsonOptions);
+                Settings loaded = (Settings)JsonSerializer.Deserialize(bytes, SettingsJsonContext.Default.Settings);
+                if (loaded != null)
+                {
+                    Instance = loaded;
+                }
 
                 // Handle upgrading settings here when needed
-                bool changed = false;
-                if (Instance.Version != Assembly.GetEntryAssembly().GetName().Version.ToString())
+                bool changed = Instance.Version != Assembly.GetEntryAssembly()?.GetName().Version?.ToString();
+                if (changed)
                 {
-                    changed = true;
                     // TODO when it becomes necessary
                 }
 
                 // Update the version to this version
-                Instance.Version = Assembly.GetEntryAssembly().GetName().Version.ToString();
+                Instance.Version = Assembly.GetEntryAssembly()?.GetName().Version?.ToString();
                 if (changed)
                     Save();
             } catch (Exception e)
             {
-                Application.Current.ShowMessage($"Failed to load settings.json! Using default values.\n{e.Message}");
+                _ = Application.Current?.ShowMessage($"Failed to load settings.json! Using default values.\n{e.Message}");
                 new Settings();
             }
         }
@@ -132,12 +139,12 @@ namespace UndertaleModToolAvalonia
             {
                 Directory.CreateDirectory(AppDataFolder);
                 string path = Path.Combine(AppDataFolder, "settings.json");
-                byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(Instance, JsonOptions);
+                byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(Instance, SettingsJsonContext.Default.Settings);
                 File.WriteAllBytes(path, bytes);
             }
             catch (Exception e)
             {
-                Application.Current.ShowMessage($"Failed to save settings.json!\n{e.Message}");
+                Application.Current?.ShowMessage($"Failed to save settings.json!\n{e.Message}");
             }
         }
     }
@@ -160,7 +167,7 @@ namespace UndertaleModToolAvalonia
 
         // Inner settings used to store values that we don't have any business reimplementing
         [JsonIgnore]
-        private DecompileSettings _innerSettings;
+        private DecompileSettings? _innerSettings;
 
         /// <summary>
         /// Indentation style being used for decompilation.
@@ -231,5 +238,11 @@ namespace UndertaleModToolAvalonia
             // Pass through to inner settings instance, which has some predefined values already
             return _innerSettings.TryGetPredefinedDouble(value, out result, out isResultMultiPart);
         }
+    }
+    
+    [JsonSerializable(typeof(Settings))]
+    [JsonSerializable(typeof(DecompilerSettings))]
+    public partial class SettingsJsonContext : JsonSerializerContext
+    {
     }
 }

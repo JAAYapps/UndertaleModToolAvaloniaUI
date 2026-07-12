@@ -18,6 +18,7 @@ using System.Runtime;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Platform.Storage;
 using UndertaleModLib;
 using UndertaleModLib.Decompiler;
 using UndertaleModLib.Models;
@@ -37,6 +38,7 @@ using UndertaleModToolAvalonia.Services.TextureCacheService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.UndertaleFontEditorViewModel;
+using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.UndertaleRoomEditorViewModel;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTypesDialog;
 using UndertaleModToolAvalonia.Views.EditorViews;
 using UndertaleModToolAvalonia.Views.EditorViews.EditorComponents;
@@ -127,7 +129,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         
         public static string AppDataFolder => Settings.AppDataFolder;
         public static string ProfilesFolder = Path.Combine(Settings.AppDataFolder, "Profiles");
-        public static string CorrectionsFolder = Path.Combine(Program.GetExecutableDirectory(), "Corrections");
+        public static string CorrectionsFolder = Path.Combine(Settings.GetExecutableDirectory() ?? string.Empty, "Corrections");
         public string ProfileHash = "Unknown";
         public bool CrashedWhileEditing = false;
 
@@ -364,13 +366,15 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             return filteredList;
         }
 
-        public async Task<bool> LoadFileAsync(string filename, bool preventClose = false, bool onlyGeneralInfo = false)
+        public async Task<bool> LoadFileAsync(IStorageFolder? folder, bool preventClose = false, bool onlyGeneralInfo = false)
         {
+            if (folder is not { }) return false;
+            
             IsEnabled = false;
             loadingDialogService.Show("Loading File", "Reading data.win, please wait...");
             await loadingDialogService.SetIndeterminateAsync(true);
 
-            GameSpecificResolver.BaseDirectory = Program.GetExecutableDirectory();
+            GameSpecificResolver.BaseDirectory = Settings.GetExecutableDirectory();
 
             bool loaded = await Task.Run<bool>(async () =>
             {
@@ -378,18 +382,42 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                 UndertaleData data = null;
                 try
                 {
-                    using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
+                    IStorageFile? dataFile = null;
+                    await foreach (var item in folder.GetItemsAsync())
                     {
-                        data = UndertaleIO.Read(stream, async (string warning, bool isImportant) =>
+                        if (item is IStorageFile file && file.Name.Equals("data.win", StringComparison.OrdinalIgnoreCase))
                         {
-                            await App.Current!.ShowWarning(warning, "Loading warning");
+                            dataFile = file;
+                            AppConstants.FilePath = folder.Path.LocalPath;
+                            break;
+                        }
+                    }
+                    
+                    if (dataFile is null)
+                    {
+                        return false;
+                    }
+                    Console.WriteLine("File name: " + dataFile.Name + " Type: " + dataFile.GetType());
+                    using (var stream = await dataFile.OpenReadAsync())
+                    {
+                        var memoryStream = new MemoryStream();
+                        await stream.CopyToAsync(memoryStream);
+                        data = UndertaleIO.Read(memoryStream, (string warning, bool isImportant) =>
+                        {
+                            Dispatcher.UIThread.Post(() =>
+                            {
+                                _ = App.Current!.ShowWarning(warning, "Loading warning");
+                            });
                             if (isImportant)
                             {
                                 hadImportantWarnings = true;
                             }
                         }, message =>
                         {
-                            loadingDialogService.UpdateStatusAsync(message);
+                            Dispatcher.UIThread.Post(() =>
+                            {
+                                loadingDialogService.UpdateStatusAsync(message);
+                            });
                         }, onlyGeneralInfo);
                     }
                 }
@@ -398,7 +426,11 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 #if DEBUG
                     Debug.WriteLine(e);
 #endif
-                    loadingDialogService.Hide();
+                    Console.WriteLine(e.Message + "\n" + e.StackTrace);
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        loadingDialogService.Hide();
+                    });
                     await Dispatcher.UIThread.InvokeAsync(async () =>
                     {
                         await App.Current!.ShowError("An error occurred while trying to load:\n" + e.Message, "Load error");
@@ -412,7 +444,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     {
                         loadingDialogService.Hide();
                         AppConstants.Data = data;
-                        AppConstants.FilePath = filename;
+                        AppConstants.FilePath = folder.Path.AbsoluteUri;
                     });
 
                     return true;
@@ -438,7 +470,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                         {
                             Settings.Instance.CanSave = true;
                             Settings.Instance.CanSafelySave = true;
-                            await profileService.UpdateProfileAsync(data, filename);
+                            await profileService.UpdateProfileAsync(data, folder);
                             if (data != null)
                             {
                                 data.ToolInfo.DecompilerSettings = Settings.Instance.DecompilerSettings;
@@ -456,7 +488,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                                 await App.Current!.ShowWarning("This game is set to run with the GameMaker Studio debugger and the normal runtime will simply hang after loading if the debugger is not running. You can turn this off in General Info by checking the \"Disable Debugger\" box and saving.", "GMS Debugger");
                             }
                         }
-                        if (Path.GetDirectoryName(AppConstants.FilePath) != Path.GetDirectoryName(filename))
+                        if (!OperatingSystem.IsBrowser() && Path.GetDirectoryName(AppConstants.FilePath) != Path.GetDirectoryName(folder.Path.AbsoluteUri))
                             UndertaleHelper.CloseChildFiles();
 
                         AppConstants.Data = data;
@@ -466,7 +498,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
                         AppConstants.Data.ToolInfo.DecompilerSettings = Settings.Instance.DecompilerSettings;
                         AppConstants.Data.ToolInfo.InstanceIdPrefix = () => Settings.Instance.InstanceIdPrefix;
-                        AppConstants.FilePath = filename;
+                        // TODO AppConstants.FilePath = folder.Path.AbsoluteUri;
                         OnPropertyChanged(nameof(AppConstants.Data));
                         OnPropertyChanged(nameof(AppConstants.FilePath));
                         OnPropertyChanged(nameof(UndertaleHelper.IsGMS2));
@@ -487,8 +519,11 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             IsEnabled = true;
             // Clear "GC holes" left in the memory in process of data unserializing
             // https://docs.microsoft.com/en-us/dotnet/api/system.runtime.gcsettings.largeobjectheapcompactionmode?view=net-6.0
-            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-            GC.Collect();
+            if (!OperatingSystem.IsBrowser())
+            {
+                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+                GC.Collect();
+            }
             ApplyFilter(AppConstants.Data);
             WeakReferenceMessenger.Default.Send(new TitleUpdateMessage());
             return true;
@@ -525,7 +560,10 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     {
                         UndertaleIO.Write(stream, AppConstants.Data, message =>
                         {
-                            loadingDialogService.UpdateStatusAsync(message);
+                            Dispatcher.UIThread.Post(() =>
+                            {
+                                loadingDialogService.UpdateStatusAsync(message);
+                            });
                         });
                     }
 
@@ -633,7 +671,10 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                         File.Move(filename + "temp", filename, true);
 
                         // Also make the changes to the profile system.
-                        await profileService.ProfileSaveEventAsync(AppConstants.Data, filename);
+                        await Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            await profileService.ProfileSaveEventAsync(AppConstants.Data, filename);
+                        });
                     }
                     else
                     {
@@ -847,7 +888,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     UndertaleFont => new UndertaleFontEditorViewModel(name, (UndertaleFont)asset, this, textureCacheService, fileService, dialogService),
                     UndertaleTimeline => new UndertaleTimelineEditorViewModel(name, (UndertaleTimeline)asset),
                     //UndertaleGameObject => "Game Object",
-                    //UndertaleRoom => "Room",
+                    UndertaleRoom => new UndertaleRoomEditorViewModel(name, (UndertaleRoom)asset, this, fileService, textureCacheService),
                     //UndertaleExtension => "Extension",
                     UndertaleTexturePageItem => new UndertaleTexturePageItemEditorViewModel(name, (UndertaleTexturePageItem)asset, this, textureCacheService, fileService),
                     UndertaleCode => new UndertaleCodeEditorViewModel(name, (UndertaleCode)asset, this, profileService, loadingDialogService, fileService),

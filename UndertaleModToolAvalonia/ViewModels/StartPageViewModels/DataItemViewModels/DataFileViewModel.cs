@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
+using Avalonia.Controls;
 using UndertaleModToolAvalonia.Models.StartPageModels;
 using UndertaleModToolAvalonia.Services.FileService;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
@@ -42,7 +44,7 @@ public partial class DataFileViewModel : ViewModelBase
 
         // Unpack the values from the array in the same order you bound them
         var name = values[0] as string;
-        var storageProvider = values[1] as Avalonia.Platform.Storage.IStorageProvider;
+        var storageProvider = TopLevel.GetTopLevel(values[1] as Visual)?.StorageProvider;//Avalonia.Platform.Storage.IStorageProvider;
 
         if (string.IsNullOrEmpty(name)) return;
 
@@ -56,13 +58,11 @@ public partial class DataFileViewModel : ViewModelBase
             }
 
             // Use the FileService to get a file path
-            var files = await fileService.LoadFileAsync(storageProvider);
-            var filePath = files?.FirstOrDefault()?.Path.LocalPath;
+            Console.WriteLine("Pass in storage provider: " + storageProvider);
+            var folders = await fileService.LoadFileAsync(storageProvider);
+            var folder = folders.FirstOrDefault();
 
-            if (string.IsNullOrEmpty(filePath))
-                return; // User cancelled
-
-            if (await editorViewModel.LoadFileAsync(filePath))
+            if (folder != null && await editorViewModel.LoadFileAsync(folder))
                 FileLoaded?.Invoke(this, EventArgs.Empty);
         }
         else

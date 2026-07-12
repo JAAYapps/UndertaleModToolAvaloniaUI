@@ -1,10 +1,11 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using FluentAvalonia.UI.Controls;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
 
 namespace UndertaleModToolAvalonia.Views.EditorViews
 {
-    public partial class RuntimePickerView : Window
+    public partial class RuntimePickerView : ContentDialog
     {
         public RuntimePickerView()
         {
@@ -12,7 +13,7 @@ namespace UndertaleModToolAvalonia.Views.EditorViews
             if (DataContext is RuntimePickerViewModel viewModel)
             {
                 if (viewModel.Selected == null && viewModel.Runtimes.Count == 0)
-                    Close();
+                    this.CloseButtonCommand.Execute(null);
             }
         }
 
@@ -21,9 +22,9 @@ namespace UndertaleModToolAvalonia.Views.EditorViews
             if (DataContext is RuntimePickerViewModel viewModel)
             {
                 var selectedRuntime = viewModel.Selected;
-                Close(selectedRuntime);
+                this.CloseButtonCommand.Execute(selectedRuntime);
             }
-            Close();
+            this.CloseButtonCommand.Execute(null);
         }
     }
 }

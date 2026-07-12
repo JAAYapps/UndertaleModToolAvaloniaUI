@@ -328,6 +328,7 @@ namespace UndertaleModLib
                 }
                 catch (Exception e)
                 {
+                    Console.WriteLine(e.Message + " " + e.StackTrace);
                     SubmitWarning($"Error initializing game-specific data resolver:\n{e.GetType().FullName}: {e.Message}", false);
                     data.GameSpecificRegistry = new(); // Use a blank registry...
                 }

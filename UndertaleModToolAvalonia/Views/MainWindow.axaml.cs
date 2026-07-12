@@ -44,7 +44,7 @@ namespace UndertaleModToolAvalonia.Views
             if (DataContext is not MainWindowViewModel vm) return;
 
             // Handle Ctrl+O for Open File
-            if (e.Key == Key.O && e.KeyModifiers == KeyModifiers.Control)
+            if (e is { Key: Key.O, KeyModifiers: KeyModifiers.Control })
             {
                 if (vm.OpenFileCommand.CanExecute(null))
                 {
@@ -54,7 +54,7 @@ namespace UndertaleModToolAvalonia.Views
                 e.Handled = true;
             }
             // Handle Ctrl+S for Save File
-            else if (e.Key == Key.S && e.KeyModifiers == KeyModifiers.Control)
+            else if (e is { Key: Key.S, KeyModifiers: KeyModifiers.Control })
             {
                 if (vm.SaveFileCommand.CanExecute(null))
                 {
@@ -77,7 +77,7 @@ namespace UndertaleModToolAvalonia.Views
         {
             // We only want this to run once
             this.Loaded -= MainWindow_Loaded;
-
+            
             if (DataContext is MainWindowViewModel vm)
                 await vm.StartupCommand.ExecuteAsync(this);
 

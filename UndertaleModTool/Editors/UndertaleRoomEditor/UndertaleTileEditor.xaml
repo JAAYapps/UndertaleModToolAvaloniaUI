@@ -133,10 +133,10 @@
                     Width="{Binding EditWidth, Mode=OneWay}"
                     Height="{Binding EditHeight, Mode=OneWay}"
                     MouseDown="Tiles_MouseDown"
-                >
-                    <Canvas.Background>
+                ><!--TODO Just include the background on conversion to Avalonia-->
+                    <!--<Canvas.Background>
                         <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#FFFFFFFF"/>
-                    </Canvas.Background>
+                    </Canvas.Background>-->
 
                     <Image
                         Visibility="{Binding settings.RoomPreviewBool, Mode=OneWay, Converter={StaticResource BoolToVisConverter}}"

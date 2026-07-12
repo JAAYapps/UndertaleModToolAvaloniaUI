@@ -4,6 +4,7 @@ namespace UndertaleModToolAvalonia.Services.LoadingDialogService;
 
 public interface ILoadingDialogService
 {
+    void Initialize();
     void Show(string title = "Loading...", string message = "Please wait...");
     void Hide();
     Task UpdateStatusAsync(string status);

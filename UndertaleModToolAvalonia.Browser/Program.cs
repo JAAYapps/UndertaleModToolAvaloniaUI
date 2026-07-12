@@ -1,17 +1,16 @@
-﻿using System.Reflection;
-using System.Runtime.Versioning;
+﻿using System.Runtime.InteropServices.JavaScript;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Browser;
-using UndertaleModToolAvalonia;
-using Microsoft.Extensions.Configuration;
+
+namespace UndertaleModToolAvalonia.Browser;
 
 internal sealed partial class Program
 {
-    private static Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
-        App.LoadServices();
-        return BuildAvaloniaApp()
+        await JSHost.ImportAsync("WebAudioPlayer", "../WebAudioPlayer.js");
+        await BuildAvaloniaApp()
             .WithInterFont()
             .StartBrowserAppAsync("out");
     }

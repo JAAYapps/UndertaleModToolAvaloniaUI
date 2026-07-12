@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -16,6 +17,8 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Avalonia.VisualTree;
+using FluentAvalonia.UI.Controls;
 using UndertaleModLib;
 using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.Models;
@@ -131,8 +134,9 @@ namespace UndertaleModToolAvalonia.ViewModels
         }
 
         [RelayCommand]
-        private async Task Startup(Window owner)
+        private async Task Startup(Visual owner)
         {
+            loadingDialogService.Initialize();
             Console.WriteLine("Running startup");
             // Load settings to see if we should associate files
             Settings.Load();
@@ -141,11 +145,7 @@ namespace UndertaleModToolAvalonia.ViewModels
             {
                 try
                 {
-                    bool shouldAssociate = true;
-                    if (File.Exists("dna.txt"))
-                    {
-                        shouldAssociate = false;
-                    }
+                    bool shouldAssociate = !File.Exists("dna.txt");
                     if (shouldAssociate && Settings.ShouldPromptForAssociations)
                     {
                         if (await App.Current!.ShowQuestion("First-time setup: Would you like to associate GameMaker data files (like .win) with UndertaleModTool?", MsBox.Avalonia.Enums.Icon.Question, "File associations") != MsBox.Avalonia.Enums.ButtonResult.Yes)
@@ -178,6 +178,7 @@ namespace UndertaleModToolAvalonia.ViewModels
             bool loaded = false;
             if (args.Length > 1)
             {
+                if (OperatingSystem.IsBrowser()) return;
                 if (args.Length > 2)
                 {
                     isLaunch = args[2] == "launch";
@@ -185,9 +186,14 @@ namespace UndertaleModToolAvalonia.ViewModels
                 }
 
                 string arg = args[1];
+                IReadOnlyList<IStorageFolder> folder = null;
+                var storageProvider = TopLevel.GetTopLevel(owner)?.StorageProvider;
+                if (storageProvider != null)
+                    folder = await fileService.LoadFileAsync(storageProvider, arg);
+                
                 if (File.Exists(arg))
                 {
-                    loaded = await editorViewModel.LoadFileAsync(arg, true, isLaunch || isSpecialLaunch);
+                    loaded = await editorViewModel.LoadFileAsync(folder.FirstOrDefault(), true, isLaunch || isSpecialLaunch);
                 }
                 else if (arg == "deleteTempFolder") // if was launched from UndertaleModToolUpdater
                 {
@@ -240,13 +246,17 @@ namespace UndertaleModToolAvalonia.ViewModels
 
                 if (isSpecialLaunch)
                 {
-                    var runtimeParams = new RuntimePickerParameters(FilePath, Data);
+                    if (FilePath != null && Data != null)
+                    {
+                        var runtimeParams = new RuntimePickerParameters(FilePath, Data);
+                
+                        var runtime = await dialogService.ShowDialogAsync<RuntimePickerViewModel, RuntimePickerParameters, RuntimeModel>(runtimeParams);
 
-                    var runtime = await dialogService.ShowDialogAsync<RuntimePickerViewModel, RuntimePickerParameters, RuntimeModel>(owner, runtimeParams);
+                        if (runtime == null)
+                            return;
+                        Process.Start(runtime.Path, "-game \"" + FilePath + "\"");
+                    }
 
-                    if (runtime == null)
-                        return;
-                    Process.Start(runtime.Path, "-game \"" + FilePath + "\"");
                     Environment.Exit(0);
                 }
                 else if (isLaunch)
@@ -298,27 +308,23 @@ namespace UndertaleModToolAvalonia.ViewModels
         }
 
         [RelayCommand]
-        private async Task OpenFileAsync(IStorageProvider storageProvider)
+        private async Task OpenFileAsync(Visual visual)
         {
             OnSelectedPageChanged(Pages[0]);
             if (CurrentPage is not ProjectsPageViewModel pvm)
                 return;
             
-            if (storageProvider is null)
+            if (TopLevel.GetTopLevel(visual)?.StorageProvider is null)
             {
                 await App.Current!.ShowError("The dialog could not be opened.");
                 return;
             }
             MenuEnabled = false;
             // Use the FileService to get a file path
-            var files = await fileService.LoadFileAsync(storageProvider);
-            var filePath = files?.FirstOrDefault()?.Path.LocalPath;
-
-            if (string.IsNullOrEmpty(filePath))
-                return; // User cancelled
-
+            var folders = await fileService.LoadFileAsync(TopLevel.GetTopLevel(visual)?.StorageProvider!);
+            var folder = folders.FirstOrDefault();
             
-            if (await editorViewModel.LoadFileAsync(filePath))
+            if (folder != null && await editorViewModel.LoadFileAsync(folder))
                 pvm.ChangePage(1);
             Console.WriteLine(Settings.Instance.CanSave);
             CanSave = Settings.Instance.CanSave;
@@ -326,15 +332,15 @@ namespace UndertaleModToolAvalonia.ViewModels
         }
 
         [RelayCommand(CanExecute = nameof(CanSave))]
-        private async Task SaveFileAsync(IStorageProvider storageProvider)
+        private async Task SaveFileAsync(Visual visual)
         {
-            if (storageProvider is null)
+            if (TopLevel.GetTopLevel(visual)?.StorageProvider is null)
             {
                 await App.Current!.ShowError("The dialog could not be opened.");
                 return;
             }
             MenuEnabled = false;
-            var storage = await fileService.SaveFileAsync(storageProvider);
+            var storage = await fileService.SaveFileAsync(TopLevel.GetTopLevel(visual)?.StorageProvider!);
 
             if (storage == null || string.IsNullOrEmpty(storage.Name))
                 return; // User cancelled
@@ -343,15 +349,15 @@ namespace UndertaleModToolAvalonia.ViewModels
             MenuEnabled = true;
         }
 
-        private async Task<bool> SaveFileSuppressDebugAsync(IStorageProvider storageProvider)
+        private async Task<bool> SaveFileSuppressDebugAsync(Visual visual)
         {
-            if (storageProvider is null)
+            if (TopLevel.GetTopLevel(visual)?.StorageProvider is null)
             {
                 await App.Current!.ShowError("The dialog could not be opened.");
                 return false;
             }
             MenuEnabled = false;
-            var storage = await fileService.SaveFileAsync(storageProvider);
+            var storage = await fileService.SaveFileAsync(TopLevel.GetTopLevel(visual)?.StorageProvider!);
 
             if (string.IsNullOrEmpty(storage.Name))
                 return false; // User cancelled
@@ -432,7 +438,7 @@ result in loss of work.");
         }
 
         [RelayCommand(CanExecute = nameof(CanSave))]
-        private async Task RunSpecial(IStorageProvider storageProvider)
+        private async Task RunSpecial(Visual visual)
         {
             if (AppConstants.Data == null)
                 return;
@@ -444,7 +450,7 @@ result in loss of work.");
                 {
                     AppConstants.Data.GeneralInfo.IsDebuggerDisabled = true;
 
-                    if (!await SaveFileSuppressDebugAsync(storageProvider))
+                    if (!await SaveFileSuppressDebugAsync(TopLevel.GetTopLevel(visual)!))
                     {
                         await App.Current!.ShowError("You must save your changes to run.");
                         AppConstants.Data.GeneralInfo.IsDebuggerDisabled = false;
@@ -461,7 +467,7 @@ result in loss of work.");
             {
                 AppConstants.Data.GeneralInfo.IsDebuggerDisabled = true;
                 if (await App.Current!.ShowQuestion("Save changes first?") == MsBox.Avalonia.Enums.ButtonResult.Yes)
-                    saveOk = await SaveFileSuppressDebugAsync(storageProvider);
+                    saveOk = await SaveFileSuppressDebugAsync(TopLevel.GetTopLevel(visual)!);
             }
 
             if (AppConstants.FilePath == null)
@@ -470,14 +476,14 @@ result in loss of work.");
             }
             else if (saveOk)
             {
-                var runtime = await dialogService.ShowDialogAsync<RuntimePickerViewModel, RuntimePickerParameters, RuntimeModel>((App.Current!.ApplicationLifetime as ClassicDesktopStyleApplicationLifetime)?.MainWindow!, new RuntimePickerParameters(AppConstants.FilePath, AppConstants.Data));
+                var runtime = await dialogService.ShowDialogAsync<RuntimePickerViewModel, RuntimePickerParameters, RuntimeModel>(new RuntimePickerParameters(AppConstants.FilePath, AppConstants.Data));
                 if (runtime != null)
                     Process.Start(runtime.Path, "-game \"" + AppConstants.FilePath + "\" -debugoutput \"" + Path.ChangeExtension(AppConstants.FilePath, ".gamelog.txt") + "\"");
             }
         }
 
         [RelayCommand(CanExecute = nameof(CanSave))]
-        private async Task RunDebug(IStorageProvider storageProvider)
+        private async Task RunDebug(Visual visual)
         {
             if (AppConstants.Data == null)
                 return;
@@ -490,14 +496,14 @@ result in loss of work.");
             bool origDbg = AppConstants.Data.GeneralInfo.IsDebuggerDisabled;
             AppConstants.Data.GeneralInfo.IsDebuggerDisabled = false;
 
-            bool saveOk = await SaveFileSuppressDebugAsync(storageProvider);
+            bool saveOk = await SaveFileSuppressDebugAsync(TopLevel.GetTopLevel(visual)!);
             if (AppConstants.FilePath == null)
             {
                 await App.Current!.ShowWarning("The file must be saved in order to be run.");
             }
             else if (saveOk)
             {
-                var runtime = await dialogService.ShowDialogAsync<RuntimePickerViewModel, RuntimePickerParameters, RuntimeModel>((App.Current!.ApplicationLifetime as ClassicDesktopStyleApplicationLifetime)?.MainWindow!, new RuntimePickerParameters(AppConstants.FilePath, AppConstants.Data));
+                var runtime = await dialogService.ShowDialogAsync<RuntimePickerViewModel, RuntimePickerParameters, RuntimeModel>(new RuntimePickerParameters(AppConstants.FilePath, AppConstants.Data));
                 if (runtime == null)
                     return;
                 if (runtime.DebuggerPath == null)
@@ -535,15 +541,15 @@ result in loss of work.");
         }
 
         [RelayCommand]
-        private async Task OffsetMap(IStorageProvider storageProvider)
+        private async Task OffsetMap(Visual visual)
         {
-            if (storageProvider is null)
+            if (TopLevel.GetTopLevel(visual)?.StorageProvider is null)
             {
                 await App.Current!.ShowError("The dialog could not be opened.");
                 return;
             }
             MenuEnabled = false;
-            var files = await fileService!.LoadFileAsync(storageProvider);
+            var files = await fileService!.LoadFileAsync(TopLevel.GetTopLevel(visual)?.StorageProvider!);
             var filePath = files?.FirstOrDefault()?.Path.LocalPath;
 
             if (string.IsNullOrEmpty(filePath))
@@ -551,7 +557,7 @@ result in loss of work.");
 
             string suggestedName = Path.ChangeExtension(filePath, ".offsetmap.txt");
 
-            var storage = await fileService!.SaveTextFileAsync(storageProvider, suggestedName);
+            var storage = await fileService!.SaveTextFileAsync(TopLevel.GetTopLevel(visual)?.StorageProvider!, suggestedName);
 
             if (storage == null || string.IsNullOrEmpty(storage.Name))
                 return; // User cancelled

@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Threading.Tasks;
+using Avalonia.Platform.Storage;
 using Underanalyzer.Decompiler;
 using UndertaleModLib;
 using UndertaleModLib.Decompiler;
@@ -20,13 +22,13 @@ namespace UndertaleModToolAvalonia.Services.ProfileService
 
         public Task ApplyCorrectionsAsync();
 
-        public Task CreateUMTLastEditedAsync(string filename);
+        public Task CreateUMTLastEditedAsync(IStorageFolder folder);
 
         public Task DestroyUMTLastEditedAsync();
 
         public Task RevertProfileAsync();
 
-        public Task UpdateProfileAsync(UndertaleData data, string filename);
+        public Task UpdateProfileAsync(UndertaleData data, IStorageFolder folder);
 
         public Task ProfileSaveEventAsync(UndertaleData data, string filename);
 

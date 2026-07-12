@@ -25,6 +25,7 @@ using UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTypesDi
 using UndertaleModToolAvalonia.ViewModels.StartPageViewModels;
 using UndertaleModToolAvalonia.ViewModels.StartPageViewModels.DataItemViewModels;
 using UndertaleModToolAvalonia.ViewModels.StartPageViewModels.SettingsViewModels;
+using UndertaleModToolAvalonia.Views;
 using MainWindow = UndertaleModToolAvalonia.Views.MainWindow;
 using MainWindowViewModel = UndertaleModToolAvalonia.ViewModels.MainWindowViewModel;
 
@@ -47,24 +48,24 @@ public partial class App : Application
     
     public override void OnFrameworkInitializationCompleted()
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        if (Settings.completeFail)
         {
-            if (Program.completeFail)
-            {
-                _ = Current?.ShowError(Program.failMessage);
-                return;
-            }
-            // Line below is needed to remove Avalonia data validation.
-            // Without this line you will get duplicate validations from both Avalonia and CT
-            BindingPlugins.DataValidators.RemoveAt(0);
-            // Window main = WindowLoader.createWindow(null,
-            //     typeof(EditorView), typeof(EditorViewModel), true, false);
+            _ = Current?.ShowError(Settings.failMessage);
+            return;
+        }
+        // Line below is needed to remove Avalonia data validation.
+        // Without this line you will get duplicate validations from both Avalonia and CT
+        BindingPlugins.DataValidators.RemoveAt(0);
+        // Window main = WindowLoader.createWindow(null,
+        //     typeof(EditorView), typeof(EditorViewModel), true, false);
 
-            
+        
 
-            try
+        try
+        {
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                desktop.MainWindow = desktop.MainWindow = Services.GetRequiredService<MainWindow>();
+                desktop.MainWindow = Services.GetRequiredService<MainWindow>();
 
                 desktop.ShutdownRequested += (sender, args) =>
                 {
@@ -74,44 +75,48 @@ public partial class App : Application
                         disposablePlayer.Dispose();
                     }
                 };
-
-                WeakReferenceMessenger.Default.Register<SettingChangedMessage>(this, (recipient, message) =>
-                {
-                    if (message.SettingName == "EnableDarkMode" && message.NewValue is bool isDark)
-                    {
-                        // This one line changes the theme for the ENTIRE application.
-                        // All open and future windows will automatically use the new theme.
-                        Current.RequestedThemeVariant = isDark ? ThemeVariant.Dark : ThemeVariant.Light;
-                    }
-                    if (message.SettingName == nameof(SettingsPageViewModel.TransparencyGridColor1) && message.NewValue is string color1)
-                    {
-                        Application.Current!.Resources["TransparencyGridColor1"] = Color.Parse(color1);
-                    }
-                    else if (message.SettingName == nameof(SettingsPageViewModel.TransparencyGridColor2) && message.NewValue is string color2)
-                    {
-                        Application.Current!.Resources["TransparencyGridColor2"] = Color.Parse(color2);
-                    }
-                });
             }
-            catch (Exception e)
+            else if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
             {
-                // Avalonia is a bit weird when I only want to display a messagebox only to display a fatal error.
-                // I had to create a new Window and hide it just for the framework to display the message.
-                Console.WriteLine(e);
-/*                if (desktop.MainWindow != null)
-                    desktop.MainWindow.Close();
-                Window main = new Window();
-                if (main != null)
-                {
-                    main.Hide();
-                    main.Loaded += (_, __) =>
-                    {
-                        main.Close();
-                    };
-                }*/
-                _ = Current?.ShowError(e.ToString());
-                Program.completeFail = true;
+                singleView.MainView = Services.GetRequiredService<MainView>();
             }
+
+            WeakReferenceMessenger.Default.Register<SettingChangedMessage>(this, (recipient, message) =>
+            {
+                if (message is { SettingName: "EnableDarkMode", NewValue: bool isDark })
+                {
+                    // This one line changes the theme for the ENTIRE application.
+                    // All open and future windows will automatically use the new theme.
+                    Current.RequestedThemeVariant = isDark ? ThemeVariant.Dark : ThemeVariant.Light;
+                }
+                if (message.SettingName == nameof(SettingsPageViewModel.TransparencyGridColor1) && message.NewValue is string color1)
+                {
+                    Application.Current!.Resources["TransparencyGridColor1"] = Color.Parse(color1);
+                }
+                else if (message.SettingName == nameof(SettingsPageViewModel.TransparencyGridColor2) && message.NewValue is string color2)
+                {
+                    Application.Current!.Resources["TransparencyGridColor2"] = Color.Parse(color2);
+                }
+            });
+        }
+        catch (Exception e)
+        {
+            // Avalonia is a bit weird when I only want to display a messagebox only to display a fatal error.
+            // I had to create a new Window and hide it just for the framework to display the message.
+            Console.WriteLine(e);
+/*                if (desktop.MainWindow != null)
+                desktop.MainWindow.Close();
+            Window main = new Window();
+            if (main != null)
+            {
+                main.Hide();
+                main.Loaded += (_, __) =>
+                {
+                    main.Close();
+                };
+            }*/
+            _ = Current?.ShowError(e.ToString());
+            Settings.completeFail = true;
         }
         
         base.OnFrameworkInitializationCompleted();
@@ -124,11 +129,24 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
 
-        // services.AddSingleton<IPlayer, Player>();
-        services.AddSingleton<IPlayer, SilkNetPlayer>();
+        if (OperatingSystem.IsBrowser())
+        {
+            services.AddSingleton<IPlayer, WebAudioPlayer>();
+            Console.WriteLine("Web Player");
+        }
+        if (OperatingSystem.IsWindows() || OperatingSystem.IsMacOS() || OperatingSystem.IsLinux())
+        {
+            services.AddSingleton<IPlayer, MiniAudioPlayer>();
+            Console.WriteLine("Miniaudio Player");
+        }
+        if (OperatingSystem.IsFreeBSD())
+        {
+            services.AddSingleton<IPlayer, DummyPlayer>();
+            Console.WriteLine("Dummy Player (FreeBSD)");
+        }
         services.AddSingleton<IFileService, FileService>();
         services.AddTransient<LoaderDialogViewModel>();
-        services.AddTransient<MainWindowViewModel>();
+        services.AddSingleton<MainWindowViewModel>();
         services.AddTransient<ProjectsPageViewModel>();
         services.AddTransient<DataFileViewModel>();
         services.AddSingleton<EditorViewModel>();
@@ -147,11 +165,20 @@ public partial class App : Application
         services.AddSingleton<IReferenceFinderService, ReferenceFinderService>();
         services.AddSingleton<ITextureCacheService, TextureCacheService>();
 
-        services.AddTransient<MainWindow>(provider => new MainWindow
+        if (OperatingSystem.IsWindows() || OperatingSystem.IsMacOS() || OperatingSystem.IsLinux() || OperatingSystem.IsFreeBSD())
         {
-            DataContext = provider.GetRequiredService<MainWindowViewModel>()
-        });
-
+            services.AddTransient<MainWindow>(provider => new MainWindow
+            {
+                DataContext = provider.GetRequiredService<MainWindowViewModel>()
+            });
+        }
+        if (OperatingSystem.IsBrowser())
+        {
+            services.AddTransient<MainView>(provider => new MainView
+            {
+                DataContext = provider.GetRequiredService<MainWindowViewModel>()
+            });
+        }
         return services.BuildServiceProvider();
     }
 }

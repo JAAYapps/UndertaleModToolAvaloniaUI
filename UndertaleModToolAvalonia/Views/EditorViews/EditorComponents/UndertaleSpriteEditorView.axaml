@@ -10,13 +10,13 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleSpriteEditorView"
 			 x:DataType="vm:UndertaleSpriteEditorViewModel">
-	<UserControl.Resources>
+	<!--<UserControl.Resources>
 		<ResourceDictionary>
 			<utils:EnumValues EnumType="undertale:UndertaleSprite+SpriteType" x:Key="SpriteType" />
 			<utils:EnumValues EnumType="undertale:UndertaleSprite+SepMaskType" x:Key="SepMaskType" />
 			<utils:EnumValues EnumType="undertale:AnimSpeedType" x:Key="AnimSpeedType" />
 		</ResourceDictionary>
-	</UserControl.Resources>
+	</UserControl.Resources>-->
 	<ScrollViewer VerticalScrollBarVisibility="Visible" AllowAutoHide="False">
 		<Grid Margin="15">
 			<Grid.ColumnDefinitions>
@@ -83,7 +83,7 @@
 			<TextBox Grid.Row="7" Grid.Column="1" Margin="3" Text="{Binding UndertaleSprite.BBoxMode}"/>
 
 			<TextBlock Grid.Row="8" Grid.Column="0" Margin="3">SepMasks</TextBlock>
-			<ComboBox ItemsSource="{Binding Source={StaticResource SepMaskType}}" SelectedItem="{Binding UndertaleSprite.SepMasks}"
+			<ComboBox ItemsSource="{Binding SepMaskTypes}" SelectedItem="{Binding UndertaleSprite.SepMasks}"
 								Grid.Row="8" Grid.Column="1" Margin="3"/>
 
 			<TextBlock Grid.Row="9" Grid.Column="0" Margin="3">Origin</TextBlock>
@@ -117,7 +117,7 @@
 																	   Loaded="UndertaleObjectReference_Loaded"
 																	   ObjectReference="{Binding Texture, Mode=TwoWay}"
 																	   ObjectType="{x:Type undertale:UndertaleTexturePageItem}"
-																	   RemoveCommand="{Binding $parent[DataGrid].DataContext.RemoveSpriteCommand}"
+																	   RemoveCommand="{Binding $parent[DataGrid].DataContext.(vm:UndertaleSpriteEditorViewModel).RemoveSpriteCommand}"
 																	   RemoveCommandParameter="{Binding}"/>
 								</DataTemplate>
 							</DataGridTemplateColumn.CellTemplate>
@@ -131,10 +131,10 @@
 			<Viewbox Grid.Row="11" Grid.Column="1" Stretch="Uniform" StretchDirection="DownOnly">
 				<Border Background="{StaticResource TransparencyGridBrushBrush}">
 					<controls:UndertaleTexturePageItemDisplay x:Name="TextureDisplay"
-															  TextureItem="{Binding $parent[UserControl].DataContext.SelectedTexture}"
-															  Editor="{Binding $parent[UserControl].DataContext.Editor}"
-															  TextureCacheService="{Binding $parent[UserControl].DataContext.TextureCacheService}"
-															  FileService="{Binding $parent[UserControl].DataContext.FileService}"/>
+															  TextureItem="{Binding $parent[UserControl].DataContext.(vm:UndertaleSpriteEditorViewModel).SelectedTexture}"
+															  Editor="{Binding $parent[UserControl].DataContext.(vm:UndertaleSpriteEditorViewModel).Editor}"
+															  TextureCacheService="{Binding $parent[UserControl].DataContext.(vm:UndertaleSpriteEditorViewModel).TextureCacheService}"
+															  FileService="{Binding $parent[UserControl].DataContext.(vm:UndertaleSpriteEditorViewModel).FileService}"/>
 				</Border>
 			</Viewbox>
 
@@ -163,7 +163,7 @@
 											<ColumnDefinition Width="Auto"/>
 										</Grid.ColumnDefinitions>
 										<TextBlock Grid.Column="0" VerticalAlignment="Center" Text="(CollisionMask)"/>
-										<Button Grid.Column="1" x:Name="RemoveButton" Content=" X " Command="{Binding $parent[UserControl].DataContext.RemoveMaskCommand}" CommandParameter="{Binding #MaskList.SelectedItem}" ToolTip.Tip="Remove"/>
+										<Button Grid.Column="1" x:Name="RemoveButton" Content=" X " Command="{Binding $parent[UserControl].DataContext.(vm:UndertaleSpriteEditorViewModel).RemoveMaskCommand}" CommandParameter="{Binding #MaskList.SelectedItem}" ToolTip.Tip="Remove"/>
 									</Grid>
 								</DataTemplate>
 							</DataGridTemplateColumn.CellTemplate>
@@ -209,8 +209,8 @@
 									<RowDefinition Height="Auto"/>
 								</Grid.RowDefinitions>
 
-								<Button Grid.Row="0" Grid.Column="0" Content="Import mask" Command="{Binding $parent[UserControl].DataContext.MaskImportCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=StorageProvider}" x:Name="MaskImport"/>
-								<Button Grid.Row="0" Grid.Column="3" Content="Export mask" Command="{Binding $parent[UserControl].DataContext.MaskExportCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=StorageProvider}" x:Name="MaskExport"
+								<Button Grid.Row="0" Grid.Column="0" Content="Import mask" Command="{Binding $parent[UserControl].DataContext.(vm:UndertaleSpriteEditorViewModel).MaskImportCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=StorageProvider}" x:Name="MaskImport"/>
+								<Button Grid.Row="0" Grid.Column="3" Content="Export mask" Command="{Binding $parent[UserControl].DataContext.(vm:UndertaleSpriteEditorViewModel).MaskExportCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=StorageProvider}" x:Name="MaskExport"
 										IsEnabled="{Binding #MaskImage.Source, Converter={x:Static converters:IsNullConverter.Instance}, ConverterParameter=Invert}"/>
 							</Grid>
 						</StackPanel>
@@ -287,7 +287,7 @@
 				<TextBox Grid.Row="0" Grid.Column="1" Margin="3" Text="{Binding UndertaleSprite.SVersion}"/>
 
 				<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Type</TextBlock>
-				<ComboBox ItemsSource="{Binding Source={StaticResource SpriteType}}" SelectedItem="{Binding UndertaleSprite.SSpriteType}"
+				<ComboBox ItemsSource="{Binding SpriteTypes}" SelectedItem="{Binding UndertaleSprite.SSpriteType}"
 									Grid.Row="1" Grid.Column="1" Margin="3"/>
 
 				<Grid Grid.Row="2" Grid.ColumnSpan="2" Margin="0" IsVisible="{x:Static Member=utils:UndertaleHelper.IsGMS2}">
@@ -304,7 +304,7 @@
 					<TextBox Grid.Row="0" Grid.Column="1" Margin="3" Text="{Binding UndertaleSprite.GMS2PlaybackSpeed}"/>
 
 					<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Playback speed type</TextBlock>
-					<ComboBox ItemsSource="{Binding Source={StaticResource AnimSpeedType}}" SelectedItem="{Binding UndertaleSprite.GMS2PlaybackSpeedType}"
+					<ComboBox ItemsSource="{Binding AnimSpeedTypes}" SelectedItem="{Binding UndertaleSprite.GMS2PlaybackSpeedType}"
 										Grid.Row="1" Grid.Column="1" Margin="3"/>
 				</Grid>
 			</Grid>

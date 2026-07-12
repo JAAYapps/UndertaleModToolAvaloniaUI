@@ -20,7 +20,7 @@ namespace UndertaleModToolAvalonia.Services.FileService
                 Title = "Save Undertale File",
                 FileTypeChoices = new List<FilePickerFileType>
                 {
-                    new FilePickerFileType("GameMaker data files (.win, .unx, .ios, .droid)") { Patterns = new List<string> { "*.win;*.unx;*.ios;*.droid" } }
+                    new FilePickerFileType("GameMaker data files (.win, .unx, .ios, .droid)") { Patterns = new List<string> { "*.win","*.unx","*.ios","*.droid" } }
                 },
                 ShowOverwritePrompt = true,
                 SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "data.win",
@@ -38,7 +38,7 @@ namespace UndertaleModToolAvalonia.Services.FileService
                 Title = "Save Audio File",
                 FileTypeChoices = new List<FilePickerFileType>
                 {
-                    new FilePickerFileType("Audio files (.wav, .ogg)") { Patterns = new List<string> { "*.wav;*.ogg;" } }
+                    new FilePickerFileType("Audio files (.wav, .ogg)") { Patterns = new List<string> { "*.wav","*.ogg" } }
                 },
                 ShowOverwritePrompt = true,
                 SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "audio" + defaultExtension.Substring(1),
@@ -85,21 +85,25 @@ namespace UndertaleModToolAvalonia.Services.FileService
             });
         }
 
-        public async Task<IReadOnlyList<IStorageFile>> LoadFileAsync(IStorageProvider storageProvider, string path = "")
+        public async Task<IReadOnlyList<IStorageFolder>> LoadFileAsync(IStorageProvider storageProvider, string path = "")
         {
             string directory = !string.IsNullOrEmpty(path) ? Path.GetFullPath(path) : "";
             string name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : "";
-            return await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+            return await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions()
             {
-                AllowMultiple = false,
-                Title = "Load Undertale File",
-                FileTypeFilter = [
-                    new FilePickerFileType("GameMaker data files (.win, .unx, .ios, .droid)") { Patterns = new List<string> { "*.win;*.unx;*.ios;*.droid" } },
-                    new FilePickerFileType("All files") { Patterns = new List<string> { "*" } }
-                ],
-                SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "data.win",
-                SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Documents)
+                Title = "Load Game Folder",
             });
+            // return await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+            // {
+            //     AllowMultiple = false,
+            //     Title = "Load Undertale File",
+            //     FileTypeFilter = [
+            //         new FilePickerFileType("GameMaker data files (.win, .unx, .ios, .droid)") { Patterns = new List<string> { "*.win","*.unx","*.ios","*.droid" } },
+            //         new FilePickerFileType("All files") { Patterns = new List<string> { "*" } }
+            //     ],
+            //     SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "data.win",
+            //     SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Documents)
+            // });
         }
 
         public async Task<IReadOnlyList<IStorageFile>> LoadAudioFileAsync(IStorageProvider storageProvider, string path = "")
@@ -111,7 +115,7 @@ namespace UndertaleModToolAvalonia.Services.FileService
                 AllowMultiple = false,
                 Title = "Load Audio File",
                 FileTypeFilter = [
-                    new FilePickerFileType("Audio files (.wav, .ogg)") { Patterns = new List<string> { "*.wav;*.ogg;" } },
+                    new FilePickerFileType("Audio files (.wav, .ogg)") { Patterns = new List<string> { "*.wav","*.ogg" } },
                     new FilePickerFileType("All files") { Patterns = new List<string> { "*" } }
                 ],
                 SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "audio.ogg",

@@ -27,7 +27,7 @@ namespace UndertaleModToolAvalonia.Utilities
         
         public static bool GMLCacheEnabled => Settings.Instance.UseGMLCache;
         
-        private static string ExePath { get; } = Program.GetExecutableDirectory();
+        private static string? ExePath { get; } = Settings.GetExecutableDirectory();
         
         // For delivering messages to LoaderDialogs
         public delegate void FileMessageEventHandler(string message);

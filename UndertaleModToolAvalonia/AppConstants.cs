@@ -25,7 +25,7 @@ namespace UndertaleModToolAvalonia
 
         public static UndertaleData? Data { get => data; set => data = value; }
 
-        public static string? FilePath { get; set; }
+        public static string? FilePath { get; set; } = string.Empty;
         
         public static string? ScriptPath { get; set; } // For the scripting interface specifically
         
