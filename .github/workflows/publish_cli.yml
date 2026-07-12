@@ -25,7 +25,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         submodules: true
     - name: Setup .NET
@@ -43,10 +43,10 @@ jobs:
         cp ./README.md ./CLI-${{ matrix.os }}/
         cp ./SCRIPTS.md ./CLI-${{ matrix.os }}/
         cp ./LICENSE.txt ./CLI-${{ matrix.os }}/
-        cp -r ./UndertaleModLib/GameSpecificData/ ./CLI-${{ matrix.os }}/GameSpecificData/
         cp -r ./UndertaleModTool/Scripts/ ./CLI-${{ matrix.os }}/Scripts/
+        rm ./CLI-${{ matrix.os }}/Underanalyzer.pdb
     - name: Upload ${{ matrix.os }} CLI
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: CLI-${{ matrix.os }}-isBundled-${{ matrix.bundled }}
         path: CLI-${{ matrix.os }}
