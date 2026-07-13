@@ -1208,9 +1208,9 @@ public partial class UndertaleCodeEditorView : UserControl
                 if (data.BuiltinList.Constants.ContainsKey(nameText))
                     return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength,
                                                    ConstantBrush);
-                if (data.BuiltinList.GlobalNotArray.ContainsKey(nameText) ||
-                    data.BuiltinList.Instance.ContainsKey(nameText) ||
-                    data.BuiltinList.GlobalArray.ContainsKey(nameText))
+                if (data.BuiltinList.GlobalVars.ContainsKey(nameText) ||
+                    data.BuiltinList.InstanceVars.ContainsKey(nameText) ||
+                    data.BuiltinList.GlobalArrayVars.ContainsKey(nameText))
                     return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength,
                                                    InstanceBrush);
                 if (vm?.CurrentLocals?.Contains(nameText) == true)

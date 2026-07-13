@@ -64,7 +64,7 @@
 				</Grid.RowDefinitions>
 
 				<TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Unknown Always 2</TextBlock>
-				<TextBox Grid.Row="0" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2UnknownAlways2}"/>
+				<TextBox Grid.Row="0" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2TilesetVersion}"/>
 
 				<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Tile Width</TextBlock>
 				<TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2TileWidth}"/>
@@ -88,7 +88,7 @@
 				<TextBox Grid.Row="7" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2TileCount}"/>
 
 				<TextBlock Grid.Row="8" Grid.Column="0" Margin="3">Exported Sprite Index</TextBlock>
-				<TextBox Grid.Row="8" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2ExportedSpriteIndex}"/>
+				<TextBox Grid.Row="8" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2ExportedSprite}"/>
 
 				<TextBlock Grid.Row="9" Grid.Column="0" Margin="3">Frame Time (microseconds)</TextBlock>
 				<TextBox Grid.Row="9" Grid.Column="1" Margin="3" Text="{Binding UndertaleBackground.GMS2FrameLength}"/>
