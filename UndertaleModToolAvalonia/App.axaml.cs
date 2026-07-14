@@ -53,13 +53,6 @@ public partial class App : Application
             _ = Current?.ShowError(Settings.failMessage);
             return;
         }
-        // Line below is needed to remove Avalonia data validation.
-        // Without this line you will get duplicate validations from both Avalonia and CT
-        BindingPlugins.DataValidators.RemoveAt(0);
-        // Window main = WindowLoader.createWindow(null,
-        //     typeof(EditorView), typeof(EditorViewModel), true, false);
-
-        
 
         try
         {

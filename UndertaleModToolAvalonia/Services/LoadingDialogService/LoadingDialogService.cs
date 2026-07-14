@@ -14,7 +14,7 @@ namespace UndertaleModToolAvalonia.Services.LoadingDialogService;
 
 public class LoadingDialogService : ILoadingDialogService
 {
-    private ContentDialog? _dialog;
+    private FAContentDialog? _dialog;
     private readonly LoaderDialogView? _dialogView;
     private readonly LoaderDialogViewModel? _viewModel;
     private bool _isShowing = false;
@@ -37,7 +37,7 @@ public class LoadingDialogService : ILoadingDialogService
         
         Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            _dialog = new ContentDialog
+            _dialog = new FAContentDialog
             {
                 PrimaryButtonText = "OK",
                 CloseButtonText = "Cancel",

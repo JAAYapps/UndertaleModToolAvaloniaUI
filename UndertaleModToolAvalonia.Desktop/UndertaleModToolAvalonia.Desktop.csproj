@@ -3,7 +3,6 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <RootNamespace>UndertaleModToolAvalonia.Desktop</RootNamespace>
     <BuiltInComInteropSupport>false</BuiltInComInteropSupport>
     <NativeLibPath>$(MSBuildProjectDirectory)/libs</NativeLibPath>
@@ -22,58 +21,42 @@
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
-
   <Target Name="CompileNativeWindows" BeforeTargets="BeforeBuild;Build;Publish" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">
     <Message Text="[AudioLib] Compiling for Windows (MSVC)..." Importance="high" />
     <MakeDir Directories="$(NativeLibPath)" />
-
-    <Exec Command="cl.exe /c $(NativeSrc) /Fo$(NativeLibPath)/miniaudio.obj /O2"
+    <Exec Command="cl.exe /c &quot;$(NativeSrc)&quot; /Fo&quot;$(NativeLibPath)/miniaudio.obj&quot; /O2"
           WorkingDirectory="$(MSBuildProjectDirectory)" />
-
-    <Exec Command="lib.exe /OUT:$(NativeLibPath)/miniaudio.lib $(NativeLibPath)/miniaudio.obj"
+    <Exec Command="lib.exe /OUT:&quot;$(NativeLibPath)/miniaudio.lib&quot; &quot;$(NativeLibPath)/miniaudio.obj&quot;"
           WorkingDirectory="$(MSBuildProjectDirectory)" />
-
-    <Exec Command="cl.exe /LD $(NativeSrc) /Fe$(NativeLibPath)/AudioLib.dll /O2"
+    <Exec Command="cl.exe /LD &quot;$(NativeSrc)&quot; /Fe&quot;$(NativeLibPath)/AudioLib.dll&quot; /O2"
           WorkingDirectory="$(MSBuildProjectDirectory)" />
-
     <Copy SourceFiles="$(NativeLibPath)/AudioLib.dll"
           DestinationFolder="$(OutputPath)"
           Condition="'$(PublishAot)' != 'true' And Exists('$(NativeLibPath)/AudioLib.dll')" />
   </Target>
-
   <Target Name="CompileNativeLinux" BeforeTargets="BeforeBuild;Build;Publish" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">
     <Message Text="[AudioLib] Compiling for Linux (GCC)..." Importance="high" />
     <MakeDir Directories="$(NativeLibPath)" />
-
-    <Exec Command="gcc -g -c $(NativeSrc) -o $(NativeLibPath)/miniaudio.o -O3 -fPIC"
+    <Exec Command="gcc -g -c &quot;$(NativeSrc)&quot; -o &quot;$(NativeLibPath)/miniaudio.o&quot; -O3 -fPIC"
           WorkingDirectory="$(MSBuildProjectDirectory)" />
-
-    <Exec Command="gcc -shared -o $(NativeLibPath)/libAudioLib.so $(NativeLibPath)/miniaudio.o"
+    <Exec Command="gcc -shared -o &quot;$(NativeLibPath)/libAudioLib.so&quot; &quot;$(NativeLibPath)/miniaudio.o&quot;"
           WorkingDirectory="$(MSBuildProjectDirectory)" />
-
     <Copy SourceFiles="$(NativeLibPath)/libAudioLib.so"
           DestinationFolder="$(OutputPath)"
           Condition="'$(PublishAot)' != 'true' And Exists('$(NativeLibPath)/libAudioLib.so')" />
   </Target>
-
   <ItemGroup>
     <NativeLibrary Include="$(NativeLibPath)/miniaudio.o" Condition="'$(PublishAot)' == 'true'">
       <LinkerArg>-Wl,--whole-archive</LinkerArg>
     </NativeLibrary>
-
     <DirectPInvoke Include="AudioLib" Condition="'$(PublishAot)' == 'true'" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.11" />
-    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.11">
-      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
-      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Avalonia.LinuxFramebuffer" Version="11.3.11" />
-  </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.0" />
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <PackageReference Include="Avalonia.LinuxFramebuffer" Version="12.1.0" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\UndertaleModToolAvalonia\UndertaleModToolAvalonia.csproj" />
   </ItemGroup>

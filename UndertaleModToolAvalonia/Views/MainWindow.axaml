@@ -13,13 +13,13 @@
 		Margin="-8"
         SystemDecorations="BorderOnly"
         x:DataType="viewModels:MainWindowViewModel">
-	<wnd:AppWindow.Title>
+	<wnd:FAAppWindow.Title>
 		<MultiBinding StringFormat="{}{0} - {1} [{2}]">
 			<Binding Path="TitleMain"/>
 			<Binding Path="Data.GeneralInfo" FallbackValue="No game loaded"/>
 			<Binding Path="FilePath"/>
 		</MultiBinding>
-	</wnd:AppWindow.Title>
+	</wnd:FAAppWindow.Title>
 	<Grid>
 		<Panel IsHitTestVisible="true">
 			<ExperimentalAcrylicBorder IsHitTestVisible="False">

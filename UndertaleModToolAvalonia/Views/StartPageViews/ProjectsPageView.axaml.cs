@@ -21,8 +21,7 @@ namespace UndertaleModToolAvalonia.Views.StartPageViews
         {
             if (TopMenu == null) return;
 
-            var window = this.GetVisualRoot() as Window;
-            if (window != null)
+            if (TopLevel.GetTopLevel(this) is Window window)
             {
                 TopMenu.DataContext = window.DataContext;
             }

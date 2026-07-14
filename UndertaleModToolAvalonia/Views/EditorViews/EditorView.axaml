@@ -146,9 +146,11 @@
 						<RowDefinition Height="*"/>
 					</Grid.RowDefinitions>
 
-					<ui:TabView Name="TabController" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,10,0" TabItems="{Binding Tabs}" SelectedItem="{Binding CurrentTab}"
+					<ui:FATabView Name="TabController" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,10,0"
+					              TabItemsSource="{Binding Tabs}"
+					              SelectedItem="{Binding CurrentTab, Mode=TwoWay}"
 								CanDragTabs="True" IsAddTabButtonVisible="False" TabWidthMode="SizeToContent" VerticalAlignment="Stretch">
-						<ui:TabView.ContextFlyout>
+						<ui:FATabView.ContextFlyout>
 							<MenuFlyout>
 								<MenuItem Header="Close" HotKey="Ctrl+W"/>
 								<MenuItem Header="Close other tabs" >
@@ -156,14 +158,14 @@
 								</MenuItem>
 								<MenuItem Header="Close all tabs" HotKey="Ctrl+Shift+W"/>
 							</MenuFlyout>
-						</ui:TabView.ContextFlyout>
-						<ui:TabView.TabItemTemplate>
+						</ui:FATabView.ContextFlyout>
+						<ui:FATabView.TabItemTemplate>
 							<DataTemplate x:DataType="vmComponents:TabViewModel">
-								<ui:TabViewItem Header="{Binding TabTitle}" IconSource="avares://UndertaleModToolAvalonia/Assets/icon.ico" />
+								<ui:FATabViewItem Header="{Binding TabTitle}" IconSource="avares://UndertaleModToolAvalonia/Assets/icon.ico" />
 							</DataTemplate>
-						</ui:TabView.TabItemTemplate>
+						</ui:FATabView.TabItemTemplate>
 
-					</ui:TabView>
+					</ui:FATabView>
 					<ContentControl Grid.Row="1" Margin="0,0,0,10" Content="{Binding CurrentTab.CurrentObject}" VerticalContentAlignment="Stretch"/>
 					<!--<StackPanel Grid.Column="1" Margin="5,10,15,5" VerticalAlignment="Top" Orientation="Horizontal">
 						<Button Width="30" Height="20" MinWidth="30" MinHeight="20">

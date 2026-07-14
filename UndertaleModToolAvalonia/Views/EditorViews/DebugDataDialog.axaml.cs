@@ -7,7 +7,7 @@ using UndertaleModToolAvalonia.Messages;
 
 namespace UndertaleModToolAvalonia.Views.EditorViews;
 
-public partial class DebugDataDialog : ContentDialog
+public partial class DebugDataDialog : FAContentDialog
 {
     public DebugDataDialog()
     {

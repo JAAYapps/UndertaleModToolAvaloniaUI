@@ -194,8 +194,8 @@ public partial class UndertaleTexturePageItemEditorView : UserControl
         if (propertyName is null) return;
 
         // Create a new TwoWay binding for the Value property
-        var twoWayBinding = new Binding(propertyName, BindingMode.TwoWay);
-
+        var twoWayBinding = new Binding(propertyName) { Mode = BindingMode.TwoWay };
+        
         // Apply the new binding. This overwrites the OneWay binding from the XAML.
         slider.Bind(Slider.ValueProperty, twoWayBinding);
 

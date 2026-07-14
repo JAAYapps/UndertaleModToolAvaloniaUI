@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using FluentAvalonia.Core;
 using System;
+using System.Linq;
 using System.Windows.Input;
 using UndertaleModLib.Models;
 using UndertaleModToolAvalonia.Controls;
@@ -101,12 +102,12 @@ public partial class UndertaleBackgroundEditorView : DataUserControl
 
     private bool ScrollTileIntoView(int tileIndex)
     {
-        if (tileIndex < 0 || tileIndex >= TileIdList.ItemsSource.Count())
+        if (tileIndex < 0 || tileIndex >= TileIdList.ItemsSource.Cast<object>().Count())
             return false;
 
         TileIdList.SelectedIndex = tileIndex;
 
-        var itemToScrollTo = TileIdList.ItemsSource.ElementAt(tileIndex);
+        var itemToScrollTo = TileIdList.ItemsSource.Cast<object>().ElementAt(tileIndex);
         if (itemToScrollTo is null)
             return false;
 

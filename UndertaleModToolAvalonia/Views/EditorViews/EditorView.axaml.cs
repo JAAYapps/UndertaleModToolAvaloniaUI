@@ -23,7 +23,7 @@ namespace UndertaleModToolAvalonia.Views.EditorViews
 
         }
 
-        private void TabController_TabCloseRequested(FluentAvalonia.UI.Controls.TabView sender, FluentAvalonia.UI.Controls.TabViewTabCloseRequestedEventArgs args)
+        private void TabController_TabCloseRequested(FluentAvalonia.UI.Controls.FATabView sender, FluentAvalonia.UI.Controls.FATabViewTabCloseRequestedEventArgs args)
         {
             if (DataContext is EditorViewModel editorViewModel)
             {

@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia.Browser" Version="11.3.11" />
-    <PackageReference Include="Microsoft.DotNet.HotReload.WebAssembly.Browser" Version="10.0.102" />
+    <PackageReference Include="Avalonia.Browser" Version="12.1.0" />
+    <PackageReference Include="Microsoft.DotNet.HotReload.WebAssembly.Browser" Version="10.0.204" />
   </ItemGroup>
 
   <ItemGroup>

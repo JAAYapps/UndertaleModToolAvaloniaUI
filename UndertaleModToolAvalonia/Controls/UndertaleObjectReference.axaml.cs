@@ -350,21 +350,22 @@ public partial class UndertaleObjectReference : UserControl
         }
     }
 
+    // Drag and drop was not even tested. Must look at that later.
     private void TextBox_DragOver(object? sender, DragEventArgs e)
     {
-        e.DragEffects = DragDropEffects.None;
+        /*e.DragEffects = DragDropEffects.None;
 
         if (CanChange && e.Data.Contains(ObjectType.Name))
         {
             e.DragEffects = DragDropEffects.Link;
         }
 
-        e.Handled = true;
+        e.Handled = true;*/
     }
 
     private void TextBox_Drop(object? sender, DragEventArgs e)
     {
-        if (CanChange && e.Data.Contains(ObjectType.Name))
+        /*if (CanChange && e.Data.Contains(ObjectType.Name))
         {
             if (e.Data.Get(ObjectType.Name) is UndertaleObject sourceItem)
             {
@@ -377,7 +378,7 @@ public partial class UndertaleObjectReference : UserControl
             e.DragEffects = DragDropEffects.None;
         }
 
-        e.Handled = true;
+        e.Handled = true;*/
     }
 
     /*private void TextBox_LostFocus(object sender, RoutedEventArgs e)

@@ -23,7 +23,7 @@ namespace UndertaleModToolAvalonia.Services.DialogService
                     throw new InvalidOperationException(
                         $"Could not find a matching View for ViewModel '{typeof(TViewModel).FullName}'. Was it named correctly (e.g., 'MyViewModel' -> 'MyView')?");
                 userControlView.DataContext = viewModel;
-                var dialog = new ContentDialog
+                var dialog = new FAContentDialog
                 {
                     Title = viewModel.Title,
                     PrimaryButtonText = "OK",
@@ -32,7 +32,7 @@ namespace UndertaleModToolAvalonia.Services.DialogService
                     DataContext = viewModel
                 };
                 var result = await dialog.ShowAsync();
-                viewModel.FinalizeResult(result == ContentDialogResult.Primary);
+                viewModel.FinalizeResult(result == FAContentDialogResult.Primary);
                 return viewModel.Result;
             });
         }
@@ -56,7 +56,7 @@ namespace UndertaleModToolAvalonia.Services.DialogService
                     throw new InvalidOperationException(
                         $"Could not find a View for ViewModel '{typeof(TViewModel).FullName}'.");
                 userControlView.DataContext = viewModel;
-                var dialog = new ContentDialog
+                var dialog = new FAContentDialog
                 {
                     Title = viewModel.Title,
                     PrimaryButtonText = "OK",
@@ -65,7 +65,7 @@ namespace UndertaleModToolAvalonia.Services.DialogService
                     DataContext = viewModel
                 };
                 var result = await dialog.ShowAsync();
-                viewModel.FinalizeResult(result == ContentDialogResult.Primary);
+                viewModel.FinalizeResult(result == FAContentDialogResult.Primary);
                 return viewModel.Result;
             });
         }

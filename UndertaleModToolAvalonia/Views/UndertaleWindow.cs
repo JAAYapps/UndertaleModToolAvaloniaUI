@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 
 namespace UndertaleModToolAvalonia.Views
 {
-    public class UndertaleWindow : AppWindow
+    public class UndertaleWindow : FAAppWindow
     {
 #if !__BROWSER__
         // Delegate for the new window procedure

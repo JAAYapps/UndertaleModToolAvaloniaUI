@@ -5,7 +5,7 @@ using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
 
 namespace UndertaleModToolAvalonia.Views.EditorViews
 {
-    public partial class RuntimePickerView : ContentDialog
+    public partial class RuntimePickerView : FAContentDialog
     {
         public RuntimePickerView()
         {
