@@ -8,6 +8,20 @@ The most complete tool for modding, decompiling and unpacking Undertale (and oth
 
 > *\* (It fills you with determination.)*
 
+# Quick Start
+
+## Windows
+
+1. Find the latest stable (or nightly) release from the [Downloads](#downloads) section below
+2. Download the GUI version (e.g. `UndertaleModTool_v0.9.2.0-Windows.zip`), or the CLI version if you know what you're doing
+3. Extract the ZIP file to a folder (do not run from inside the archive!)
+4. Run `UndertaleModTool.exe` to start the tool
+5. Open your game's data file (e.g. `data.win`, `game.ios`, `game.unx`, etc.) via File → Open
+
+## macOS/Linux
+
+As of writing, the Avalonia Port here is mainly missing room and game object editing. Those are being worked on along with the Project JumpStart Undertale Mod Manager.
+
 # Downloads
 
 Both the latest stable release and the most cutting edge version can be downloaded from the table below!

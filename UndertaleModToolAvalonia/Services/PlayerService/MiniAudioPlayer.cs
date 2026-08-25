@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using NLayer.NAudioSupport;
 using static UndertaleModToolAvalonia.Services.PlayerService.IPlayer;
 
 namespace UndertaleModToolAvalonia.Services.PlayerService
@@ -169,21 +170,19 @@ namespace UndertaleModToolAvalonia.Services.PlayerService
 
         private FloatSound DecodeMp3(Stream stream)
         {
-            // Note: On Linux, Mp3FileReader might fail if it relies on Windows Codecs.
-            // If you have NLayer or similar bundled, use that instead.
-            using var reader = new Mp3FileReader(stream);
+            using var reader = new Mp3FileReaderBase(stream, format => new Mp3FrameDecompressor(format));
             return DecodeSampleProvider(reader.ToSampleProvider());
         }
 
         private FloatSound DecodeSampleProvider(ISampleProvider provider)
         {
             var pcmData = new List<float>();
-            var buffer = new float[provider.WaveFormat.SampleRate * provider.WaveFormat.Channels];
+            Span<float> buffer = new float[provider.WaveFormat.SampleRate * provider.WaveFormat.Channels];
             int read;
 
-            while ((read = provider.Read(buffer, 0, buffer.Length)) > 0)
+            while ((read = provider.Read(buffer)) > 0)
             {
-                pcmData.AddRange(buffer.Take(read));
+                pcmData.AddRange(buffer.ToArray().Take(read));
             }
 
             return new FloatSound(pcmData.ToArray(), provider.WaveFormat.Channels, provider.WaveFormat.SampleRate);
