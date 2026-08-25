@@ -7,6 +7,10 @@
     <RootNamespace>UndertaleModToolAvalonia.Browser</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <WasmBuildNative>true</WasmBuildNative>
+  </PropertyGroup>
+  
   <ItemGroup>
     <PackageReference Include="Avalonia.Browser" Version="12.1.0" />
     <PackageReference Include="Microsoft.DotNet.HotReload.WebAssembly.Browser" Version="10.0.204" />

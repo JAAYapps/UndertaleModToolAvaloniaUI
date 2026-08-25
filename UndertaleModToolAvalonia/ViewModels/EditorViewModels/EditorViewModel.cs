@@ -388,7 +388,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                         if (item is IStorageFile file && file.Name.Equals("data.win", StringComparison.OrdinalIgnoreCase))
                         {
                             dataFile = file;
-                            AppConstants.FilePath = folder.Path.LocalPath;
+                            AppConstants.FilePath = folder.Path.IsAbsoluteUri ? folder.Path.LocalPath : folder.Name;
                             break;
                         }
                     }
@@ -444,7 +444,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     {
                         loadingDialogService.Hide();
                         AppConstants.Data = data;
-                        AppConstants.FilePath = folder.Path.AbsoluteUri;
+                        AppConstants.FilePath = folder.Path.IsAbsoluteUri ? folder.Path.AbsoluteUri : folder.Name;
                     });
 
                     return true;
