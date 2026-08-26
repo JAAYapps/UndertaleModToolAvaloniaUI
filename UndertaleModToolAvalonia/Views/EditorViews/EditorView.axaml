@@ -142,7 +142,6 @@
 						<ColumnDefinition Width="Auto"/>
 					</Grid.ColumnDefinitions>
 					<Grid.RowDefinitions>
-						<RowDefinition Height="auto"/>
 						<RowDefinition Height="*"/>
 					</Grid.RowDefinitions>
 
@@ -164,16 +163,7 @@
 								<ui:FATabViewItem Header="{Binding TabTitle}" IconSource="avares://UndertaleModToolAvalonia/Assets/icon.ico" />
 							</DataTemplate>
 						</ui:FATabView.TabItemTemplate>
-
 					</ui:FATabView>
-					<!--<StackPanel Grid.Column="1" Margin="5,10,15,5" VerticalAlignment="Top" Orientation="Horizontal">
-						<Button Width="30" Height="20" MinWidth="30" MinHeight="20">
-							<Image Source="/Assets/tabs_left_button.png" Stretch="Uniform"/>
-						</Button>
-						<Button Width="30" Height="20" MinWidth="30" MinHeight="20">
-							<Image Source="/Assets/tabs_right_button.png" Stretch="Uniform"/>
-						</Button>
-					</StackPanel>-->
 				</Grid>
 			</Grid>
 		</DockPanel>

@@ -18,7 +18,7 @@ namespace UndertaleModToolAvalonia.Views
         public MainWindow()
         {
             InitializeComponent();
-
+            
             TitleBar.ExtendsContentIntoTitleBar = true;
             TitleBar.Height = 0;
             //TitleBar.ButtonHoverBackgroundColor = Color.Parse("#20FFFFFF");
