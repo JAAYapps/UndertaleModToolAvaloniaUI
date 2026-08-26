@@ -58,7 +58,7 @@ public class LoadingDialogService : ILoadingDialogService
                     if (visual is Button { Name: "PrimaryButton" or "CloseButton" } button)
                         button.IsVisible = false;
                     if (visual.Name == "BackgroundElement")
-                        (visual as Border).Height = 210;
+                        (visual as Border)?.Height = 210;
                     if (visual is Grid { Name: "DialogSpace" } space)
                     {
                         space.Margin = new Thickness(0, 50, 0, 0);
@@ -67,8 +67,7 @@ public class LoadingDialogService : ILoadingDialogService
                 }
             };
             _dialogView?.DataContext = _viewModel;
-            //.FindControl<Button>("PrimaryButton").IsVisible = false;
-            
+                
             if (_viewModel != null)
             {
                 _viewModel.MessageTitle = title;
@@ -76,6 +75,7 @@ public class LoadingDialogService : ILoadingDialogService
                 _dialog.Title = title;
                 _dialog.IsVisible = true;
             }
+            
             await _dialog.ShowAsync();
         });
         
@@ -84,13 +84,14 @@ public class LoadingDialogService : ILoadingDialogService
 
     public void Hide()
     {
-        if (!_isShowing || _dialog == null) return;
+        if (!_isShowing) return;
         
         _isShowing = false; // Allow the Closing event to pass
         
         Dispatcher.UIThread.InvokeAsync(() =>
         {
-            _dialog.Hide(); // This actually removes it from the Visual Tree
+            _dialog?.Hide(); // This actually removes it from the Visual Tree
+            _dialog?.Content =  null;
             _dialog = null; // Clean up
         });
     }

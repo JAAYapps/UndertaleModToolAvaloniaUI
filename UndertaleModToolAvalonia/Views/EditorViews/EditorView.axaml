@@ -134,7 +134,7 @@
 					</TreeView.DataTemplates>
 				</TreeView>
 				
-				<GridSplitter Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Center" VerticalAlignment="Stretch" ShowsPreview="True" Width="3"/>
+				<GridSplitter Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" HorizontalAlignment="Center" VerticalAlignment="Stretch" ShowsPreview="True" Width="3"/>
 
 				<Grid Grid.Column="2" Grid.Row="0" Grid.RowSpan="2" Name="TabsGrid" UseLayoutRounding="True" Margin="10,0,0,3">
 					<Grid.ColumnDefinitions>
@@ -166,7 +166,6 @@
 						</ui:FATabView.TabItemTemplate>
 
 					</ui:FATabView>
-					<ContentControl Grid.Row="1" Margin="0,0,0,10" Content="{Binding CurrentTab.CurrentObject}" VerticalContentAlignment="Stretch"/>
 					<!--<StackPanel Grid.Column="1" Margin="5,10,15,5" VerticalAlignment="Top" Orientation="Horizontal">
 						<Button Width="30" Height="20" MinWidth="30" MinHeight="20">
 							<Image Source="/Assets/tabs_left_button.png" Stretch="Uniform"/>

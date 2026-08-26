@@ -395,6 +395,10 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     
                     if (dataFile is null)
                     {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            loadingDialogService.Hide();
+                        });
                         return false;
                     }
                     Console.WriteLine("File name: " + dataFile.Name + " Type: " + dataFile.GetType());

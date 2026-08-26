@@ -1,0 +1,10 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:vmComponents="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents"
+             x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.TabView"
+             x:DataType="vmComponents:TabViewModel">
+    <ContentControl Grid.Column="0" Grid.Row="1" Margin="0,0,0,10" Content="{Binding CurrentObject}" VerticalContentAlignment="Stretch"/>
+</UserControl>
