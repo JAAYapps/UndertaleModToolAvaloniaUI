@@ -375,6 +375,9 @@ namespace UndertaleModToolAvalonia.ViewModels
             MenuEnabled = false;
             try
             {
+                if (!await CommitCodeChangesAsync())
+                    return false;
+
                 var storage = await fileService.SaveFileAsync(storageProvider, AppConstants.FilePath ?? "");
 
                 if (storage == null || string.IsNullOrEmpty(storage.Name))
@@ -395,6 +398,16 @@ namespace UndertaleModToolAvalonia.ViewModels
             }
         }
         
+        private async Task<bool> CommitCodeChangesAsync()
+        {
+            var compiled = await WeakReferenceMessenger.Default.Send(new SaveCodeChangesMessage()).GetResponsesAsync();
+            if (compiled.All(ok => ok))
+                return true;
+
+            await App.Current!.ShowError("The code in the code editor did not compile, so nothing was saved.\nFix the error or undo the change, then save again.", "Save error");
+            return false;
+        }
+
         public async Task<bool> ConfirmCloseAsync(Visual visual)
         {
             if (AppConstants.Data == null || !Settings.Instance.WarnOnClose)
@@ -440,6 +453,8 @@ result in loss of work.");
                 await App.Current!.ShowWarning("The file must be saved in order to be run.");
                 return;
             }
+            if (!await CommitCodeChangesAsync())
+                return;
             bool oldDisableDebuggerState = true;
             int oldSteamValue = 0;
             oldDisableDebuggerState = AppConstants.Data.GeneralInfo.IsDebuggerDisabled;

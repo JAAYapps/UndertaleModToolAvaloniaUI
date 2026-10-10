@@ -30,6 +30,8 @@ using UndertaleModLib;
 using UndertaleModLib.Compiler;
 using UndertaleModLib.Decompiler;
 using UndertaleModLib.Models;
+using CommunityToolkit.Mvvm.Messaging;
+using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents;
 using static UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.UndertaleCodeEditorViewModel;
@@ -197,6 +199,8 @@ public partial class UndertaleCodeEditorView : UserControl
 
     private void UndertaleCodeEditor_Unloaded(object? sender, RoutedEventArgs e)
     {
+        WeakReferenceMessenger.Default.Unregister<SaveCodeChangesMessage>(this);
+
         if (DataContext is not UndertaleCodeEditorViewModel vm)
             return;
 
@@ -206,6 +210,9 @@ public partial class UndertaleCodeEditorView : UserControl
 
     private async void UndertaleCodeEditor_Loaded(object? sender, RoutedEventArgs e)
     {
+        WeakReferenceMessenger.Default.Unregister<SaveCodeChangesMessage>(this);
+        WeakReferenceMessenger.Default.Register<SaveCodeChangesMessage>(this, (recipient, message) => message.Reply(CommitChangesAsync()));
+
         if (DataContext is UndertaleCodeEditorViewModel)
             await FillInCodeViewer();
     }
@@ -327,17 +334,48 @@ public partial class UndertaleCodeEditorView : UserControl
         if (DataContext is not UndertaleCodeEditorViewModel vm)
             return;
 
-        if (vm.DecompiledFocused)
+        compileRequested = true;
+        try
         {
-            await DecompiledLostFocusBody(sender, new RoutedEventArgs());
+            if (vm.DecompiledFocused)
+            {
+                await DecompiledLostFocusBody(sender, new RoutedEventArgs());
+            }
+            else if (vm.DisassemblyFocused)
+            {
+                DisassemblyEditor_LostFocus(sender, new RoutedEventArgs());
+                DisassemblyEditor_GotFocus(sender, null);
+            }
         }
-        else if (vm.DisassemblyFocused)
+        finally
         {
-            DisassemblyEditor_LostFocus(sender, new RoutedEventArgs());
-            DisassemblyEditor_GotFocus(sender, null);
+            compileRequested = false;
         }
 
         await Task.Delay(1); //dummy await
+    }
+    
+    private bool compileRequested;
+    
+    private Task compileInProgress = Task.CompletedTask;
+    
+    public async Task<bool> CommitChangesAsync()
+    {
+        if (DataContext is not UndertaleCodeEditorViewModel vm)
+            return true;
+        
+        await compileInProgress;
+
+        if (!vm.DecompiledChanged && !vm.DisassemblyChanged)
+            return true;
+
+        if (vm.DecompiledChanged)
+            vm.DecompiledFocused = true;
+        else
+            vm.DisassemblyFocused = true;
+        await SaveChanges();
+        
+        return !vm.DecompiledChanged && !vm.DisassemblyChanged;
     }
 
     private async Task Command_Compile(object sender, EventArgs e)
@@ -361,7 +399,8 @@ public partial class UndertaleCodeEditorView : UserControl
 
     private async void DecompiledEditor_LostFocus(object? sender, RoutedEventArgs e)
     {
-        await DecompiledLostFocusBody(sender, e);
+        compileInProgress = DecompiledLostFocusBody(sender, e);
+        await compileInProgress;
     }
 
     private void DisassemblyEditor_GotFocus(object? sender, RoutedEventArgs e)
@@ -410,7 +449,7 @@ public partial class UndertaleCodeEditorView : UserControl
 
         var currentlyFocused = topLevel.FocusManager.GetFocusedElement();
 
-        if (currentlyFocused != null && DecompiledEditor.IsVisualAncestorOf(currentlyFocused as Visual))
+        if (!compileRequested && currentlyFocused is Visual focused && DisassemblyEditor.IsVisualAncestorOf(focused))
             return;
 
         UndertaleData data = AppConstants.Data;
@@ -435,16 +474,6 @@ public partial class UndertaleCodeEditorView : UserControl
 
         // Disassemble new code
         DisassembleCode(code, false);
-
-        if (!DisassemblyEditor.IsReadOnly)
-        {
-            if (vm.Editor.IsSaving)
-            {
-                vm.Editor.IsSaving = false;
-
-                vm.fileService.SaveFileAsync(TopLevel.GetTopLevel(this)!.StorageProvider);
-            }
-        }
     }
 
     private void DisassembleCode(UndertaleCode code, bool first)
@@ -555,8 +584,6 @@ public partial class UndertaleCodeEditorView : UserControl
         {
             vm.loadingDialogSerivce.Show("Decompiling", "Decompiling, please wait... This can take a while on complex scripts.");
 
-            bool openSaveDialog = false;
-
             UndertaleCode gettextCode = null;
             if (vm.Gettext == null)
                 gettextCode = AppConstants.Data!.Code.ByName("gml_Script_textdata_en");
@@ -589,8 +616,6 @@ public partial class UndertaleCodeEditorView : UserControl
                         vm.PopulateCurrentLocals(dataa, code);
 
                         RestoreCaretPosition(DecompiledEditor, currLine, currColumn, scrollPos);
-
-                        openSaveDialog = vm.Editor.IsSaving;
                     }
 
                     DecompiledEditor.Document.EndUpdate();
@@ -605,13 +630,6 @@ public partial class UndertaleCodeEditorView : UserControl
                 });
             });
             vm.loadingDialogSerivce.Hide();
-
-            vm.Editor.IsSaving = false;
-
-            if (openSaveDialog)
-            {
-                await vm.fileService.SaveFileAsync(TopLevel.GetTopLevel(this)!.StorageProvider);
-            }
         }
     }
 
@@ -654,7 +672,7 @@ public partial class UndertaleCodeEditorView : UserControl
 
         var currentlyFocused = topLevel.FocusManager.GetFocusedElement();
 
-        if (currentlyFocused != null && DecompiledEditor.IsVisualAncestorOf(currentlyFocused as Visual))
+        if (!compileRequested && currentlyFocused is Visual focused && DecompiledEditor.IsVisualAncestorOf(focused))
             return;
 
         UndertaleData data = AppConstants.Data;

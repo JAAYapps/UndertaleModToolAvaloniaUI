@@ -75,8 +75,6 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         
         [ObservableProperty] private bool scriptExecutionSuccess = true;
         
-        [ObservableProperty] private bool isSaving = false;
-        
         [ObservableProperty] private string scriptErrorMessage = "";
         
         [ObservableProperty] private string scriptErrorType = "";

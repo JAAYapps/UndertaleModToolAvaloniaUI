@@ -17,6 +17,8 @@ using UndertaleModLib.Decompiler;
 using UndertaleModLib.Models;
 using UndertaleModToolAvalonia.Services.FileService;
 using UndertaleModToolAvalonia.Services.LoadingDialogService;
+using CommunityToolkit.Mvvm.Messaging;
+using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.Services.ProfileService;
 using UndertaleModToolAvalonia.Utilities;
 
@@ -153,7 +155,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
         [RelayCommand]
         private async Task RunCompileAsync()
         {
-
+            await WeakReferenceMessenger.Default.Send(new SaveCodeChangesMessage()).GetResponsesAsync();
         }
 
         public async Task<(string decompiled, Exception e)> CompileAsync(UndertaleCode code, UndertaleData dataa, UndertaleCode gettextCode, string gettextJsonPath)
