@@ -2,21 +2,17 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Scripting;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Reflection;
 using System.Runtime;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using UndertaleModLib;
@@ -40,9 +36,6 @@ using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.UndertaleFontEditorViewModel;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.UndertaleRoomEditorViewModel;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTypesDialog;
-using UndertaleModToolAvalonia.Views.EditorViews;
-using UndertaleModToolAvalonia.Views.EditorViews.EditorComponents;
-using static UndertaleModLib.Models.UndertaleRoom;
 
 namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 {
@@ -169,6 +162,18 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             Highlighted = new Description("Welcome to UndertaleModTool!", "Open a data.win file to get started, then double click on the items on the left to view them.");
             var asset = GetViewModelFromObject(Highlighted);
             OpenInTab(asset, false, asset.MainText);
+            
+            WeakReferenceMessenger.Default.Register<OpenAssetMessage>(this, (recipient, message) =>
+            {
+                if (message.InNewTab)
+                    OpenAssetInNewTab(message.Asset);
+                else
+                    OpenAssetInTab(message.Asset);
+            });
+            WeakReferenceMessenger.Default.Register<FindReferencesMessage>(this, (recipient, message) =>
+            {
+                FindAllReferencesCommand.Execute(message.Asset);
+            });
 
             _ = new Settings();
 

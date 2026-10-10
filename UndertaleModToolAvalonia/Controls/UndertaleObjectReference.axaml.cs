@@ -1,15 +1,19 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using UndertaleModLib;
 using UndertaleModLib.Models;
+using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.Utilities;
 
 namespace UndertaleModToolAvalonia.Controls;
@@ -180,37 +184,24 @@ public partial class UndertaleObjectReference : UserControl
         InitializeComponent();
         Loaded += UndertaleObjectReference_Loaded;
         DetailsButton.Click += DetailsButton_Click;
-        ObjectText.DoubleTapped += ObjectText_DoubleTapped;
         ObjectText.AddHandler(DragDrop.DragOverEvent, TextBox_DragOver);
         ObjectText.AddHandler(DragDrop.DropEvent, TextBox_Drop);
+        AddHandler(PointerPressedEvent, Details_MouseDown, RoutingStrategies.Tunnel);
         RemoveCommand = new RelayCommand(() => ObjectReference = null);
+        
+        OpenInTabCommand = new RelayCommand<object>(asset => SendOpen(asset, inNewTab: false));
+        OpenInNewTabCommand = new RelayCommand<object>(asset => SendOpen(asset, inNewTab: true));
+        FindAllReferencesCommand = new RelayCommand<object>(asset =>
+        {
+            if (asset is not null)
+                WeakReferenceMessenger.Default.Send(new FindReferencesMessage(asset));
+        });
     }
 
-    private void ObjectText_DoubleTapped(object? sender, TappedEventArgs e)
+    private static void SendOpen(object? asset, bool inNewTab)
     {
-        if (OpenInTabCommand?.CanExecute(ObjectReference) == true)
-        {
-            OpenInTabCommand.Execute(ObjectReference);
-        }
-    }
-
-    private void ContextFlyout_Opened(object? sender, EventArgs e)
-    {
-        if (sender is MenuFlyout menu)
-        {
-            UpdateContextMenu(ObjectReference);
-            foreach (var item in menu.Items)
-            {
-                var menuItem = item as MenuItem;
-                if ((menuItem.Header as string) == "Find all references")
-                {
-                    Type objType = ObjectReference.GetType();
-                    menuItem.IsVisible = UndertaleResourceReferenceMap.IsTypeReferenceable(objType);
-
-                    break;
-                }
-            }
-        }
+        if (asset is not null)
+            WeakReferenceMessenger.Default.Send(new OpenAssetMessage(asset, inNewTab));
     }
 
     private void UndertaleObjectReference_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -313,9 +304,11 @@ public partial class UndertaleObjectReference : UserControl
         }
         else if (change.Property == ObjectReferenceProperty)
         {
-            UpdatePseudoClass(change.NewValue);
+            object? newValue = change.GetNewValue<object?>();
+            UpdatePseudoClass(newValue);
+            IsTypeReferenceable = newValue is not null && UndertaleResourceReferenceMap.IsTypeReferenceable(newValue.GetType());
 
-            UpdateContextMenu(change.GetNewValue<object?>());
+            UpdateContextMenu(newValue);
         }
     }
 
@@ -336,7 +329,7 @@ public partial class UndertaleObjectReference : UserControl
             ObjectText.ContextFlyout = null;
     }
 
-    private void Details_MouseDown(object sender, PointerPressedEventArgs e)
+    private void Details_MouseDown(object? sender, PointerPressedEventArgs e)
     {
         if (ObjectReference is null)
             return;
@@ -347,68 +340,47 @@ public partial class UndertaleObjectReference : UserControl
             {
                 OpenInNewTabCommand.Execute(ObjectReference);
             }
+            e.Handled = true;
+        }
+        else if (point.Properties.IsLeftButtonPressed && e.ClickCount == 2
+                 && e.Source is Visual source && (source == ObjectText || ObjectText.IsVisualAncestorOf(source)))
+        {
+            if (OpenInTabCommand?.CanExecute(ObjectReference) == true)
+            {
+                OpenInTabCommand.Execute(ObjectReference);
+            }
+            e.Handled = true;
         }
     }
+    
+    private UndertaleObject? AcceptedResource(DragEventArgs e)
+    {
+        if (!CanChange || ObjectType is null)
+            return null;
 
-    // Drag and drop was not even tested. Must look at that later.
+        UndertaleObject? resource = ResourceDragDrop.GetResource(e);
+        return resource is not null && ObjectType.IsInstanceOfType(resource) ? resource : null;
+    }
+
+    // Drop works but cursor stays red on Linux (Not sure if it's just Solus OS in Wayland). Avalonia issue, not this code.
     private void TextBox_DragOver(object? sender, DragEventArgs e)
     {
-        /*e.DragEffects = DragDropEffects.None;
-
-        if (CanChange && e.Data.Contains(ObjectType.Name))
-        {
-            e.DragEffects = DragDropEffects.Link;
-        }
-
-        e.Handled = true;*/
+        e.DragEffects = AcceptedResource(e) is null ? DragDropEffects.None : DragDropEffects.Link;
+        e.Handled = true;
     }
 
     private void TextBox_Drop(object? sender, DragEventArgs e)
     {
-        /*if (CanChange && e.Data.Contains(ObjectType.Name))
+        if (AcceptedResource(e) is UndertaleObject resource)
         {
-            if (e.Data.Get(ObjectType.Name) is UndertaleObject sourceItem)
-            {
-                ObjectReference = sourceItem;
-                e.DragEffects = DragDropEffects.Link;
-            }
+            ObjectReference = resource;
+            e.DragEffects = DragDropEffects.Link;
         }
         else
         {
             e.DragEffects = DragDropEffects.None;
         }
 
-        e.Handled = true;*/
+        e.Handled = true;
     }
-
-    /*private void TextBox_LostFocus(object sender, RoutedEventArgs e)
-    {
-        TextBox tb = sender as TextBox;
-        var binding = BindingOperations.GetBindingExpression(tb, TextBox.TextProperty);
-        if (binding.IsDirty)
-        {
-            if (ObjectReference != null)
-            {
-                StringUpdateWindow dialog = new StringUpdateWindow();
-                dialog.Owner = Window.GetWindow(this);
-                dialog.ShowDialog();
-                switch (dialog.Result)
-                {
-                    case StringUpdateWindow.ResultType.ChangeOneValue:
-                        ObjectReference = (Application.Current.MainWindow as MainWindow).Data.Strings.MakeString(tb.Text);
-                        break;
-                    case StringUpdateWindow.ResultType.ChangeReferencedValue:
-                        binding.UpdateSource();
-                        break;
-                    case StringUpdateWindow.ResultType.Cancel:
-                        binding.UpdateTarget();
-                        break;
-                }
-            }
-            else
-            {
-                ObjectReference = (Application.Current.MainWindow as MainWindow).Data.Strings.MakeString(tb.Text);
-            }
-        }
-    }*/
 }

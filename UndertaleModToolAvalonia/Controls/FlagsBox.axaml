@@ -10,13 +10,13 @@
 		<converters:EnumToValuesConverter x:Key="enumToValuesConverter"/>
 	</UserControl.Resources>
 	<StackPanel>
-		<TextBox Text="{Binding #Self.Value, Mode=OneWay}" TextWrapping="Wrap"/>
+		<TextBox x:Name="ValueText" Text="{Binding #Self.Value, Mode=OneWay}" TextWrapping="Wrap"/>
 		<Expander Header="Flags">
 			<ItemsControl ItemsSource="{Binding #Self.Value, Converter={StaticResource enumToValuesConverter}}">
 				<ItemsControl.ItemTemplate>
 					<DataTemplate>
 						<StackPanel>
-							<CheckBox>
+							<CheckBox Command="{Binding #Self.ToggleFlagCommand}" CommandParameter="{Binding}">
 								<CheckBox.Resources>
 									<converters:EnumFlagToBoolConverter x:Key="enumFlagToBoolConverter"/>
 								</CheckBox.Resources>

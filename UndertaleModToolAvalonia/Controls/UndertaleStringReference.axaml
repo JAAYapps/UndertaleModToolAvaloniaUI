@@ -33,7 +33,7 @@
 			<ColumnDefinition Width="Auto"/>
 		</Grid.ColumnDefinitions>
 		<TextBox Grid.Column="0" x:Name="ObjectText" DragDrop.AllowDrop="True"
-                           ToolTip.Tip="This is an string reference. Change the value here to edit this just this value of all referenced values, or drag and drop another string instance from the tree on the left to change the reference"
+                           ToolTip.Tip="This is a string reference. Change the value here to edit just this value or all referenced values, or drag and drop another string from the tree on the left to change the reference"
                            Text="{Binding #Self.ObjectReference.Content, Mode=OneWay}">
 			<TextBox.Styles>
 				<Style Selector="local|UndertaleStringReference:null-reference > Grid > TextBox">

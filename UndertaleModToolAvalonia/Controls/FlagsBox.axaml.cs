@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Windows.Input;
@@ -17,23 +19,14 @@ public partial class FlagsBox : UserControl
 
     public Enum? Value
     {
-        get
-        {
-            Console.WriteLine("Getting type: " + Value.GetType());
-            return GetValue(ValueProperty);
-        }
-        set
-        {
-            Console.WriteLine("Setting type: " + Value.GetType());
-            SetValue(ValueProperty, value);
-        }
+        get => GetValue(ValueProperty);
+        set => SetValue(ValueProperty, value);
     }
 
     public ICommand ToggleFlagCommand { get; }
 
     public FlagsBox()
     {
-        InitializeComponent();
         ToggleFlagCommand = new RelayCommand<object>(flagValue =>
         {
             if (Value is not Enum currentValue || flagValue is not Enum flag) return;
@@ -51,5 +44,36 @@ public partial class FlagsBox : UserControl
             // Convert the result back to the original enum type and update the Value
             Value = (Enum?)Enum.ToObject(currentValue.GetType(), result);
         });
+
+        InitializeComponent();
+        ValueText.LostFocus += (sender, e) => CommitText();
+        ValueText.KeyDown += (sender, e) =>
+        {
+            if (e.Key == Key.Enter)
+            {
+                e.Handled = true;
+                CommitText();
+            }
+        };
+    }
+    
+    private void CommitText()
+    {
+        if (Value is not Enum current)
+            return;
+
+        string text = ValueText.Text ?? string.Empty;
+        if (text == current.ToString())
+            return;
+
+        if (Enum.TryParse(current.GetType(), text, ignoreCase: true, out object? parsed) && parsed is Enum typed)
+        {
+            Value = typed;
+            ValueText.SetCurrentValue(TextBox.TextProperty, typed.ToString());
+        }
+        else
+        {
+            ValueText.SetCurrentValue(TextBox.TextProperty, current.ToString());
+        }
     }
 }

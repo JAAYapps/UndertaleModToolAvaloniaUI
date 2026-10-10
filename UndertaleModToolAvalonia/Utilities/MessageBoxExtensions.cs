@@ -1,8 +1,12 @@
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using System.Collections.Generic;
+using System.Linq;
 using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
+using MsBox.Avalonia.Models;
 
 namespace UndertaleModToolAvalonia.Utilities;
 
@@ -75,6 +79,29 @@ public static class MessageBoxExtensions
 		public static async Task<ButtonResult> ShowError(this Application app, string messageBoxText, string title = "Error")
 		{
 			return await app.ShowCore(messageBoxText, title, ButtonEnum.Ok, Icon.Error);
+		}
+
+		/// <summary>
+		/// Shows a <see cref="MessageBoxManager"/> whose buttons carry the given captions.
+		/// </summary>
+		/// <param name="app">The parent from which the <see cref="MessageBoxManager"/> will show.</param>
+		/// <param name="messageBoxText">A <see cref="string"/> that specifies the text to display.</param>
+		/// <param name="title">A <see cref="string"/> that specifies the title bar caption to display.</param>
+		/// <param name="choices">The caption of each button, in the order they are shown.</param>
+		/// <returns>The index into <paramref name="choices"/> of the clicked button,
+		/// or -1 if the <see cref="MessageBoxManager"/> was closed without choosing.</returns>
+		public static async Task<int> ShowChoice(this Application app, string messageBoxText, string title, params string[] choices)
+		{
+			string clicked = await MessageBoxManager.GetMessageBoxCustom(new MessageBoxCustomParams
+			{
+				ContentTitle = title,
+				ContentMessage = messageBoxText,
+				Icon = Icon.Question,
+				WindowStartupLocation = WindowStartupLocation.CenterOwner,
+				ButtonDefinitions = choices.Select(choice => new ButtonDefinition { Name = choice }).ToList()
+			}).ShowAsync();
+
+			return System.Array.IndexOf(choices, clicked);
 		}
 
 		/// <summary>
