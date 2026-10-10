@@ -10,6 +10,10 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
     {
         public ICommand CloseCommand { get; }
 
+        public ICommand CloseOtherTabsCommand { get; }
+
+        public ICommand CloseAllTabsCommand { get; }
+
         [ObservableProperty]
         private object currentObject;
 
@@ -34,10 +38,12 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
         /// <param name="obj">The object that should be open.</param>
         /// <param name="tabIndex">The tab index.</param>
         /// <param name="tabTitle">The tab title.</param>
-        public TabViewModel(object obj, int tabIndex, string tabTitle = null, ICommand closeCommand = null)
+        public TabViewModel(object obj, int tabIndex, string tabTitle = null, ICommand closeCommand = null, ICommand closeOtherTabsCommand = null, ICommand closeAllTabsCommand = null)
         {
             CurrentObject = obj;
             CloseCommand = closeCommand;
+            CloseOtherTabsCommand = closeOtherTabsCommand;
+            CloseAllTabsCommand = closeAllTabsCommand;
             AutoClose = obj is DescriptionViewModel;
 
             IsCustomTitle = tabTitle is not null;

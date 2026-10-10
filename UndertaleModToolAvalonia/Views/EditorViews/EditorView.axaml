@@ -16,6 +16,10 @@
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
 		<vm:EditorViewModel/>
 	</Design.DataContext>
+	<UserControl.KeyBindings>
+		<KeyBinding Gesture="Ctrl+W" Command="{Binding CloseCurrentTabCommand}"/>
+		<KeyBinding Gesture="Ctrl+Shift+W" Command="{Binding CloseAllTabsCommand}"/>
+	</UserControl.KeyBindings>
 	<Grid>
 		<DockPanel>
 			<Grid DockPanel.Dock="Bottom">
@@ -38,12 +42,19 @@
 						<RowDefinition Height="Auto"/>
 					</Grid.RowDefinitions>
 					<StackPanel Grid.Row="0" Margin="0,0,0,5" Orientation="Horizontal">
-						<Button Margin="0,0,2,0" Name="BackButton" Height="26" Width="50">
+						<Button Margin="0,0,2,0" Name="BackButton" Height="26" Width="50" ToolTip.Tip="Back" Command="{Binding GoBackCommand}">
 							<Button.Styles>
 								<Style Selector="Button">
 									<Setter Property="Background">
 										<Setter.Value>
 											<ImageBrush Source="/Assets/arrow_blue.png" Stretch="None"/>
+										</Setter.Value>
+									</Setter>
+								</Style>
+								<Style Selector="Button:disabled /template/ ContentPresenter">
+									<Setter Property="Background">
+										<Setter.Value>
+											<ImageBrush Source="/Assets/arrow_blue.png" Stretch="None" Opacity="0.4"/>
 										</Setter.Value>
 									</Setter>
 								</Style>
@@ -56,12 +67,19 @@
 								</Style>
 							</Button.Styles>
 						</Button>
-						<Button Name="ForwardButton" Margin="0,0,2,0" Height="26" Width="50">
+						<Button Name="ForwardButton" Margin="0,0,2,0" Height="26" Width="50" ToolTip.Tip="Forward" Command="{Binding GoForwardCommand}">
 							<Button.Styles>
 								<Style Selector="Button">
 									<Setter Property="Background">
 										<Setter.Value>
 											<ImageBrush Source="/Assets/arrow_blue.png" Stretch="None"/>
+										</Setter.Value>
+									</Setter>
+								</Style>
+								<Style Selector="Button:disabled /template/ ContentPresenter">
+									<Setter Property="Background">
+										<Setter.Value>
+											<ImageBrush Source="/Assets/arrow_blue.png" Stretch="None" Opacity="0.4"/>
 										</Setter.Value>
 									</Setter>
 								</Style>
@@ -149,18 +167,17 @@
 					              TabItemsSource="{Binding Tabs}"
 					              SelectedItem="{Binding CurrentTab, Mode=TwoWay}"
 								CanDragTabs="True" IsAddTabButtonVisible="False" TabWidthMode="SizeToContent" VerticalAlignment="Stretch">
-						<ui:FATabView.ContextFlyout>
-							<MenuFlyout>
-								<MenuItem Header="Close" HotKey="Ctrl+W"/>
-								<MenuItem Header="Close other tabs" >
-
-								</MenuItem>
-								<MenuItem Header="Close all tabs" HotKey="Ctrl+Shift+W"/>
-							</MenuFlyout>
-						</ui:FATabView.ContextFlyout>
 						<ui:FATabView.TabItemTemplate>
 							<DataTemplate x:DataType="vmComponents:TabViewModel">
-								<ui:FATabViewItem Header="{Binding TabTitle}" IconSource="avares://UndertaleModToolAvalonia/Assets/icon.ico" />
+								<ui:FATabViewItem Header="{Binding TabTitle}" IconSource="avares://UndertaleModToolAvalonia/Assets/icon.ico">
+									<ui:FATabViewItem.ContextFlyout>
+										<MenuFlyout>
+											<MenuItem Header="Close" InputGesture="Ctrl+W" Command="{Binding CloseCommand}" CommandParameter="{Binding}"/>
+											<MenuItem Header="Close other tabs" Command="{Binding CloseOtherTabsCommand}" CommandParameter="{Binding}"/>
+											<MenuItem Header="Close all tabs" InputGesture="Ctrl+Shift+W" Command="{Binding CloseAllTabsCommand}"/>
+										</MenuFlyout>
+									</ui:FATabViewItem.ContextFlyout>
+								</ui:FATabViewItem>
 							</DataTemplate>
 						</ui:FATabView.TabItemTemplate>
 					</ui:FATabView>

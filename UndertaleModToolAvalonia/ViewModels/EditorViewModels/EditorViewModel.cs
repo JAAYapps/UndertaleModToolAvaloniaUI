@@ -847,6 +847,75 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         }
 
         [RelayCommand]
+        private void CloseCurrentTab()
+        {
+            CloseTab();
+        }
+
+        private bool CanCloseOtherTabs(TabViewModel tab) => tab != null && Tabs.Count > 1;
+
+        [RelayCommand(CanExecute = nameof(CanCloseOtherTabs))]
+        private void CloseOtherTabs(TabViewModel tab)
+        {
+            foreach (TabViewModel other in Tabs.Where(t => t != tab).Reverse().ToList())
+            {
+                if (!other.AutoClose)
+                    ClosedTabsHistory.Add(other);
+                Tabs.Remove(other);
+            }
+
+            CurrentTab = tab;
+            CloseOtherTabsCommand.NotifyCanExecuteChanged();
+        }
+
+        [RelayCommand]
+        private void CloseAllTabs()
+        {
+            if (Tabs.Count == 1 && CurrentTab is { AutoClose: true })
+                return;
+
+            ResetTabs();
+        }
+
+        private bool CanGoBack() => CurrentTab is { HistoryPosition: > 0 };
+
+        [RelayCommand(CanExecute = nameof(CanGoBack))]
+        private void GoBack()
+        {
+            CurrentTab.HistoryPosition--;
+            ShowHistoryObject();
+        }
+
+        private bool CanGoForward() => CurrentTab is not null && CurrentTab.HistoryPosition < CurrentTab.History.Count - 1;
+
+        [RelayCommand(CanExecute = nameof(CanGoForward))]
+        private void GoForward()
+        {
+            CurrentTab.HistoryPosition++;
+            ShowHistoryObject();
+        }
+
+        private void ShowHistoryObject()
+        {
+            object obj = CurrentTab.History[CurrentTab.HistoryPosition];
+            CurrentTab.CurrentObject = obj;
+            CurrentTab.TabTitle = GetTitleForObject(obj);
+            NotifyHistoryChanged();
+        }
+
+        private void NotifyHistoryChanged()
+        {
+            GoBackCommand.NotifyCanExecuteChanged();
+            GoForwardCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnCurrentTabChanged(TabViewModel? value)
+        {
+            NotifyHistoryChanged();
+            CloseOtherTabsCommand.NotifyCanExecuteChanged();
+        }
+
+        [RelayCommand]
         private void DeleteAsset(object asset)
         {
 
@@ -973,7 +1042,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             if (isNewTab || Tabs.Count == 0)
             {
                 int newIndex = Tabs.Count;
-                TabViewModel newTab = new(obj, newIndex, tabTitle, CloseAssetTabCommand);
+                TabViewModel newTab = new(obj, newIndex, tabTitle, CloseAssetTabCommand, CloseOtherTabsCommand, CloseAllTabsCommand);
 
                 Tabs.Add(newTab);
                 // CurrentTabIndex = newIndex;
@@ -996,6 +1065,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                 CurrentTab.TabTitle = tabTitle;
                 CurrentTab.History.Add(obj);
                 CurrentTab.HistoryPosition++;
+                NotifyHistoryChanged();
             }
         }
 
@@ -1016,6 +1086,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
                 if (!closingTab.AutoClose)
                     ClosedTabsHistory.Add(closingTab);
+                CloseOtherTabsCommand.NotifyCanExecuteChanged();
 
                 if (Tabs.Count == 0)
                 {
