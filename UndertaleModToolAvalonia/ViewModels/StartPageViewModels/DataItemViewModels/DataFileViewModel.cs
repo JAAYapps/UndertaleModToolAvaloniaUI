@@ -59,10 +59,10 @@ public partial class DataFileViewModel : ViewModelBase
 
             // Use the FileService to get a file path
             Console.WriteLine("Pass in storage provider: " + storageProvider);
-            var folders = await fileService.LoadFileAsync(storageProvider);
-            var folder = folders.FirstOrDefault();
+            var files = await fileService.LoadFileAsync(storageProvider);
+            var file = files.FirstOrDefault();
 
-            if (folder != null && await editorViewModel.LoadFileAsync(folder))
+            if (file != null && await editorViewModel.LoadFileAsync(file))
                 FileLoaded?.Invoke(this, EventArgs.Empty);
         }
         else

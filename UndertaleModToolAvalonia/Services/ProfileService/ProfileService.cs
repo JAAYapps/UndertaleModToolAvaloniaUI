@@ -135,7 +135,7 @@ namespace UndertaleModToolAvalonia.Services.ProfileService
             }
         }
 
-        public async Task CreateUMTLastEditedAsync(IStorageFolder folder)
+        public async Task CreateUMTLastEditedAsync(IStorageFile dataFile)
         {
             if (!Settings.Instance.ProfileModeEnabled || AppConstants.ProfileHash is null)
             {
@@ -144,7 +144,7 @@ namespace UndertaleModToolAvalonia.Services.ProfileService
 
             try
             {
-                File.WriteAllText(Path.Combine(Settings.ProfilesFolder, "LastEdited.txt"), AppConstants.ProfileHash + "\n" + (await folder.GetFileAsync("data.win"))?.Path.AbsoluteUri);
+                File.WriteAllText(Path.Combine(Settings.ProfilesFolder, "LastEdited.txt"), AppConstants.ProfileHash + "\n" + (dataFile.TryGetLocalPath() ?? dataFile.Name));
             }
             catch (Exception exc)
             {
@@ -192,7 +192,7 @@ namespace UndertaleModToolAvalonia.Services.ProfileService
                 await App.Current.ShowError("RevertProfile error! (Note that profile mode is highly experimental.)\n" + exc);
             }
         }
-        public async Task UpdateProfileAsync(UndertaleData data, IStorageFolder folder)
+        public async Task UpdateProfileAsync(UndertaleData data, IStorageFile dataFile)
         {
             if (!Settings.Instance.ProfileModeEnabled)
             {
@@ -207,9 +207,7 @@ namespace UndertaleModToolAvalonia.Services.ProfileService
                 await Task.Run(() =>
                 {
                     using var md5Instance = MD5.Create();
-                    using var stream = folder.GetFileAsync("data.win");
-                    var inputStream = stream.Result?.OpenReadAsync().Result;
-                    if (inputStream == null) return;
+                    using var inputStream = dataFile.OpenReadAsync().Result;
                     Settings.Instance.MD5CurrentlyLoaded = md5Instance.ComputeHash(inputStream);
                     Settings.Instance.MD5PreviouslyLoaded = Settings.Instance.MD5CurrentlyLoaded;
                     AppConstants.ProfileHash = BitConverter.ToString(Settings.Instance.MD5PreviouslyLoaded).Replace("-", "").ToLowerInvariant();
@@ -286,7 +284,7 @@ should you encounter any problems, please let us know or leave
 an issue on GitHub.");
                     Settings.Instance.ProfileMessageShown = true;
                 }
-                await CreateUMTLastEditedAsync(folder);
+                await CreateUMTLastEditedAsync(dataFile);
             }
             catch (Exception exc)
             {

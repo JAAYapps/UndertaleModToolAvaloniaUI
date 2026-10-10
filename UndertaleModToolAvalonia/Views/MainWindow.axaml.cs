@@ -26,6 +26,22 @@ namespace UndertaleModToolAvalonia.Views
             this.Loaded += MainWindow_Loaded;
             this.KeyDown += MainWindow_KeyDown;
             this.Resized += MainWindow_Resized;
+            this.Closing += MainWindow_Closing;
+        }
+
+        private bool closeConfirmed;
+
+        private async void MainWindow_Closing(object? sender, WindowClosingEventArgs e)
+        {
+            if (closeConfirmed || DataContext is not MainWindowViewModel vm)
+                return;
+            
+            e.Cancel = true;
+            if (await vm.ConfirmCloseAsync(this))
+            {
+                closeConfirmed = true;
+                Close();
+            }
         }
 
         private void MainWindow_Resized(object? sender, WindowResizedEventArgs e)
@@ -47,8 +63,7 @@ namespace UndertaleModToolAvalonia.Views
             {
                 if (vm.OpenFileCommand.CanExecute(null))
                 {
-                    // Manually execute the command with the valid StorageProvider
-                    vm.OpenFileCommand.Execute(this.StorageProvider);
+                    vm.OpenFileCommand.Execute(this);
                 }
                 e.Handled = true;
             }
@@ -57,7 +72,7 @@ namespace UndertaleModToolAvalonia.Views
             {
                 if (vm.SaveFileCommand.CanExecute(null))
                 {
-                    vm.SaveFileCommand.Execute(this.StorageProvider);
+                    vm.SaveFileCommand.Execute(this);
                 }
                 e.Handled = true;
             }

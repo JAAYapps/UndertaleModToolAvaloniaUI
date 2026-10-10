@@ -13,7 +13,7 @@ namespace UndertaleModToolAvalonia.Services.FileService
     {
         public async Task<IStorageFile?> SaveFileAsync(IStorageProvider storageProvider, string path = "", string defaultExtension = "*.win")
         {
-            string directory = !string.IsNullOrEmpty(path) ? Path.GetFullPath(path) : "";
+            string directory = !string.IsNullOrEmpty(path) ? Path.GetDirectoryName(Path.GetFullPath(path)) ?? "" : "";
             string name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : "";
             return await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
             {
@@ -24,14 +24,14 @@ namespace UndertaleModToolAvalonia.Services.FileService
                 },
                 ShowOverwritePrompt = true,
                 SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "data.win",
-                DefaultExtension = defaultExtension,
+                DefaultExtension = defaultExtension.TrimStart('*', '.'),
                 SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Documents)
             });
         }
 
         public async Task<IStorageFile?> SaveAudioFileAsync(IStorageProvider storageProvider, string path = "", string defaultExtension = "*.ogg")
         {
-            string directory = !string.IsNullOrEmpty(path) ? Path.GetFullPath(path) : "";
+            string directory = !string.IsNullOrEmpty(path) ? Path.GetDirectoryName(Path.GetFullPath(path)) ?? "" : "";
             string name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : "";
             return await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
             {
@@ -42,14 +42,14 @@ namespace UndertaleModToolAvalonia.Services.FileService
                 },
                 ShowOverwritePrompt = true,
                 SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "audio" + defaultExtension.Substring(1),
-                DefaultExtension = defaultExtension,
+                DefaultExtension = defaultExtension.TrimStart('*', '.'),
                 SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Music)
             });
         }
 
         public async Task<IStorageFile?> SaveTextFileAsync(IStorageProvider storageProvider, string path = "")
         {
-            string directory = !string.IsNullOrEmpty(path) ? Path.GetFullPath(path) : "";
+            string directory = !string.IsNullOrEmpty(path) ? Path.GetDirectoryName(Path.GetFullPath(path)) ?? "" : "";
             string name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : "";
             return await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
             {
@@ -61,14 +61,14 @@ namespace UndertaleModToolAvalonia.Services.FileService
                 },
                 ShowOverwritePrompt = true,
                 SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "data.txt",
-                DefaultExtension = "*.txt",
+                DefaultExtension = "txt",
                 SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Documents)
             });
         }
 
         public async Task<IStorageFile?> SaveImageFileAsync(IStorageProvider storageProvider, string path = "")
         {
-            string directory = !string.IsNullOrEmpty(path) ? Path.GetFullPath(path) : "";
+            string directory = !string.IsNullOrEmpty(path) ? Path.GetDirectoryName(Path.GetFullPath(path)) ?? "" : "";
             string name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : "";
             return await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
             {
@@ -80,35 +80,31 @@ namespace UndertaleModToolAvalonia.Services.FileService
                 },
                 ShowOverwritePrompt = true,
                 SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "image.png",
-                DefaultExtension = "*.png",
+                DefaultExtension = "png",
                 SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Pictures)
             });
         }
 
-        public async Task<IReadOnlyList<IStorageFolder>> LoadFileAsync(IStorageProvider storageProvider, string path = "")
+        public async Task<IReadOnlyList<IStorageFile>> LoadFileAsync(IStorageProvider storageProvider, string path = "")
         {
-            string directory = !string.IsNullOrEmpty(path) ? Path.GetFullPath(path) : "";
+            string directory = !string.IsNullOrEmpty(path) ? Path.GetDirectoryName(Path.GetFullPath(path)) ?? "" : "";
             string name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : "";
-            return await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions()
+            return await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
             {
-                Title = "Load Game Folder",
+                AllowMultiple = false,
+                Title = "Load Undertale File",
+                FileTypeFilter = [
+                    new FilePickerFileType("GameMaker data files (.win, .unx, .ios, .droid)") { Patterns = new List<string> { "*.win","*.unx","*.ios","*.droid" } },
+                    new FilePickerFileType("All files") { Patterns = new List<string> { "*" } }
+                ],
+                SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "data.win",
+                SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Documents)
             });
-            // return await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
-            // {
-            //     AllowMultiple = false,
-            //     Title = "Load Undertale File",
-            //     FileTypeFilter = [
-            //         new FilePickerFileType("GameMaker data files (.win, .unx, .ios, .droid)") { Patterns = new List<string> { "*.win","*.unx","*.ios","*.droid" } },
-            //         new FilePickerFileType("All files") { Patterns = new List<string> { "*" } }
-            //     ],
-            //     SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "data.win",
-            //     SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Documents)
-            // });
         }
 
         public async Task<IReadOnlyList<IStorageFile>> LoadAudioFileAsync(IStorageProvider storageProvider, string path = "")
         {
-            string directory = !string.IsNullOrEmpty(path) ? Path.GetFullPath(path) : "";
+            string directory = !string.IsNullOrEmpty(path) ? Path.GetDirectoryName(Path.GetFullPath(path)) ?? "" : "";
             string name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : "";
             return await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
             {
@@ -125,7 +121,7 @@ namespace UndertaleModToolAvalonia.Services.FileService
 
         public async Task<IReadOnlyList<IStorageFile>> LoadTextFileAsync(IStorageProvider storageProvider, string path = "")
         {
-            string directory = !string.IsNullOrEmpty(path) ? Path.GetFullPath(path) : "";
+            string directory = !string.IsNullOrEmpty(path) ? Path.GetDirectoryName(Path.GetFullPath(path)) ?? "" : "";
             string name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : "";
             return await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
             {
@@ -142,7 +138,7 @@ namespace UndertaleModToolAvalonia.Services.FileService
 
         public async Task<IReadOnlyList<IStorageFile>> LoadImageFileAsync(IStorageProvider storageProvider, string path = "")
         {
-            string directory = !string.IsNullOrEmpty(path) ? Path.GetFullPath(path) : "";
+            string directory = !string.IsNullOrEmpty(path) ? Path.GetDirectoryName(Path.GetFullPath(path)) ?? "" : "";
             string name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : "";
             return await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
             {

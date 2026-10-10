@@ -58,18 +58,15 @@ namespace UndertaleModToolAvalonia.ViewModels
 
         [ObservableProperty] private bool isMaximized;
 
-        private bool CanSave
+        private bool CanSave => Settings.Instance.CanSave;
+        
+        private void RefreshCanSave()
         {
-            get
-            {
-                OnPropertyChanged(nameof(CanSave));
-                return Settings.Instance.CanSave;
-            }
-            set
-            {
-                Settings.Instance.CanSave = value;
-                OnPropertyChanged(nameof(CanSave));
-            }
+            OnPropertyChanged(nameof(CanSave));
+            SaveFileCommand.NotifyCanExecuteChanged();
+            RunGameCommand.NotifyCanExecuteChanged();
+            RunSpecialCommand.NotifyCanExecuteChanged();
+            RunDebugCommand.NotifyCanExecuteChanged();
         }
 
         public MainWindowViewModel(IServiceProvider services, EditorViewModel editorViewModel, IProfileService profileService, IDialogService dialogService, IPlayer playerService, IFileService fileService, ILoadingDialogService loadingDialogService)
@@ -87,6 +84,7 @@ namespace UndertaleModToolAvalonia.ViewModels
             {
                 Data = AppConstants.Data;
                 FilePath = AppConstants.FilePath;
+                RefreshCanSave();
             });
             Pages = new ObservableCollection<PageTemplate>()
             {
@@ -94,7 +92,6 @@ namespace UndertaleModToolAvalonia.ViewModels
                 new PageTemplate(typeof(SettingsPageViewModel), "Settings"),
             };
             OnSelectedPageChanged(Pages[0]);
-            CanSave = Settings.Instance.CanSave;
             UpdateToggleIcon();
         }
 
@@ -133,9 +130,15 @@ namespace UndertaleModToolAvalonia.ViewModels
             IsPaneOpen = !IsPaneOpen;
         }
 
+        private bool startupRan;
+
         [RelayCommand]
         private async Task Startup(Visual owner)
         {
+            if (startupRan)
+                return;
+            startupRan = true;
+
             loadingDialogService.Initialize();
             Console.WriteLine("Running startup");
             // Load settings to see if we should associate files
@@ -186,14 +189,17 @@ namespace UndertaleModToolAvalonia.ViewModels
                 }
 
                 string arg = args[1];
-                IReadOnlyList<IStorageFolder> folder = null;
                 var storageProvider = TopLevel.GetTopLevel(owner)?.StorageProvider;
-                if (storageProvider != null)
-                    folder = await fileService.LoadFileAsync(storageProvider, arg);
-                
-                if (File.Exists(arg))
+
+                if (storageProvider != null && File.Exists(arg))
                 {
-                    loaded = await editorViewModel.LoadFileAsync(folder.FirstOrDefault(), true, isLaunch || isSpecialLaunch);
+                    var file = await storageProvider.TryGetFileFromPathAsync(Path.GetFullPath(arg));
+                    loaded = await editorViewModel.LoadFileAsync(file, true, isLaunch || isSpecialLaunch);
+                }
+                else if (storageProvider != null && Directory.Exists(arg))
+                {
+                    var folder = await storageProvider.TryGetFolderFromPathAsync(Path.GetFullPath(arg));
+                    loaded = await editorViewModel.LoadFolderAsync(folder, true, isLaunch || isSpecialLaunch);
                 }
                 else if (arg == "deleteTempFolder") // if was launched from UndertaleModToolUpdater
                 {
@@ -243,6 +249,9 @@ namespace UndertaleModToolAvalonia.ViewModels
                         }
                     });
                 }
+
+                if (loaded && !isLaunch && !isSpecialLaunch && CurrentPage is ProjectsPageViewModel projectsPage)
+                    projectsPage.ChangePage(1);
 
                 if (isSpecialLaunch)
                 {
@@ -297,14 +306,18 @@ namespace UndertaleModToolAvalonia.ViewModels
         }
 
         [RelayCommand]
-        private void NewProject()
+        private async Task NewProject()
         {
             OnSelectedPageChanged(Pages[0]);
             if (CurrentPage is not ProjectsPageViewModel pvm)
                 return;
+
+            if (AppConstants.Data != null &&
+                await App.Current!.ShowQuestion("Warning: you currently have a project open.\nAre you sure you want to make a new project?") != MsBox.Avalonia.Enums.ButtonResult.Yes)
+                return;
+
+            editorViewModel.NewFile();
             pvm.ChangePage(1);
-            editorViewModel?.BuildTree(null);
-            CanSave = Settings.Instance.CanSave;
         }
 
         [RelayCommand]
@@ -319,52 +332,87 @@ namespace UndertaleModToolAvalonia.ViewModels
                 await App.Current!.ShowError("The dialog could not be opened.");
                 return;
             }
+            if (!MenuEnabled)
+                return;
             MenuEnabled = false;
-            // Use the FileService to get a file path
-            var folders = await fileService.LoadFileAsync(TopLevel.GetTopLevel(visual)?.StorageProvider!);
-            var folder = folders.FirstOrDefault();
-            
-            if (folder != null && await editorViewModel.LoadFileAsync(folder))
-                pvm.ChangePage(1);
-            Console.WriteLine(Settings.Instance.CanSave);
-            CanSave = Settings.Instance.CanSave;
-            MenuEnabled = true;
+            try
+            {
+                // Use the FileService to get a file path
+                var files = await fileService.LoadFileAsync(TopLevel.GetTopLevel(visual)?.StorageProvider!, AppConstants.FilePath ?? "");
+                var file = files.FirstOrDefault();
+
+                if (file != null && await editorViewModel.LoadFileAsync(file))
+                    pvm.ChangePage(1);
+            }
+            finally
+            {
+                MenuEnabled = true;
+                RefreshCanSave();
+            }
         }
 
         [RelayCommand(CanExecute = nameof(CanSave))]
         private async Task SaveFileAsync(Visual visual)
         {
-            if (TopLevel.GetTopLevel(visual)?.StorageProvider is null)
-            {
-                await App.Current!.ShowError("The dialog could not be opened.");
-                return;
-            }
-            MenuEnabled = false;
-            var storage = await fileService.SaveFileAsync(TopLevel.GetTopLevel(visual)?.StorageProvider!);
-
-            if (storage == null || string.IsNullOrEmpty(storage.Name))
-                return; // User cancelled
-
-            await editorViewModel.SaveFileAsync(storage.Path.AbsolutePath);
-            MenuEnabled = true;
+            await SaveWithDialogAsync(visual, false);
         }
 
         private async Task<bool> SaveFileSuppressDebugAsync(Visual visual)
         {
-            if (TopLevel.GetTopLevel(visual)?.StorageProvider is null)
+            return await SaveWithDialogAsync(visual, true);
+        }
+        
+        private async Task<bool> SaveWithDialogAsync(Visual visual, bool suppressDebug)
+        {
+            var storageProvider = TopLevel.GetTopLevel(visual)?.StorageProvider;
+            if (storageProvider is null)
             {
                 await App.Current!.ShowError("The dialog could not be opened.");
                 return false;
             }
+            if (!MenuEnabled)
+                return false;
             MenuEnabled = false;
-            var storage = await fileService.SaveFileAsync(TopLevel.GetTopLevel(visual)?.StorageProvider!);
+            try
+            {
+                var storage = await fileService.SaveFileAsync(storageProvider, AppConstants.FilePath ?? "");
 
-            if (string.IsNullOrEmpty(storage.Name))
-                return false; // User cancelled
+                if (storage == null || string.IsNullOrEmpty(storage.Name))
+                    return false; // User cancelled
 
-            await editorViewModel.SaveFileAsync(storage.Path.AbsolutePath, true);
-            MenuEnabled = true;
-            return true;
+                string? path = storage.TryGetLocalPath();
+                if (path == null)
+                {
+                    await App.Current!.ShowError("The chosen location is not a file on this computer, so it cannot be saved to.", "Save error");
+                    return false;
+                }
+
+                return await editorViewModel.SaveFileAsync(path, suppressDebug);
+            }
+            finally
+            {
+                MenuEnabled = true;
+            }
+        }
+        
+        public async Task<bool> ConfirmCloseAsync(Visual visual)
+        {
+            if (AppConstants.Data == null || !Settings.Instance.WarnOnClose)
+                return true;
+
+            var result = await App.Current!.ShowQuestionWithCancel("Save changes before quitting?");
+            if (result == MsBox.Avalonia.Enums.ButtonResult.No)
+                return true;
+            if (result != MsBox.Avalonia.Enums.ButtonResult.Yes)
+                return false;
+
+            return await SaveWithDialogAsync(visual, true);
+        }
+
+        [RelayCommand]
+        private void Exit(Visual visual)
+        {
+            (TopLevel.GetTopLevel(visual) as Window)?.Close();
         }
 
         [RelayCommand(CanExecute = nameof(CanSave))]
@@ -387,6 +435,11 @@ result in loss of work.");
             }
             bool saveOk = true;
             string oldFilePath = AppConstants.FilePath!;
+            if (string.IsNullOrEmpty(oldFilePath))
+            {
+                await App.Current!.ShowWarning("The file must be saved in order to be run.");
+                return;
+            }
             bool oldDisableDebuggerState = true;
             int oldSteamValue = 0;
             oldDisableDebuggerState = AppConstants.Data.GeneralInfo.IsDebuggerDisabled;
@@ -394,9 +447,10 @@ result in loss of work.");
             AppConstants.Data.GeneralInfo.SteamAppID = 0;
             AppConstants.Data.GeneralInfo.IsDebuggerDisabled = true;
             string TempFilesFolder = (oldFilePath != null ? Path.Combine(Path.GetDirectoryName(oldFilePath)!, "MyMod.temp") : "");
-            await editorViewModel.SaveFileAsync(TempFilesFolder, false);
+            saveOk = await editorViewModel.SaveFileAsync(TempFilesFolder, false);
             AppConstants.Data.GeneralInfo.SteamAppID = oldSteamValue;
             AppConstants.FilePath = oldFilePath;
+            WeakReferenceMessenger.Default.Send(new TitleUpdateMessage());
             AppConstants.Data.GeneralInfo.IsDebuggerDisabled = oldDisableDebuggerState;
             if (TempFilesFolder == null)
             {
@@ -548,19 +602,28 @@ result in loss of work.");
                 await App.Current!.ShowError("The dialog could not be opened.");
                 return;
             }
+            if (!MenuEnabled)
+                return;
             MenuEnabled = false;
-            var files = await fileService!.LoadFileAsync(TopLevel.GetTopLevel(visual)?.StorageProvider!);
-            var filePath = files?.FirstOrDefault()?.Path.LocalPath;
+            var files = await fileService!.LoadFileAsync(TopLevel.GetTopLevel(visual)?.StorageProvider!, AppConstants.FilePath ?? "");
+            var filePath = files?.FirstOrDefault()?.TryGetLocalPath();
 
             if (string.IsNullOrEmpty(filePath))
+            {
+                MenuEnabled = true;
                 return; // User cancelled
+            }
 
             string suggestedName = Path.ChangeExtension(filePath, ".offsetmap.txt");
 
             var storage = await fileService!.SaveTextFileAsync(TopLevel.GetTopLevel(visual)?.StorageProvider!, suggestedName);
+            string? outputPath = storage?.TryGetLocalPath();
 
-            if (storage == null || string.IsNullOrEmpty(storage.Name))
+            if (string.IsNullOrEmpty(outputPath))
+            {
+                MenuEnabled = true;
                 return; // User cancelled
+            }
 
             loadingDialogService.Show("Generating", "Loading, please wait...");
             await loadingDialogService.SetIndeterminateAsync(true);
@@ -572,7 +635,7 @@ result in loss of work.");
                     using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
                     {
                         var offsets = UndertaleIO.GenerateOffsetMap(stream);
-                        using (var writer = File.CreateText(storage.Path.AbsolutePath))
+                        using (var writer = File.CreateText(outputPath))
                         {
                             foreach (var off in offsets.OrderBy((x) => x.Key))
                             {

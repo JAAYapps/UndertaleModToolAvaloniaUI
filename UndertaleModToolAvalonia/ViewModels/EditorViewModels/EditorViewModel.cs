@@ -370,13 +370,43 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
             return filteredList;
         }
-
-        public async Task<bool> LoadFileAsync(IStorageFolder? folder, bool preventClose = false, bool onlyGeneralInfo = false)
+        
+        private static readonly string[] dataFileNames = ["data.win", "game.unx", "game.ios", "game.droid"];
+        
+        public async Task<bool> LoadFolderAsync(IStorageFolder? folder, bool preventClose = false, bool onlyGeneralInfo = false)
         {
             if (folder is not { }) return false;
+
+            IStorageFile? dataFile = null;
+            int dataFileRank = dataFileNames.Length;
+            await foreach (var item in folder.GetItemsAsync())
+            {
+                if (item is not IStorageFile file)
+                    continue;
+                int rank = Array.FindIndex(dataFileNames, name => name.Equals(file.Name, StringComparison.OrdinalIgnoreCase));
+                if (rank >= 0 && rank < dataFileRank)
+                {
+                    dataFile = file;
+                    dataFileRank = rank;
+                }
+            }
+
+            if (dataFile is null)
+            {
+                await App.Current!.ShowError("No GameMaker data file (" + string.Join(", ", dataFileNames) + ") was found in:\n" + (folder.TryGetLocalPath() ?? folder.Name), "Load error");
+                return false;
+            }
+            return await LoadFileAsync(dataFile, preventClose, onlyGeneralInfo);
+        }
+
+        public async Task<bool> LoadFileAsync(IStorageFile? dataFile, bool preventClose = false, bool onlyGeneralInfo = false)
+        {
+            if (dataFile is not { }) return false;
             
+            string filePath = dataFile.TryGetLocalPath() ?? dataFile.Name;
+
             IsEnabled = false;
-            loadingDialogService.Show("Loading File", "Reading data.win, please wait...");
+            loadingDialogService.Show("Loading File", "Reading " + dataFile.Name + ", please wait...");
             await loadingDialogService.SetIndeterminateAsync(true);
 
             GameSpecificResolver.BaseDirectory = Settings.GetExecutableDirectory();
@@ -387,26 +417,6 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                 UndertaleData data = null;
                 try
                 {
-                    IStorageFile? dataFile = null;
-                    await foreach (var item in folder.GetItemsAsync())
-                    {
-                        if (item is IStorageFile file && file.Name.Equals("data.win", StringComparison.OrdinalIgnoreCase))
-                        {
-                            dataFile = file;
-                            AppConstants.FilePath = folder.Path.IsAbsoluteUri ? folder.Path.LocalPath : folder.Name;
-                            break;
-                        }
-                    }
-                    
-                    if (dataFile is null)
-                    {
-                        Dispatcher.UIThread.Post(() =>
-                        {
-                            loadingDialogService.Hide();
-                        });
-                        return false;
-                    }
-                    Console.WriteLine("File name: " + dataFile.Name + " Type: " + dataFile.GetType());
                     using (var stream = await dataFile.OpenReadAsync())
                     {
                         var memoryStream = new MemoryStream();
@@ -453,7 +463,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     {
                         loadingDialogService.Hide();
                         AppConstants.Data = data;
-                        AppConstants.FilePath = folder.Path.IsAbsoluteUri ? folder.Path.AbsoluteUri : folder.Name;
+                        AppConstants.FilePath = filePath;
                     });
 
                     return true;
@@ -479,7 +489,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                         {
                             Settings.Instance.CanSave = true;
                             Settings.Instance.CanSafelySave = true;
-                            await profileService.UpdateProfileAsync(data, folder);
+                            await profileService.UpdateProfileAsync(data, dataFile);
                             if (data != null)
                             {
                                 data.ToolInfo.DecompilerSettings = Settings.Instance.DecompilerSettings;
@@ -497,17 +507,18 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                                 await App.Current!.ShowWarning("This game is set to run with the GameMaker Studio debugger and the normal runtime will simply hang after loading if the debugger is not running. You can turn this off in General Info by checking the \"Disable Debugger\" box and saving.", "GMS Debugger");
                             }
                         }
-                        if (!OperatingSystem.IsBrowser() && Path.GetDirectoryName(AppConstants.FilePath) != Path.GetDirectoryName(folder.Path.AbsoluteUri))
+                        if (!OperatingSystem.IsBrowser() && Path.GetDirectoryName(AppConstants.FilePath) != Path.GetDirectoryName(filePath))
                             UndertaleHelper.CloseChildFiles();
 
                         AppConstants.Data = data;
+                        AppConstants.FilePath = filePath;
+                        ResetTabs();
 
                         UndertaleCachedImageLoader.Reset();
                         // CachedTileDataLoader.Reset();
 
                         AppConstants.Data.ToolInfo.DecompilerSettings = Settings.Instance.DecompilerSettings;
                         AppConstants.Data.ToolInfo.InstanceIdPrefix = () => Settings.Instance.InstanceIdPrefix;
-                        // TODO AppConstants.FilePath = folder.Path.AbsoluteUri;
                         OnPropertyChanged(nameof(AppConstants.Data));
                         OnPropertyChanged(nameof(AppConstants.FilePath));
                         OnPropertyChanged(nameof(UndertaleHelper.IsGMS2));
@@ -522,10 +533,10 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                 });
                 return true;
             });
-            if (!loaded)
-                return false;
             loadingDialogService.Hide();
             IsEnabled = true;
+            if (!loaded)
+                return false;
             // Clear "GC holes" left in the memory in process of data unserializing
             // https://docs.microsoft.com/en-us/dotnet/api/system.runtime.gcsettings.largeobjectheapcompactionmode?view=net-6.0
             if (!OperatingSystem.IsBrowser())
@@ -537,21 +548,17 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             WeakReferenceMessenger.Default.Send(new TitleUpdateMessage());
             return true;
         }
-
-        public async Task SaveFileAsync(string filename, bool suppressDebug = false)
+        
+        public async Task<bool> SaveFileAsync(string filename, bool suppressDebug = false)
         {
             if (AppConstants.Data == null || AppConstants.Data.UnsupportedBytecodeVersion)
-                return;
-            
-            bool isDifferentPath = AppConstants.FilePath != filename;
+                return false;
             
             // --- Start Saving Process ---
-            loadingDialogService.Show("Saving File", "Saveing data.win, please wait...");
+            loadingDialogService.Show("Saving File", "Saving " + Path.GetFileName(filename) + ", please wait...");
             await loadingDialogService.SetIndeterminateAsync(true);
 
             IProgress<Tuple<int, string, double>> progress = new Progress<Tuple<int, string, double>>(i => { loadingDialogService.UpdateStatusAsync(i.Item2); loadingDialogService.UpdateProgressAsync(i.Item1, i.Item3); });
-
-            AppConstants.FilePath = filename;
 
             if (Path.GetDirectoryName(AppConstants.FilePath) != Path.GetDirectoryName(filename))
                 UndertaleHelper.CloseChildFiles();
@@ -559,7 +566,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             DebugDataDialogViewModel.DebugDataMode debugMode = DebugDataDialogViewModel.DebugDataMode.NoDebug;
             if (!suppressDebug && AppConstants.Data.GeneralInfo != null && !AppConstants.Data.GeneralInfo.IsDebuggerDisabled)
                 await App.Current!.ShowWarning("You are saving the game in GameMaker Studio debug mode. Unless the debugger is running, the normal runtime will simply hang after loading. You can turn this off in General Info by checking the \"Disable Debugger\" box and saving.", "GMS Debugger");
-            Task t = Task.Run(async () =>
+            Task<bool> t = Task.Run(async () =>
             {
                 bool SaveSucceeded = true;
 
@@ -652,7 +659,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                             }
                         }
 
-                        using (UndertaleWriter writer = new UndertaleWriter(new FileStream(Path.ChangeExtension(AppConstants.FilePath, ".yydebug"), FileMode.Create, FileAccess.Write)))
+                        using (UndertaleWriter writer = new UndertaleWriter(new FileStream(Path.ChangeExtension(filename, ".yydebug"), FileMode.Create, FileAccess.Write)))
                         {
                             debugData.FORM.Serialize(writer);
                             writer.ThrowIfUnwrittenObjects();
@@ -710,12 +717,46 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                 {
                     loadingDialogService.Hide();
                 });
+                return SaveSucceeded;
             });
 
-            await t;
+            bool saved = await t;
+            
+            if (saved)
+            {
+                AppConstants.FilePath = filename;
+                WeakReferenceMessenger.Default.Send(new TitleUpdateMessage());
+            }
 
             GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             GC.Collect();
+            return saved;
+        }
+        
+        public void NewFile()
+        {
+            UndertaleHelper.CloseChildFiles();
+
+            AppConstants.Data = UndertaleData.CreateNew();
+            AppConstants.Data.ToolInfo.DecompilerSettings = Settings.Instance.DecompilerSettings;
+            AppConstants.Data.ToolInfo.InstanceIdPrefix = () => Settings.Instance.InstanceIdPrefix;
+            AppConstants.FilePath = null;
+            Settings.Instance.CanSave = true;
+            Settings.Instance.CanSafelySave = true;
+
+            UndertaleCachedImageLoader.Reset();
+            ResetTabs();
+            ApplyFilter(AppConstants.Data);
+            WeakReferenceMessenger.Default.Send(new TitleUpdateMessage());
+        }
+        
+        private void ResetTabs()
+        {
+            Tabs.Clear();
+            ClosedTabsHistory.Clear();
+            CurrentTab = null;
+            var asset = GetViewModelFromObject(Highlighted);
+            OpenInTab(asset, false, asset.MainText);
         }
 
         private void DisposeGameData()

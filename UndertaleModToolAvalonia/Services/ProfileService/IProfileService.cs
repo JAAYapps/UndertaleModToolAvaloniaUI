@@ -22,13 +22,13 @@ namespace UndertaleModToolAvalonia.Services.ProfileService
 
         public Task ApplyCorrectionsAsync();
 
-        public Task CreateUMTLastEditedAsync(IStorageFolder folder);
+        public Task CreateUMTLastEditedAsync(IStorageFile dataFile);
 
         public Task DestroyUMTLastEditedAsync();
 
         public Task RevertProfileAsync();
 
-        public Task UpdateProfileAsync(UndertaleData data, IStorageFolder folder);
+        public Task UpdateProfileAsync(UndertaleData data, IStorageFile dataFile);
 
         public Task ProfileSaveEventAsync(UndertaleData data, string filename);
 
