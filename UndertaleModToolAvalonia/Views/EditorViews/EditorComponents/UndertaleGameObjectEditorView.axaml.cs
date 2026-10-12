@@ -48,4 +48,13 @@ public partial class UndertaleGameObjectEditorView : UserControl
             return;
         vm.AddEventCommand?.Execute(button.DataContext);
     }
+
+    private void ActionButton_DoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e)
+    {
+        if (sender is not Button button)
+            return;
+        if (DataContext is not UndertaleGameObjectEditorViewModel vm)
+            return;
+        vm.AddActionCommand?.Execute(button.DataContext);
+    }
 }

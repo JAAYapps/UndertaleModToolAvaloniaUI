@@ -212,25 +212,30 @@
 										<DataGridTemplateColumn Header="Actions" Width="5*">
 											<DataGridTemplateColumn.CellTemplate>
 												<DataTemplate>
-													<DataGrid ItemsSource="{Binding Actions}" AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True"
-															  HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None"
-															  SelectionMode="Single">
-														<DataGrid.Columns>
-															<DataGridTemplateColumn Header="Code" Width="*">
-																<DataGridTemplateColumn.CellTemplate>
-																	<DataTemplate>
-																		<controls:UndertaleObjectReference ObjectReference="{Binding CodeId, Mode=TwoWay}" ObjectType="{x:Type undertale:UndertaleCode}" Margin="23,3,3,3" CanRemove="True"
-																										   Loaded="UndertaleObjectReference_Loaded" GotFocus="UndertaleObjectReference_GotFocus"
-																										   UndertaleData="{x:Static Member=app:AppConstants.Data}"
-																										   GameObject="{Binding $parent[UserControl].DataContext.(vm:UndertaleGameObjectEditorViewModel).UndertaleGameObject, Mode=OneWay}"
-																										   ObjectEventType="{Binding $parent[DataGrid;1].DataContext.(vm:GameObjectEventTypeViewModel).EventType, Mode=OneWay}"
-																										   RemoveCommand="{Binding $parent[UserControl].DataContext.(vm:UndertaleGameObjectEditorViewModel).RemoveActionCommand}"
-																										   RemoveCommandParameter="{Binding}"/>
-																	</DataTemplate>
-																</DataGridTemplateColumn.CellTemplate>
-															</DataGridTemplateColumn>
-														</DataGrid.Columns>
-													</DataGrid>
+													<Grid RowDefinitions="*,*">
+														<DataGrid Grid.Row="0" ItemsSource="{Binding Actions}" AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True"
+																  HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None"
+																  SelectionMode="Single">
+															<DataGrid.Columns>
+																<DataGridTemplateColumn Header="Code" Width="*">
+																	<DataGridTemplateColumn.CellTemplate>
+																		<DataTemplate>
+																			<controls:UndertaleObjectReference ObjectReference="{Binding CodeId, Mode=TwoWay}" ObjectType="{x:Type undertale:UndertaleCode}" Margin="23,3,3,3" CanRemove="True"
+																											   Loaded="UndertaleObjectReference_Loaded" GotFocus="UndertaleObjectReference_GotFocus"
+																											   UndertaleData="{x:Static Member=app:AppConstants.Data}"
+																											   GameObject="{Binding $parent[UserControl].DataContext.(vm:UndertaleGameObjectEditorViewModel).UndertaleGameObject, Mode=OneWay}"
+																											   ObjectEventType="{Binding $parent[DataGrid;1].DataContext.(vm:GameObjectEventTypeViewModel).EventType, Mode=OneWay}"
+																											   RemoveCommand="{Binding $parent[UserControl].DataContext.(vm:UndertaleGameObjectEditorViewModel).RemoveActionCommand}"
+																											   RemoveCommandParameter="{Binding}"/>
+																		</DataTemplate>
+																	</DataGridTemplateColumn.CellTemplate>
+																</DataGridTemplateColumn>
+															</DataGrid.Columns>
+														</DataGrid>
+														<Button Grid.Row="1" HorizontalAlignment="Stretch" Margin="5" DoubleTapped="ActionButton_DoubleTapped">
+															<TextBlock Margin="5" TextAlignment="Center" FontStyle="Italic">Double click to add</TextBlock>
+														</Button>
+													</Grid>
 												</DataTemplate>
 											</DataGridTemplateColumn.CellTemplate>
 										</DataGridTemplateColumn>

@@ -97,6 +97,14 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
         }
 
         [RelayCommand]
+        private void AddAction(UndertaleGameObject.Event ev)
+        {
+            if (ev is null) return;
+
+            ev.Actions.Add(new UndertaleGameObject.EventAction());
+        }
+
+        [RelayCommand]
         private void RemoveAction(UndertaleGameObject.EventAction action)
         {
             if (action is null) return;
