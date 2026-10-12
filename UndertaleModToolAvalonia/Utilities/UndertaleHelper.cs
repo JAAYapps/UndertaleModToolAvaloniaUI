@@ -23,7 +23,7 @@ namespace UndertaleModToolAvalonia.Utilities
         public static bool IsGMS2 => (AppConstants.Data?.GeneralInfo?.Major ?? 0) >= 2 ? true : false;
         
         // God this is so ugly, if there's a better way, please, put in a pull request
-        public static bool IsExtProductIDEligible => (AppConstants.Data?.GeneralInfo?.Major ?? 0) >= 2 || (AppConstants.Data?.GeneralInfo?.Major ?? 0) == 1 && ((AppConstants.Data?.GeneralInfo?.Build ?? 0) >= 1773 || (AppConstants.Data?.GeneralInfo?.Build ?? 0) == 1539) ? true : false;
+        public static bool IsExtProductIDEligible => (AppConstants.Data?.GeneralInfo?.Major ?? 0) >= 2 || (AppConstants.Data?.GeneralInfo?.Major ?? 0) == 1 && ((AppConstants.Data?.GeneralInfo?.Build ?? 0) >= 1773 || (AppConstants.Data?.GeneralInfo?.Build ?? 0) == 1559) ? true : false;
         
         public static bool GMLCacheEnabled => Settings.Instance.UseGMLCache;
         

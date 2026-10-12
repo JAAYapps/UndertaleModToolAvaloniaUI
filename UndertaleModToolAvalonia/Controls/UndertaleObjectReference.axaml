@@ -35,16 +35,20 @@
 				</Style>
 			</TextBox.Styles>
 		</TextBox>
-		<Button Grid.Column="1" x:Name="DetailsButton"
-                ToolTip.Tip="Open referenced object">
-			<Button.Content>
-				<TextBlock>...</TextBlock>
-			</Button.Content>
+		<Button Grid.Column="1" x:Name="DetailsButton">
 			<Button.Styles>
-				<Style Selector="local|UndertaleObjectReference[ObjectReference={x:Null}]:not(.is-code) > Grid > Button#DetailsButton">
+				<Style Selector="local|UndertaleObjectReference > Grid > Button#DetailsButton">
+					<Setter Property="Content">
+						<Template>
+							<TextBlock>...</TextBlock>
+						</Template>
+					</Setter>
+					<Setter Property="ToolTip.Tip" Value="Open referenced object"/>
+				</Style>
+				<Style Selector="local|UndertaleObjectReference:null-reference:not(.is-code) > Grid > Button#DetailsButton">
 					<Setter Property="IsEnabled" Value="False"/>
 				</Style>
-				<Style Selector="local|UndertaleObjectReference.is-code[ObjectReference={x:Null}] > Grid > Button#DetailsButton">
+				<Style Selector="local|UndertaleObjectReference.is-code:null-reference > Grid > Button#DetailsButton">
 					<Setter Property="IsEnabled" Value="True"/>
 					<Setter Property="Content">
 						<Template>
@@ -60,7 +64,7 @@
                 Content=" X " ToolTip.Tip="Remove reference">
 			<Button.Styles>
 				<Style Selector="local|UndertaleObjectReference[CanRemove=False] > Grid > Button#RemoveButton, 
-                                 local|UndertaleObjectReference[ObjectReference={x:Null}] > Grid > Button#RemoveButton">
+                                 local|UndertaleObjectReference:null-reference > Grid > Button#RemoveButton">
 					<Setter Property="IsEnabled" Value="False"/>
 				</Style>
 			</Button.Styles>
