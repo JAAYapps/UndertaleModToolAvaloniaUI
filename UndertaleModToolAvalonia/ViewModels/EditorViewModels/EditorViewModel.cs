@@ -1297,12 +1297,15 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     UndertaleTimeline => new UndertaleTimelineEditorViewModel(name, (UndertaleTimeline)asset),
                     UndertaleGameObject => new UndertaleGameObjectEditorViewModel(name, (UndertaleGameObject)asset, this, fileService, textureCacheService, referenceFinderService, dialogService),
                     UndertaleRoom => new UndertaleRoomEditorViewModel(name, (UndertaleRoom)asset, this, fileService, textureCacheService),
-                    //UndertaleExtension => "Extension",
+                    UndertaleExtension => new UndertaleExtensionEditorViewModel(name, (UndertaleExtension)asset),
+                    UndertaleExtensionFile => new UndertaleExtensionFileEditorViewModel(name, (UndertaleExtensionFile)asset),
+                    UndertaleExtensionFunction => new UndertaleExtensionFunctionEditorViewModel(name, (UndertaleExtensionFunction)asset),
                     UndertaleTexturePageItem => new UndertaleTexturePageItemEditorViewModel(name, (UndertaleTexturePageItem)asset, this, textureCacheService, fileService),
                     UndertaleCode => new UndertaleCodeEditorViewModel(name, (UndertaleCode)asset, this, profileService, loadingDialogService, fileService),
                     UndertaleVariable => new UndertaleVariableEditorViewModel(name, (UndertaleVariable)asset),
                     UndertaleFunction => new UndertaleFunctionEditorViewModel(name, (UndertaleFunction)asset),
-                    //UndertaleCodeLocals => "Code Locals",
+                    UndertaleCodeLocals => new UndertaleCodeLocalsEditorViewModel(name, (UndertaleCodeLocals)asset),
+                    UndertaleString => new UndertaleStringEditorViewModel(name, (UndertaleString)asset),
                     UndertaleEmbeddedTexture => new UndertaleEmbeddedTextureEditorViewModel(name, (UndertaleEmbeddedTexture)asset, this, fileService, textureCacheService),
                     UndertaleEmbeddedAudio => new UndertaleEmbeddedAudioEditorViewModel(name, (UndertaleEmbeddedAudio)asset, playerService, fileService),
                     UndertaleTextureGroupInfo => new UndertaleTextureGroupInfoEditorViewModel(name, (UndertaleTextureGroupInfo)asset),
@@ -1310,7 +1313,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     // TODO Figure out what this is. UndertaleSequence => "Sequence",
                     // TODO Figure out what this is too. UndertaleAnimationCurve => "Animation Curve",
                     UndertaleParticleSystem => new UndertaleParticleSystemEditorViewModel(name, (UndertaleParticleSystem)asset),
-                    //UndertaleParticleSystemEmitter => "Particle System Emitter",
+                    UndertaleParticleSystemEmitter => new UndertaleParticleSystemEmitterEditorViewModel(name, (UndertaleParticleSystemEmitter)asset, this, fileService, textureCacheService),
                     _ => new EditorContentViewModel($"There is no Editor for {name}.")
                 };
                 return model;
