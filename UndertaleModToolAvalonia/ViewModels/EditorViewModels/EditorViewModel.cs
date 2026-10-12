@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.CodeAnalysis.Scripting;
 using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -810,40 +811,258 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         }
 
         [RelayCommand]
-        private void AddNewItem(ResourceNodeViewModel? categoryNode)
+        private async Task AddNewItem(ResourceNodeViewModel? categoryNode)
         {
-            if (categoryNode is null) return;
+            if (categoryNode is null || !categoryNode.CanAddItem) return;
+            if (categoryNode.SourceList is not IList list) return;
 
-            // Logic to add a new item based on the category
-            // For example:
-            if (categoryNode.Header == "Sounds")
+            Type t = list.GetType().GetGenericArguments()[0];
+            UndertaleResource obj = Activator.CreateInstance(t) as UndertaleResource;
+            if (obj is UndertaleNamedResource namedResource)
             {
-                var newSound = new UndertaleSound();
-                newSound.Name = AppConstants.Data.Strings.MakeString("new_sound");
-                AppConstants.Data.Sounds.Add(newSound);
+                bool doMakeString = obj is not (UndertaleTexturePageItem or UndertaleEmbeddedAudio or UndertaleEmbeddedTexture);
+                string notDataNewName = null;
+                if (obj is UndertaleTexturePageItem)
+                {
+                    notDataNewName = "PageItem " + list.Count;
+                }
+                if (obj is UndertaleEmbeddedAudio)
+                {
+                    notDataNewName = "EmbeddedSound " + list.Count;
+                }
+                if (obj is UndertaleEmbeddedTexture)
+                {
+                    notDataNewName = "Texture " + list.Count;
+                }
 
-                // Add the new item to the tree view
-                categoryNode.Children.Add(new ResourceNodeViewModel(newSound.Name.Content, newSound, this, referenceFinderService));
+                if (doMakeString)
+                {
+                    string assetTypeName = obj.GetType().Name.Replace("Undertale", "").Replace("GameObject", "Object").ToLower();
+                    string newName = $"{assetTypeName}{list.Count}";
+                    string? userNewName = await dialogService.ShowDialogAsync<TextInputViewModel, TextInputParameters, string>(new TextInputParameters($"Choose new {assetTypeName} name", "Name of new asset:", newName));
+                    if (userNewName is null)
+                    {
+                        return;
+                    }
+                    if (IsValidAssetIdentifier(userNewName))
+                    {
+                        newName = userNewName;
+                    }
+                    else
+                    {
+                        if (await App.Current!.ShowQuestionWithCancel($"Asset name \"{userNewName}\" is not a valid identifier. Add a new asset using an auto-generated name instead?",
+                            MsBox.Avalonia.Enums.Icon.Warning, "Invalid name") != MsBox.Avalonia.Enums.ButtonResult.Yes)
+                        {
+                            return;
+                        }
+                    }
+                    namedResource.Name = AppConstants.Data.Strings.MakeString(newName);
+                    if (obj is UndertaleRoom roomResource)
+                    {
+                        if (AppConstants.Data.IsGameMaker2())
+                        {
+                            roomResource.Caption = null;
+                            roomResource.Backgrounds.Clear();
+                            if (AppConstants.Data.IsVersionAtLeast(2024, 13))
+                            {
+                                roomResource.Flags |= UndertaleRoom.RoomEntryFlags.IsGM2024_13;
+                                roomResource.InstanceCreationOrderIDs ??= new();
+                            }
+                            else
+                            {
+                                roomResource.Flags |= UndertaleRoom.RoomEntryFlags.IsGMS2;
+                                if (AppConstants.Data.IsVersionAtLeast(2, 3))
+                                {
+                                    roomResource.Flags |= UndertaleRoom.RoomEntryFlags.IsGMS2_3;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            roomResource.Caption = AppConstants.Data.Strings.MakeString("");
+                        }
+
+                        if (await App.Current!.ShowQuestion("Add the new room to the end of the room order list?", MsBox.Avalonia.Enums.Icon.Question, "Add to room order list") == MsBox.Avalonia.Enums.ButtonResult.Yes)
+                        {
+                            AppConstants.Data.GeneralInfo.RoomOrder.Add(new(roomResource));
+                        }
+                    }
+                    else if (obj is UndertaleScript scriptResource)
+                    {
+                        if (AppConstants.Data.IsVersionAtLeast(2, 3))
+                        {
+                            scriptResource.Code = UndertaleCode.CreateEmptyEntry(AppConstants.Data, $"gml_GlobalScript_{newName}");
+                            if (AppConstants.Data.GlobalInitScripts is IList<UndertaleGlobalInit> globalInitScripts)
+                            {
+                                globalInitScripts.Add(new UndertaleGlobalInit()
+                                {
+                                    Code = scriptResource.Code
+                                });
+                            }
+                        }
+                        else
+                        {
+                            scriptResource.Code = UndertaleCode.CreateEmptyEntry(AppConstants.Data, $"gml_Script_{newName}");
+                        }
+                    }
+                    else if (obj is UndertaleCode codeResource)
+                    {
+                        if (AppConstants.Data.CodeLocals is not null)
+                        {
+                            codeResource.LocalsCount = 1;
+                            UndertaleCodeLocals.CreateEmptyEntry(AppConstants.Data, codeResource.Name);
+                        }
+                        else
+                        {
+                            codeResource.WeirdLocalFlag = true;
+                        }
+                    }
+                    else if (obj is UndertaleExtension extension)
+                    {
+                        extension.FolderName = AppConstants.Data.Strings.MakeString("");
+                        extension.ClassName = AppConstants.Data.Strings.MakeString("");
+                        extension.Version = AppConstants.Data.Strings.MakeString("1.0.0");
+
+                        if (UndertaleExtension.ProductDataEligible(AppConstants.Data))
+                        {
+                            var newProductID = new byte[] { 0xBA, 0x5E, 0xBA, 0x11, 0xBA, 0xDD, 0x06, 0x60, 0xBE, 0xEF, 0xED, 0xBA, 0x0B, 0xAB, 0xBA, 0xBE };
+                            AppConstants.Data.FORM.EXTN.productIdData.Add(newProductID);
+                        }
+                    }
+                    else if (obj is UndertaleShader shader)
+                    {
+                        shader.GLSL_ES_Vertex = AppConstants.Data.Strings.MakeString("", true);
+                        shader.GLSL_ES_Fragment = AppConstants.Data.Strings.MakeString("", true);
+                        shader.GLSL_Vertex = AppConstants.Data.Strings.MakeString("", true);
+                        shader.GLSL_Fragment = AppConstants.Data.Strings.MakeString("", true);
+                        shader.HLSL9_Vertex = AppConstants.Data.Strings.MakeString("", true);
+                        shader.HLSL9_Fragment = AppConstants.Data.Strings.MakeString("", true);
+                    }
+                }
+                else
+                {
+                    namedResource.Name = new UndertaleString(notDataNewName);
+                }
             }
-            // ... add logic for other categories
+            else if (obj is UndertaleString str)
+            {
+                str.Content = "string" + list.Count;
+            }
+            list.Add(obj);
+
+            categoryNode.ReloadChildren();
+            OpenAssetInNewTab(obj);
+        }
+
+        private static bool IsValidAssetIdentifier(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return false;
+            }
+
+            char firstChar = name[0];
+            if (!char.IsAsciiLetter(firstChar) && firstChar != '_')
+            {
+                return false;
+            }
+            foreach (char c in name.Skip(1))
+            {
+                if (!char.IsAsciiLetterOrDigit(c) && c != '_')
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         [RelayCommand]
-        private void DeleteItem(ResourceNodeViewModel? resourceNode)
+        private async Task DeleteItem(ResourceNodeViewModel? resourceNode)
         {
-            if (resourceNode?.Model is not UndertaleObject resource) return;
+            if (resourceNode?.Model is not UndertaleResource resource) return;
+            if (AppConstants.Data?[resource.GetType()] is not IList list || !list.Contains(resource)) return;
 
-            // Find the parent node to remove the child from its collection
-            // (This requires having a reference to the parent in the child node, or searching the tree)
-
-            // Then, remove the item from the main data list
-            // For example:
-            if (resource is UndertaleSound sound)
+            bool isLast = list.IndexOf(resource) == list.Count - 1;
+            if (await App.Current!.ShowQuestion("Delete " + resource + "?" + (!isLast ? "\n\nNote that the code often references objects by ID, so this operation is likely to break stuff because other items will shift up!" : ""),
+                isLast ? MsBox.Avalonia.Enums.Icon.Question : MsBox.Avalonia.Enums.Icon.Warning, "Confirmation") != MsBox.Avalonia.Enums.ButtonResult.Yes)
             {
-                AppConstants.Data.Sounds.Remove(sound);
-                // And also remove the ViewModel node from the tree
-                // ParentNode.Children.Remove(resourceNode);
+                return;
             }
+
+            list.Remove(resource);
+
+            RemoveAssetFromTabs(resource);
+            RemoveNodeFromTree(resourceNode, list);
+        }
+
+        private void RemoveAssetFromTabs(object asset)
+        {
+            bool IsAsset(object obj) => obj is EditorContentViewModel content && ReferenceEquals(content.Asset, asset);
+
+            foreach (TabViewModel tab in Tabs.Where(x => IsAsset(x.CurrentObject)).ToList())
+            {
+                CloseTab(tab, Tabs.Count == 1);
+            }
+
+            ClosedTabsHistory.RemoveAll(x => IsAsset(x.CurrentObject));
+
+            foreach (TabViewModel tab in Tabs.Concat(ClosedTabsHistory))
+            {
+                for (int i = tab.History.Count - 1; i >= 0; i--)
+                {
+                    if (!IsAsset(tab.History[i]))
+                        continue;
+
+                    if (i < tab.HistoryPosition)
+                        tab.HistoryPosition--;
+
+                    tab.History.RemoveAt(i);
+                }
+
+                for (int i = tab.History.Count - 1; i > 0; i--)
+                {
+                    if (tab.History[i] is not EditorContentViewModel { Asset: not null } current
+                        || tab.History[i - 1] is not EditorContentViewModel previous
+                        || !ReferenceEquals(current.Asset, previous.Asset))
+                        continue;
+
+                    int duplicate = tab.History[i] == tab.CurrentObject ? i - 1 : i;
+                    if (duplicate < tab.HistoryPosition)
+                        tab.HistoryPosition--;
+
+                    tab.History.RemoveAt(duplicate);
+                }
+            }
+
+            NotifyHistoryChanged();
+        }
+
+        private void RemoveNodeFromTree(ResourceNodeViewModel resourceNode, IList list)
+        {
+            ResourceNodeViewModel? category = FindNode(FilteredRootNodes, x => x.CanAddItem && ReferenceEquals(x.SourceList, list));
+            if (category is not null)
+                category.ReloadChildren();
+            else
+                FindNode(FilteredRootNodes, x => x.Children.Contains(resourceNode))?.Children.Remove(resourceNode);
+
+            if (SelectedNode == resourceNode)
+                SelectedNode = null;
+        }
+
+        private static ResourceNodeViewModel? FindNode(IEnumerable<ResourceNodeViewModel> nodes, Func<ResourceNodeViewModel, bool> match)
+        {
+            foreach (ResourceNodeViewModel node in nodes)
+            {
+                if (match(node))
+                    return node;
+
+                ResourceNodeViewModel? found = FindNode(node.Children, match);
+                if (found is not null)
+                    return found;
+            }
+
+            return null;
         }
 
         [RelayCommand]

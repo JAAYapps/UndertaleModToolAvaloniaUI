@@ -111,6 +111,9 @@
 				<TreeView Grid.Column="0" Grid.Row="1" Name="MainTree" Margin="5"
 						  ItemsSource="{Binding FilteredRootNodes}"
 						  SelectedItem="{Binding SelectedNode}">
+					<TreeView.KeyBindings>
+						<KeyBinding Gesture="Delete" Command="{Binding DeleteItemCommand}" CommandParameter="{Binding SelectedNode}"/>
+					</TreeView.KeyBindings>
 					<TreeView.Styles>
 						<Style Selector="TreeViewItem" x:DataType="vmComponents:ResourceNodeViewModel">
 							<Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
@@ -134,12 +137,12 @@
 									<MenuItem Header="Add"
 											  Command="{Binding AddItemCommand}"
 											  CommandParameter="{Binding}"
-											  IsVisible="{Binding IsCategory}" />
+											  IsVisible="{Binding CanAddItem}" />
 
 									<MenuItem Header="Delete"
 											  Command="{Binding DeleteItemCommand}"
 											  CommandParameter="{Binding}"
-											  IsVisible="{Binding IsResourceItem}" />
+											  IsVisible="{Binding CanDeleteItem}" />
 								</MenuFlyout>
 							</Setter>
 						</Style>

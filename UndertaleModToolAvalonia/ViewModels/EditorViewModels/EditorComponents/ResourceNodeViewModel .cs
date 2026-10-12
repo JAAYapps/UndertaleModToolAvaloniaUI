@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -32,6 +33,12 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
 
         public bool IsResourceItem => !IsCategory;
 
+        public IList? SourceList => sourceChildren as IList;
+
+        public bool CanAddItem { get; }
+
+        public bool CanDeleteItem => Model is UndertaleResource;
+
         public ICommand AddItemCommand { get; }
 
         public ICommand CopyItemToClipboardCommand { get; }
@@ -63,6 +70,9 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
 
             // A node is a category if it doesn't represent a specific data model
             IsCategory = model is null || model is UndertaleData;
+
+            CanAddItem = sourceChildren is IList list && list.GetType().IsGenericType
+                         && typeof(UndertaleResource).IsAssignableFrom(list.GetType().GetGenericArguments()[0]);
 
             if (model is UndertaleObject resource)
             {
@@ -151,6 +161,23 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
         public void MarkAsLoaded()
         {
             isLoaded = true;
+        }
+
+        public void ReloadChildren()
+        {
+            isLoaded = false;
+
+            if (IsExpanded)
+            {
+                LoadChildren();
+                return;
+            }
+
+            Children.Clear();
+            if (sourceChildren?.Any() == true)
+            {
+                Children.Add(new ResourceNodeViewModel("Loading...", null, editorVM, referenceFinderService));
+            }
         }
     }
 }
