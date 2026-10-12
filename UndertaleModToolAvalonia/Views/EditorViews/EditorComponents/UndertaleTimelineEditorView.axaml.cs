@@ -39,4 +39,12 @@ public partial class UndertaleTimelineEditorView : UserControl
         vm.UndertaleTimeline.Moments.Add(obj);
         UpdateLayout();
     }
+
+    private void ActionButton_DoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is not Button { DataContext: UndertaleTimeline.UndertaleTimelineMoment moment })
+            return;
+
+        moment.Event.Add(new UndertaleGameObject.EventAction());
+    }
 }

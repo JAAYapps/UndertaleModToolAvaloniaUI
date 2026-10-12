@@ -45,19 +45,24 @@
 						<DataGridTemplateColumn Header="Actions (Code Entries)" Width="3*">
 							<DataGridTemplateColumn.CellTemplate>
 								<DataTemplate>
-									<DataGrid ItemsSource="{Binding Event}" AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" 
-											  HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" 
-											  SelectionMode="Single">
-										<DataGrid.Columns>
-											<DataGridTemplateColumn Header="Code" Width="*">
-												<DataGridTemplateColumn.CellTemplate>
-													<DataTemplate>
-														<controls:UndertaleObjectReference ObjectReference="{Binding CodeId, Mode=TwoWay}" ObjectType="{x:Type undertale:UndertaleCode}" Margin="23,3,3,3" CanRemove="False"/>
-													</DataTemplate>
-												</DataGridTemplateColumn.CellTemplate>
-											</DataGridTemplateColumn>
-										</DataGrid.Columns>
-									</DataGrid>
+									<Grid RowDefinitions="*,*">
+										<DataGrid Grid.Row="0" ItemsSource="{Binding Event}" AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" 
+												  HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" 
+												  SelectionMode="Single">
+											<DataGrid.Columns>
+												<DataGridTemplateColumn Header="Code" Width="*">
+													<DataGridTemplateColumn.CellTemplate>
+														<DataTemplate>
+															<controls:UndertaleObjectReference ObjectReference="{Binding CodeId, Mode=TwoWay}" ObjectType="{x:Type undertale:UndertaleCode}" Margin="23,3,3,3" CanRemove="False"/>
+														</DataTemplate>
+													</DataGridTemplateColumn.CellTemplate>
+												</DataGridTemplateColumn>
+											</DataGrid.Columns>
+										</DataGrid>
+										<Button Grid.Row="1" HorizontalAlignment="Stretch" Margin="5" DoubleTapped="ActionButton_DoubleTapped">
+											<TextBlock Margin="5" TextAlignment="Center" FontStyle="Italic">Double click to add</TextBlock>
+										</Button>
+									</Grid>
 								</DataTemplate>
 							</DataGridTemplateColumn.CellTemplate>
 						</DataGridTemplateColumn>
