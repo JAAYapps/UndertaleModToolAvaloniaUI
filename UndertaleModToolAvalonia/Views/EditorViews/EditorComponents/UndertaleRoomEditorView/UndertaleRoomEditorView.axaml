@@ -7,6 +7,8 @@
              xmlns:converters="using:UndertaleModToolAvalonia.Converters"
              xmlns:controlConverters="using:UndertaleModToolAvalonia.Converters.ControlConverters"
              xmlns:local="using:UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleRoomEditorView"
+             xmlns:controls="using:UndertaleModToolAvalonia.Controls"
+             xmlns:app="using:UndertaleModToolAvalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleRoomEditorView.UndertaleRoomEditorView"
              x:DataType="vm:UndertaleRoomEditorViewModel">
@@ -17,6 +19,8 @@
             <controlConverters:NonexistentColorConverter x:Key="NonexistentColorConverter"/>
             <controlConverters:EnabledColorConverter x:Key="EnabledColorConverter"/>
             <controlConverters:MultiCollectionBinding x:Key="MultiCollectionBinding"/>
+            <controlConverters:LayerTypeConverter x:Key="LayerTypeConverter"/>
+            <converters:IsVersionAtLeastConverter x:Key="IsVersionAtLeastConverter"/>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
@@ -237,6 +241,677 @@
                                   Click="TreeViewMoveDownButton_Click"/>
                 </StackPanel>
             </Border>
+
+            <ScrollViewer Grid.Column="2" Margin="3,0,0,0" Name="ObjectEditor" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible"
+                          Content="{Binding SelectedObject}">
+                <ScrollViewer.Styles>
+                    <Style Selector="ScrollViewer#ObjectEditor TextBlock, ScrollViewer#ObjectEditor CheckBox">
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                    </Style>
+                </ScrollViewer.Styles>
+                <ScrollViewer.DataTemplates>
+                    <DataTemplate DataType="{x:Type undertale:UndertaleRoom}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="5"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Name</TextBlock>
+                            <controls:UndertaleStringReference Grid.Row="0" Grid.Column="2" Margin="3" ObjectReference="{Binding Name}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Caption</TextBlock>
+                            <controls:UndertaleStringReference Grid.Row="1" Grid.Column="2" Margin="3" ObjectReference="{Binding Caption}"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Size</TextBlock>
+                            <Grid Grid.Row="2" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding Width}"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding Height}"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Speed</TextBlock>
+                            <TextBox Grid.Row="3" Grid.Column="2" Margin="3" Text="{Binding Speed}"/>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Persistent</TextBlock>
+                            <CheckBox Grid.Row="4" Grid.Column="2" Margin="3" IsChecked="{Binding Persistent}"/>
+
+                            <TextBlock Grid.Row="5" Grid.Column="0" Margin="3" IsVisible="{Binding Flags, Mode=OneTime, Converter={StaticResource IsGMS2Converter}}">Background color</TextBlock>
+                            <controls:ColorPicker Grid.Row="5" Grid.Column="2" Margin="3" Color="{Binding BackgroundColor}" HasAlpha="False" IsVisible="{Binding Flags, Mode=OneTime, Converter={StaticResource IsGMS2Converter}}"/>
+
+                            <TextBlock Grid.Row="6" Grid.Column="0" Margin="3" IsVisible="{Binding Flags, Mode=OneTime, Converter={StaticResource IsGMS2Converter}}">Draw background color</TextBlock>
+                            <CheckBox Grid.Row="6" Grid.Column="2" Margin="3" IsChecked="{Binding DrawBackgroundColor}" IsVisible="{Binding Flags, Mode=OneTime, Converter={StaticResource IsGMS2Converter}}"/>
+
+                            <TextBlock Grid.Row="7" Grid.Column="0" Margin="3">Creation Code</TextBlock>
+                            <controls:UndertaleObjectReference Grid.Row="7" Grid.Column="2" Margin="3" ObjectReference="{Binding CreationCodeId}" ObjectType="{x:Type undertale:UndertaleCode}"
+                                                               UndertaleData="{x:Static Member=app:AppConstants.Data}"
+                                                               Room="{Binding}"/>
+
+                            <TextBlock Grid.Row="8" Grid.Column="0" Margin="3">Flags</TextBlock>
+                            <controls:FlagsBox Grid.Row="8" Grid.Column="2" Margin="3" Value="{Binding Flags, Converter={StaticResource IsGMS2Converter}, ConverterParameter=flags}"/>
+
+                            <TextBlock Grid.Row="9" Grid.Column="0" Margin="3">World</TextBlock>
+                            <TextBox Grid.Row="9" Grid.Column="2" Margin="3" Text="{Binding World}"/>
+
+                            <TextBlock Grid.Row="10" Grid.Column="0" Margin="3">Top/Left/Right/Bottom</TextBlock>
+                            <Grid Grid.Row="10" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding Top}"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding Left}"/>
+                                <TextBox Grid.Column="2" Margin="3" Text="{Binding Right}"/>
+                                <TextBox Grid.Column="3" Margin="3" Text="{Binding Bottom}"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="11" Grid.Column="0" Margin="3">Gravity</TextBlock>
+                            <Grid Grid.Row="11" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding GravityX}" ToolTip.Tip="X"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding GravityY}" ToolTip.Tip="Y"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="12" Grid.Column="0" Margin="3">Grid Width</TextBlock>
+                            <TextBox Grid.Row="12" Grid.Column="2" Margin="3" Text="{Binding GridWidth}"/>
+
+                            <TextBlock Grid.Row="13" Grid.Column="0" Margin="3">Grid Height</TextBlock>
+                            <TextBox Grid.Row="13" Grid.Column="2" Margin="3" Text="{Binding GridHeight}"/>
+
+                            <TextBlock Grid.Row="14" Grid.Column="0" Margin="3">Grid Thickness</TextBlock>
+                            <TextBox Grid.Row="14" Grid.Column="2" Margin="3" Text="{Binding GridThicknessPx}"/>
+                        </Grid>
+                    </DataTemplate>
+
+                    <DataTemplate DataType="{x:Type undertale:UndertaleRoom+Background}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="5"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Enabled</TextBlock>
+                            <CheckBox Grid.Row="0" Grid.Column="2" Margin="3" IsChecked="{Binding Enabled}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Foreground</TextBlock>
+                            <CheckBox Grid.Row="1" Grid.Column="2" Margin="3" IsChecked="{Binding Foreground}"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Definition</TextBlock>
+                            <controls:UndertaleObjectReference Grid.Row="2" Grid.Column="2" Margin="3" ObjectReference="{Binding BackgroundDefinition}" ObjectType="{x:Type undertale:UndertaleBackground}" CanRemove="True"/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Position</TextBlock>
+                            <Grid Grid.Row="3" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding X}" ToolTip.Tip="X"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding Y}" ToolTip.Tip="Y"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Tiling</TextBlock>
+                            <Grid Grid.Row="4" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <CheckBox Grid.Column="0" Margin="3" IsChecked="{Binding TiledHorizontally}" ToolTip.Tip="Horizontal"/>
+                                <CheckBox Grid.Column="1" Margin="3" IsChecked="{Binding TiledVertically}" ToolTip.Tip="Vertical"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="5" Grid.Column="0" Margin="3">Speed</TextBlock>
+                            <Grid Grid.Row="5" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding SpeedX}" ToolTip.Tip="X"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding SpeedY}" ToolTip.Tip="Y"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="6" Grid.Column="0" Margin="3">Stretch</TextBlock>
+                            <CheckBox Grid.Row="6" Grid.Column="2" Margin="3" IsChecked="{Binding Stretch}"/>
+                        </Grid>
+                    </DataTemplate>
+
+                    <DataTemplate DataType="{x:Type undertale:UndertaleRoom+View}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="5"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Enabled</TextBlock>
+                            <CheckBox Grid.Row="0" Grid.Column="2" Margin="3" IsChecked="{Binding Enabled}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Pos/size</TextBlock>
+                            <Grid Grid.Row="1" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding ViewX}" ToolTip.Tip="X"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding ViewY}" ToolTip.Tip="Y"/>
+                                <TextBox Grid.Column="2" Margin="3" Text="{Binding ViewWidth}" ToolTip.Tip="Width"/>
+                                <TextBox Grid.Column="3" Margin="3" Text="{Binding ViewHeight}" ToolTip.Tip="Height"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Port pos/size</TextBlock>
+                            <Grid Grid.Row="2" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding PortX}" ToolTip.Tip="X"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding PortY}" ToolTip.Tip="Y"/>
+                                <TextBox Grid.Column="2" Margin="3" Text="{Binding PortWidth}" ToolTip.Tip="Width"/>
+                                <TextBox Grid.Column="3" Margin="3" Text="{Binding PortHeight}" ToolTip.Tip="Height"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Border</TextBlock>
+                            <Grid Grid.Row="3" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding BorderX}" ToolTip.Tip="X"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding BorderY}" ToolTip.Tip="Y"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Speed</TextBlock>
+                            <Grid Grid.Row="4" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding SpeedX}" ToolTip.Tip="X"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding SpeedY}" ToolTip.Tip="Y"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="5" Grid.Column="0" Margin="3">Follows object</TextBlock>
+                            <controls:UndertaleObjectReference Grid.Row="5" Grid.Column="2" Margin="3" ObjectReference="{Binding ObjectId}" ObjectType="{x:Type undertale:UndertaleGameObject}"/>
+                        </Grid>
+                    </DataTemplate>
+
+                    <DataTemplate DataType="{x:Type undertale:UndertaleRoom+GameObject}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="5"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Margin="3" Foreground="{Binding !Nonexistent, Converter={StaticResource EnabledColorConverter}}">Position</TextBlock>
+                            <Grid Grid.Row="0" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding X}" ToolTip.Tip="X" IsEnabled="{Binding !Nonexistent}"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding Y}" ToolTip.Tip="Y" IsEnabled="{Binding !Nonexistent}"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Margin="3" Foreground="{Binding !Nonexistent, Converter={StaticResource EnabledColorConverter}}">Definition</TextBlock>
+                            <controls:UndertaleObjectReference Grid.Row="1" Grid.Column="2" Margin="3" ObjectReference="{Binding ObjectDefinition}" ObjectType="{x:Type undertale:UndertaleGameObject}" CanRemove="False" IsEnabled="{Binding !Nonexistent}"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Margin="3" Foreground="{Binding !Nonexistent, Converter={StaticResource EnabledColorConverter}}">Instance ID</TextBlock>
+                            <TextBox Grid.Row="2" Grid.Column="2" Margin="3" Text="{Binding InstanceID}" IsEnabled="{Binding !Nonexistent}"/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Margin="3" Foreground="{Binding !Nonexistent, Converter={StaticResource EnabledColorConverter}}">Creation code</TextBlock>
+                            <controls:UndertaleObjectReference Grid.Row="3" Grid.Column="2" Margin="3" ObjectReference="{Binding CreationCode}" ObjectType="{x:Type undertale:UndertaleCode}"
+                                                               UndertaleData="{x:Static Member=app:AppConstants.Data}"
+                                                               Room="{Binding $parent[UserControl].DataContext.(vm:UndertaleRoomEditorViewModel).Room}"
+                                                               RoomGameObject="{Binding}"
+                                                               IsPreCreate="False"
+                                                               IsEnabled="{Binding !Nonexistent}"/>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Margin="3" Foreground="{Binding !Nonexistent, Converter={StaticResource EnabledColorConverter}}">Scale</TextBlock>
+                            <Grid Grid.Row="4" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding ScaleX}" ToolTip.Tip="X" IsEnabled="{Binding !Nonexistent}"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding ScaleY}" ToolTip.Tip="Y" IsEnabled="{Binding !Nonexistent}"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="5" Grid.Column="0" Margin="3" Foreground="{Binding !Nonexistent, Converter={StaticResource EnabledColorConverter}}">Color</TextBlock>
+                            <controls:ColorPicker Grid.Row="5" Grid.Column="2" Margin="3" Color="{Binding Color}" IsEnabled="{Binding !Nonexistent}"/>
+
+                            <TextBlock Grid.Row="6" Grid.Column="0" Margin="3" Foreground="{Binding !Nonexistent, Converter={StaticResource EnabledColorConverter}}">Rotation</TextBlock>
+                            <TextBox Grid.Row="6" Grid.Column="2" Margin="3" Text="{Binding Rotation}" IsEnabled="{Binding !Nonexistent}"/>
+
+                            <Grid Grid.Row="7" Grid.ColumnSpan="3" IsVisible="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2.2.2.302}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="5"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Margin="3" Foreground="{Binding !Nonexistent, Converter={StaticResource EnabledColorConverter}}">Frame index</TextBlock>
+                                <TextBox Grid.Row="0" Grid.Column="2" Margin="3" Text="{Binding ImageIndex}" IsEnabled="{Binding !Nonexistent}"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Margin="3" Foreground="{Binding !Nonexistent, Converter={StaticResource EnabledColorConverter}}">Image speed</TextBlock>
+                                <TextBox Grid.Row="1" Grid.Column="2" Margin="3" Text="{Binding ImageSpeed}" IsEnabled="{Binding !Nonexistent}"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="8" Grid.Column="0" Margin="3" Foreground="{Binding !Nonexistent, Converter={StaticResource EnabledColorConverter}}">Pre Create code</TextBlock>
+                            <controls:UndertaleObjectReference Grid.Row="8" Grid.Column="2" Margin="3" ObjectReference="{Binding PreCreateCode}" ObjectType="{x:Type undertale:UndertaleCode}"
+                                                               UndertaleData="{x:Static Member=app:AppConstants.Data}"
+                                                               Room="{Binding $parent[UserControl].DataContext.(vm:UndertaleRoomEditorViewModel).Room}"
+                                                               RoomGameObject="{Binding}"
+                                                               IsPreCreate="True"
+                                                               IsEnabled="{Binding !Nonexistent}"/>
+                        </Grid>
+                    </DataTemplate>
+
+                    <DataTemplate DataType="{x:Type undertale:UndertaleRoom+Tile}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="5"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Position</TextBlock>
+                            <Grid Grid.Row="0" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding X}" ToolTip.Tip="X"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding Y}" ToolTip.Tip="Y"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Definition</TextBlock>
+                            <controls:UndertaleObjectReference Grid.Row="1" Grid.Column="2" Margin="3" ObjectReference="{Binding ObjectDefinition}" CanRemove="False"
+                                                               ObjectType="{Binding $parent[UserControl].DataContext.(vm:UndertaleRoomEditorViewModel).TileDefinitionType, Mode=OneTime}"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Source</TextBlock>
+                            <Grid Grid.Row="2" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding SourceX}" ToolTip.Tip="X"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding SourceY}" ToolTip.Tip="Y"/>
+                                <TextBox Grid.Column="2" Margin="3" Text="{Binding Width}" ToolTip.Tip="Width"/>
+                                <TextBox Grid.Column="3" Margin="3" Text="{Binding Height}" ToolTip.Tip="Height"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Depth</TextBlock>
+                            <TextBox Grid.Row="3" Grid.Column="2" Margin="3" Text="{Binding TileDepth}"/>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Instance ID</TextBlock>
+                            <TextBox Grid.Row="4" Grid.Column="2" Margin="3" Text="{Binding InstanceID}"/>
+
+                            <TextBlock Grid.Row="5" Grid.Column="0" Margin="3">Scale</TextBlock>
+                            <Grid Grid.Row="5" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding ScaleX}" ToolTip.Tip="X"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding ScaleY}" ToolTip.Tip="Y"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="6" Grid.Column="0" Margin="3">Color</TextBlock>
+                            <controls:ColorPicker Grid.Row="6" Grid.Column="2" Margin="3" Color="{Binding Color}"/>
+                        </Grid>
+                    </DataTemplate>
+
+                    <DataTemplate DataType="{x:Type undertale:UndertaleRoom+Layer}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="5"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Layer name</TextBlock>
+                            <controls:UndertaleStringReference Grid.Row="0" Grid.Column="2" Margin="3" ObjectReference="{Binding LayerName}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Layer id</TextBlock>
+                            <TextBox Grid.Row="1" Grid.Column="2" Margin="3" Text="{Binding LayerId}"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Layer type</TextBlock>
+                            <TextBlock Grid.Row="2" Grid.Column="2" Margin="3" Text="{Binding LayerType}" FontWeight="Bold"/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Depth</TextBlock>
+                            <TextBox Grid.Row="3" Grid.Column="2" Margin="3" Text="{Binding LayerDepth}"/>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Margin="3" IsVisible="{Binding LayerType, Mode=OneTime, Converter={StaticResource LayerTypeConverter}}">Offset</TextBlock>
+                            <Grid Grid.Row="4" Grid.Column="2" IsVisible="{Binding LayerType, Mode=OneTime, Converter={StaticResource LayerTypeConverter}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding XOffset}" ToolTip.Tip="X"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding YOffset}" ToolTip.Tip="Y"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="5" Grid.Column="0" Margin="3" IsVisible="{Binding LayerType, Mode=OneTime, Converter={StaticResource LayerTypeConverter}}">Speed</TextBlock>
+                            <Grid Grid.Row="5" Grid.Column="2" IsVisible="{Binding LayerType, Mode=OneTime, Converter={StaticResource LayerTypeConverter}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding HSpeed}" ToolTip.Tip="Horizontal"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding VSpeed}" ToolTip.Tip="Vertical"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="6" Grid.Column="0" Margin="3">Visible</TextBlock>
+                            <CheckBox Grid.Row="6" Grid.Column="2" Margin="3" IsChecked="{Binding IsVisible}"/>
+
+                            <Separator Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3"/>
+
+                            <TextBlock Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="3" Margin="3" Text="Empty layer data." IsVisible="{Binding Data, Converter={x:Static ObjectConverters.IsNull}}"/>
+                            <ContentControl Name="LayerDataContent" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="3" Content="{Binding Data, Mode=OneTime}">
+                                <ContentControl.DataTemplates>
+                                    <DataTemplate DataType="{x:Type undertale:UndertaleRoom+Layer+LayerInstancesData}">
+                                        <TextBlock Margin="3" Text="Contains GameObject instances, listed in the tree on the left"/>
+                                    </DataTemplate>
+
+                                    <DataTemplate DataType="{x:Type undertale:UndertaleRoom+Layer+LayerTilesData}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="5"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Size</TextBlock>
+                                            <Grid Grid.Row="0" Grid.Column="2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox Grid.Column="0" Margin="3" Text="{Binding TilesX}" ToolTip.Tip="Horizontal"/>
+                                                <TextBox Grid.Column="1" Margin="3" Text="{Binding TilesY}" ToolTip.Tip="Vertical"/>
+                                                <Button Grid.Column="2" Margin="3" HorizontalAlignment="Stretch" Command="{Binding $parent[UserControl].DataContext.(vm:UndertaleRoomEditorViewModel).AutoSizeTilesCommand}" CommandParameter="{Binding}" ToolTip.Tip="Automatically set size to match room size">Auto</Button>
+                                            </Grid>
+
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Tile set</TextBlock>
+                                            <controls:UndertaleObjectReference Grid.Row="1" Grid.Column="2" Margin="3" ObjectReference="{Binding Background}" ObjectType="{x:Type undertale:UndertaleBackground}" CanRemove="False"/>
+                                        </Grid>
+                                    </DataTemplate>
+
+                                    <DataTemplate DataType="{x:Type undertale:UndertaleRoom+Layer+LayerBackgroundData}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="5"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Visible</TextBlock>
+                                            <CheckBox Grid.Row="0" Grid.Column="2" Margin="3" IsChecked="{Binding Visible}"/>
+
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Foreground</TextBlock>
+                                            <CheckBox Grid.Row="1" Grid.Column="2" Margin="3" IsChecked="{Binding Foreground}"/>
+
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Sprite</TextBlock>
+                                            <controls:UndertaleObjectReference Grid.Row="2" Grid.Column="2" Margin="3" ObjectReference="{Binding Sprite}" ObjectType="{x:Type undertale:UndertaleSprite}" CanRemove="False"/>
+
+                                            <TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Tiling</TextBlock>
+                                            <Grid Grid.Row="3" Grid.Column="2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <CheckBox Grid.Column="0" Margin="3" IsChecked="{Binding TiledHorizontally}" ToolTip.Tip="Horizontal"/>
+                                                <CheckBox Grid.Column="1" Margin="3" IsChecked="{Binding TiledVertically}" ToolTip.Tip="Vertical"/>
+                                            </Grid>
+
+                                            <TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Stretch</TextBlock>
+                                            <CheckBox Grid.Row="4" Grid.Column="2" Margin="3" IsChecked="{Binding Stretch}"/>
+
+                                            <TextBlock Grid.Row="5" Grid.Column="0" Margin="3">Color</TextBlock>
+                                            <controls:ColorPicker Grid.Row="5" Grid.Column="2" Margin="3" Color="{Binding Color}"/>
+
+                                            <TextBlock Grid.Row="6" Grid.Column="0" Margin="3">First frame</TextBlock>
+                                            <TextBox Grid.Row="6" Grid.Column="2" Margin="3" Text="{Binding FirstFrame}"/>
+
+                                            <TextBlock Grid.Row="7" Grid.Column="0" Margin="3">Animation speed</TextBlock>
+                                            <Grid Grid.Row="7" Grid.Column="2" Margin="3">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="2*"/>
+                                                    <ColumnDefinition Width="1*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox Grid.Column="0" Text="{Binding AnimationSpeed}"/>
+                                                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding $parent[UserControl].DataContext.(vm:UndertaleRoomEditorViewModel).AnimationSpeedTypes}" SelectedItem="{Binding AnimationSpeedType}"/>
+                                            </Grid>
+                                        </Grid>
+                                    </DataTemplate>
+
+                                    <DataTemplate DataType="{x:Type undertale:UndertaleRoom+Layer+LayerAssetsData}">
+                                        <TextBlock Margin="3" Text="Contains legacy tiles and sprites, listed in the tree on the left"/>
+                                    </DataTemplate>
+                                </ContentControl.DataTemplates>
+                            </ContentControl>
+                        </Grid>
+                    </DataTemplate>
+
+                    <DataTemplate DataType="{x:Type undertale:UndertaleRoom+SpriteInstance}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="5"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Name</TextBlock>
+                            <controls:UndertaleStringReference Grid.Row="0" Grid.Column="2" Margin="3" ObjectReference="{Binding Name}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Definition</TextBlock>
+                            <controls:UndertaleObjectReference Grid.Row="1" Grid.Column="2" Margin="3" ObjectReference="{Binding Sprite}" ObjectType="{x:Type undertale:UndertaleSprite}" CanRemove="False"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Position</TextBlock>
+                            <Grid Grid.Row="2" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding X}" ToolTip.Tip="X"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding Y}" ToolTip.Tip="Y"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Scale</TextBlock>
+                            <Grid Grid.Row="3" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding ScaleX}" ToolTip.Tip="X"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding ScaleY}" ToolTip.Tip="Y"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Color</TextBlock>
+                            <controls:ColorPicker Grid.Row="4" Grid.Column="2" Margin="3" Color="{Binding Color}"/>
+
+                            <TextBlock Grid.Row="5" Grid.Column="0" Margin="3">Animation speed</TextBlock>
+                            <Grid Grid.Row="5" Grid.Column="2" Margin="3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding AnimationSpeed}"/>
+                                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding $parent[UserControl].DataContext.(vm:UndertaleRoomEditorViewModel).AnimationSpeedTypes}" SelectedItem="{Binding AnimationSpeedType}"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="6" Grid.Column="0" Margin="3">Frame index</TextBlock>
+                            <TextBox Grid.Row="6" Grid.Column="2" Margin="3" Text="{Binding FrameIndex}"/>
+
+                            <TextBlock Grid.Row="7" Grid.Column="0" Margin="3">Rotation</TextBlock>
+                            <TextBox Grid.Row="7" Grid.Column="2" Margin="3" Text="{Binding Rotation}"/>
+                        </Grid>
+                    </DataTemplate>
+
+                    <DataTemplate DataType="{x:Type undertale:UndertaleRoom+ParticleSystemInstance}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="5"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Name</TextBlock>
+                            <controls:UndertaleStringReference Grid.Row="0" Grid.Column="2" Margin="3" ObjectReference="{Binding Name}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Definition</TextBlock>
+                            <controls:UndertaleObjectReference Grid.Row="1" Grid.Column="2" Margin="3" ObjectReference="{Binding ParticleSystem}" ObjectType="{x:Type undertale:UndertaleParticleSystem}" CanRemove="False"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Position</TextBlock>
+                            <Grid Grid.Row="2" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding X}" ToolTip.Tip="X"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding Y}" ToolTip.Tip="Y"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Scale</TextBlock>
+                            <Grid Grid.Row="3" Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Margin="3" Text="{Binding ScaleX}" ToolTip.Tip="X"/>
+                                <TextBox Grid.Column="1" Margin="3" Text="{Binding ScaleY}" ToolTip.Tip="Y"/>
+                            </Grid>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Color</TextBlock>
+                            <controls:ColorPicker Grid.Row="4" Grid.Column="2" Margin="3" Color="{Binding Color}"/>
+
+                            <TextBlock Grid.Row="5" Grid.Column="0" Margin="3">Rotation</TextBlock>
+                            <TextBox Grid.Row="5" Grid.Column="2" Margin="3" Text="{Binding Rotation}"/>
+
+                            <TextBlock Grid.Row="6" Grid.Column="0" Margin="3" IsVisible="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2024.14}">Instance ID</TextBlock>
+                            <TextBox Grid.Row="6" Grid.Column="2" Margin="3" Text="{Binding InstanceID}" IsVisible="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2024.14}"/>
+                        </Grid>
+                    </DataTemplate>
+                </ScrollViewer.DataTemplates>
+            </ScrollViewer>
         </Grid>
     </Grid>
 </UserControl>

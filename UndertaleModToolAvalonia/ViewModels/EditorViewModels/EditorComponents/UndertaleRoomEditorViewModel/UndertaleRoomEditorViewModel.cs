@@ -53,6 +53,11 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
 
         public string GameObjectsHeader => IsGMS2Room ? "Game objects (from all layers)" : "Game objects";
 
+        public Type TileDefinitionType => UndertaleHelper.IsGMS2 ? typeof(UndertaleSprite) : typeof(UndertaleBackground);
+
+        public AnimationSpeedType[] AnimationSpeedTypes { get; } = 
+            Enum.GetValues<AnimationSpeedType>();
+
         partial void OnSelectedObjectChanged(object value)
         {
             if (value is UndertaleRoom.Layer layer)
@@ -133,6 +138,24 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
 
             if (clearEditor)
                 SelectedObject = null;
+        }
+
+        [RelayCommand]
+        private async Task AutoSizeTiles(Layer.LayerTilesData data)
+        {
+            if (data is null) return;
+
+            if (data.Background is null)
+            {
+                await App.Current!.ShowMessage("The layer must have a tileset set!");
+                return;
+            }
+            data.TilesX = (uint)Math.Ceiling(
+                Convert.ToDouble(Room.Width) / Convert.ToDouble(data.Background.GMS2TileWidth)
+            );
+            data.TilesY = (uint)Math.Ceiling(
+                Convert.ToDouble(Room.Height) / Convert.ToDouble(data.Background.GMS2TileHeight)
+            );
         }
 
         public async Task<bool> MoveItem(UndertaleObject obj, int dist, bool isInAllGameObjectsList)
