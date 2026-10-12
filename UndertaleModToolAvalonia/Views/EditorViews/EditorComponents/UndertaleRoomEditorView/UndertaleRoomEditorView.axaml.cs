@@ -39,11 +39,13 @@ public partial class UndertaleRoomEditorView : UserControl
     private bool placingTiles = false;
     private readonly List<Point> placedTiles = new();
     private double scaleOriginX, scaleOriginY;
+    private Point lastMousePos;
 
     public UndertaleRoomEditorView()
     {
         InitializeComponent();
         RoomObjectsTree.AddHandler(GotFocusEvent, RoomObjectsTree_GotFocus, RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(KeyDownEvent, UndertaleRoomEditorView_KeyDown, RoutingStrategies.Bubble);
         ZoomBorder.AddHandler(DragDrop.DragOverEvent, RoomGraphics_DragOver);
         ZoomBorder.AddHandler(DragDrop.DropEvent, RoomGraphics_Drop);
     }
@@ -66,6 +68,7 @@ public partial class UndertaleRoomEditorView : UserControl
         }
 
         currentViewModel.SetupRoom();
+        GameObjItems.ContextFlyout = currentViewModel.IsGMS2Room ? null : Resources["GameObjectsFlyout"] as MenuFlyout;
         currentViewModel.PropertyChanged += ViewModel_PropertyChanged;
     }
 
@@ -119,8 +122,8 @@ public partial class UndertaleRoomEditorView : UserControl
 
         if (e.Key == Key.Delete)
             vm.DeleteItemCommand.Execute(selectedObj);
-        else if (e.Key == Key.C && e.KeyModifiers == KeyModifiers.Control)
-            vm.CopyCommand.Execute(selectedObj);
+        else if (e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Alt))
+            return;
         else if (e.Key == Key.X && selectedObj is GameObject { ObjectDefinition.Sprite: not null } objx)
         {
             objx.ScaleX *= -1;
@@ -135,6 +138,39 @@ public partial class UndertaleRoomEditorView : UserControl
             await MoveItem(selectedObj, -1);
         else if (e.Key == Key.OemPlus)
             await MoveItem(selectedObj, 1);
+    }
+
+    private void UndertaleRoomEditorView_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Handled || DataContext is not UndertaleRoomEditorViewModel vm)
+            return;
+        if ((e.Source as Visual)?.FindAncestorOfType<TextBox>(includeSelf: true) is TextBox { IsReadOnly: false })
+            return;
+
+        if (e.KeyModifiers == KeyModifiers.Control && e.Key == Key.C)
+            vm.CopyCommand.Execute(vm.SelectedObject as UndertaleObject);
+        else if (e.KeyModifiers == KeyModifiers.Control && (e.Key == Key.V || e.Key == Key.P))
+            Paste();
+        else if (e.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift) && e.Key == Key.V)
+            Paste(true);
+        else if (e.KeyModifiers == KeyModifiers.Control && e.Key == Key.Z)
+            vm.UndoCommand.Execute(null);
+        else
+            return;
+
+        e.Handled = true;
+    }
+
+    private void Paste(bool shiftPressed = false)
+    {
+        if (DataContext is not UndertaleRoomEditorViewModel vm)
+            return;
+
+        Point mousePos = ZoomBorder.IsPointerOver ? lastMousePos : new();
+        UndertaleObject? newObj = vm.Paste(mousePos, shiftPressed);
+
+        if (newObj is not null)
+            SelectObject(newObj);
     }
 
     private void RoomObjectsTree_DoubleTapped(object? sender, TappedEventArgs e)
@@ -527,6 +563,7 @@ public partial class UndertaleRoomEditorView : UserControl
 
         UndertaleRoom room = vm.Room;
         Point mousePos = e.GetPosition(RoomGraphics);
+        lastMousePos = mousePos;
 
         if (placingTiles)
         {
@@ -711,6 +748,72 @@ public partial class UndertaleRoomEditorView : UserControl
             clickedTile.SourceX = (int)gridMouseCoordinates.X;
             clickedTile.SourceY = (int)gridMouseCoordinates.Y;
         }
+    }
+
+    private void SelectNewObject(UndertaleObject? newObj)
+    {
+        if (newObj is not null)
+            SelectObject(newObj);
+    }
+
+    private void MenuItem_NewLayerInstances_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is UndertaleRoomEditorViewModel vm)
+            SelectNewObject(vm.AddLayer<Layer.LayerInstancesData>(LayerType.Instances, "NewInstancesLayer"));
+    }
+
+    private void MenuItem_NewLayerTiles_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is UndertaleRoomEditorViewModel vm)
+            SelectNewObject(vm.AddLayer<Layer.LayerTilesData>(LayerType.Tiles, "NewTilesLayer"));
+    }
+
+    private void MenuItem_NewLayerBackground_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is UndertaleRoomEditorViewModel vm)
+            SelectNewObject(vm.AddLayer<Layer.LayerBackgroundData>(LayerType.Background, "NewBackgroundLayer"));
+    }
+
+    private void MenuItem_NewLayerAssets_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is UndertaleRoomEditorViewModel vm)
+            SelectNewObject(vm.AddLayer<Layer.LayerAssetsData>(LayerType.Assets, "NewAssetsLayer"));
+    }
+
+    private void MenuItem_NewGMS2ObjectInstance_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is UndertaleRoomEditorViewModel vm)
+            SelectNewObject(vm.AddGMS2ObjectInstance((sender as MenuItem)?.DataContext as Layer));
+    }
+
+    private void MenuItem_NewLegacyTile_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is UndertaleRoomEditorViewModel vm)
+            SelectNewObject(vm.AddLegacyTile((sender as MenuItem)?.DataContext as Layer));
+    }
+
+    private void MenuItem_NewSprite_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is UndertaleRoomEditorViewModel vm)
+            SelectNewObject(vm.AddSprite((sender as MenuItem)?.DataContext as Layer));
+    }
+
+    private void MenuItem_NewObjectInstance_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is UndertaleRoomEditorViewModel vm)
+            SelectNewObject(vm.AddObjectInstance());
+    }
+
+    private void MenuItem_NewGMS1Tile_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is UndertaleRoomEditorViewModel vm)
+            SelectNewObject(vm.AddGMS1Tile());
+    }
+
+    private void MenuItem_Paste_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is UndertaleRoomEditorViewModel vm)
+            SelectNewObject(vm.PasteInto((sender as MenuItem)?.DataContext as Layer));
     }
 
     private void MenuItem_Copy_Click(object? sender, RoutedEventArgs e)

@@ -20,6 +20,10 @@
             <controlConverters:NonexistentColorConverter x:Key="NonexistentColorConverter"/>
             <controlConverters:EnabledColorConverter x:Key="EnabledColorConverter"/>
             <controlConverters:MultiCollectionBinding x:Key="MultiCollectionBinding"/>
+            <MenuFlyout x:Key="GameObjectsFlyout">
+                <MenuItem Header="New object instance" Click="MenuItem_NewObjectInstance_Click"/>
+                <MenuItem Header="Paste object instance" Click="MenuItem_Paste_Click" InputGesture="Ctrl+V"/>
+            </MenuFlyout>
             <controlConverters:LayerTypeConverter x:Key="LayerTypeConverter"/>
             <converters:IsVersionAtLeastConverter x:Key="IsVersionAtLeastConverter"/>
             <controlConverters:RoomGridBrushConverter x:Key="RoomGridBrushConverter"/>
@@ -170,8 +174,23 @@
                     </TreeViewItem>
                     <TreeViewItem Name="GameObjItems" Header="{Binding GameObjectsHeader}" ItemsSource="{Binding Room.GameObjects, Mode=OneWay}" Background="Transparent"
                                   Foreground="{Binding IsNotGMS2Room, Converter={StaticResource EnabledColorConverter}}"/>
-                    <TreeViewItem Name="TileItems" Header="Tiles" ItemsSource="{Binding Room.Tiles, Mode=OneWay}" IsVisible="{Binding Room.Flags, Mode=OneTime, Converter={StaticResource IsGMS2Converter}}" Background="Transparent"/>
+                    <TreeViewItem Name="TileItems" Header="Tiles" ItemsSource="{Binding Room.Tiles, Mode=OneWay}" IsVisible="{Binding Room.Flags, Mode=OneTime, Converter={StaticResource IsGMS2Converter}}" Background="Transparent">
+                        <TreeViewItem.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuItem Header="New tile" Click="MenuItem_NewGMS1Tile_Click"/>
+                                <MenuItem Header="Paste tile" Click="MenuItem_Paste_Click" InputGesture="Ctrl+V"/>
+                            </MenuFlyout>
+                        </TreeViewItem.ContextFlyout>
+                    </TreeViewItem>
                     <TreeViewItem Name="LayerItems" Header="Layers" ItemsSource="{Binding Room.Layers, Mode=OneWay}" IsExpanded="True" IsVisible="{Binding Room.Flags, Mode=OneTime, Converter={StaticResource IsGMS2Converter}, ConverterParameter=invert}" Background="Transparent">
+                        <TreeViewItem.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuItem Header="New Instances layer" Click="MenuItem_NewLayerInstances_Click"/>
+                                <MenuItem Header="New Tiles layer" Click="MenuItem_NewLayerTiles_Click"/>
+                                <MenuItem Header="New Background layer" Click="MenuItem_NewLayerBackground_Click"/>
+                                <MenuItem Header="New Assets layer" Click="MenuItem_NewLayerAssets_Click"/>
+                            </MenuFlyout>
+                        </TreeViewItem.ContextFlyout>
                         <TreeViewItem.DataTemplates>
                             <local:LayerDataTemplateSelector>
                                 <local:LayerDataTemplateSelector.PathDataTemplate>
@@ -186,6 +205,8 @@
                                                    Foreground="{Binding IsVisible, Converter={StaticResource EnabledColorConverter}}">
                                             <TextBlock.ContextFlyout>
                                                 <MenuFlyout>
+                                                    <MenuItem Header="New object instance" Click="MenuItem_NewGMS2ObjectInstance_Click"/>
+                                                    <MenuItem Header="Paste object instance" Click="MenuItem_Paste_Click" InputGesture="Ctrl+V"/>
                                                     <MenuItem Header="Delete layer" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
                                                 </MenuFlyout>
                                             </TextBlock.ContextFlyout>
@@ -219,6 +240,9 @@
                                                    Foreground="{Binding IsVisible, Converter={StaticResource EnabledColorConverter}}">
                                             <TextBlock.ContextFlyout>
                                                 <MenuFlyout>
+                                                    <MenuItem Header="New legacy tile" Click="MenuItem_NewLegacyTile_Click"/>
+                                                    <MenuItem Header="New sprite instance" Click="MenuItem_NewSprite_Click"/>
+                                                    <MenuItem Header="Paste asset" Click="MenuItem_Paste_Click" InputGesture="Ctrl+V"/>
                                                     <MenuItem Header="Delete layer" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
                                                 </MenuFlyout>
                                             </TextBlock.ContextFlyout>

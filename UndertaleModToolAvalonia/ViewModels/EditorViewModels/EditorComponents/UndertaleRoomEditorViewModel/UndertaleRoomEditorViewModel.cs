@@ -227,6 +227,135 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
             return true;
         }
 
+        [RelayCommand]
+        private void Undo()
+        {
+            if (!undoStack.Any()) return;
+
+            var undoObject = undoStack.Pop();
+            if (undoObject is GameObject undoGameObject && SelectedObject is GameObject gameObjToChange)
+            {
+                if (gameObjToChange.InstanceID == undoGameObject.InstanceID)
+                {
+                    gameObjToChange.X = undoGameObject.X;
+                    gameObjToChange.Y = undoGameObject.Y;
+                    gameObjToChange.ScaleX = undoGameObject.ScaleX;
+                    gameObjToChange.ScaleY = undoGameObject.ScaleY;
+                }
+            }
+            if (undoObject is Tile undoTile && SelectedObject is Tile tileToChange)
+            {
+                if (tileToChange.InstanceID == undoTile.InstanceID)
+                {
+                    tileToChange.X = undoTile.X;
+                    tileToChange.Y = undoTile.Y;
+                }
+            }
+            Room.SetupRoom(false, false);
+        }
+
+        public UndertaleObject? Paste(Point mousePos, bool shiftPressed = false)
+        {
+            if (Copied is null)
+                return null;
+
+            Layer? layer = null;
+            if (Room.Layers.Count > 0)
+            {
+                layer = SelectedObject switch
+                {
+                    Tile tile => GetLayerOf(tile),
+                    GameObject gameObj => GetLayerOf(gameObj),
+                    SpriteInstance spr => GetLayerOf(spr),
+                    Layer l => l,
+                    _ => null
+                };
+            }
+
+            if (UndertaleHelper.IsGMS2 && layer == null)
+            {
+                _ = App.Current!.ShowError("Please select a layer.");
+                return null;
+            }
+
+            if (!shiftPressed)
+            {
+                int gridWidth = Math.Max(Convert.ToInt32(Room.GridWidth), 1);
+                int gridHeight = Math.Max(Convert.ToInt32(Room.GridHeight), 1);
+                mousePos = new Point(Math.Floor(mousePos.X / gridWidth) * gridWidth, Math.Floor(mousePos.Y / gridHeight) * gridHeight);
+            }
+
+            return AddObjectCopy(layer, Copied, true, -1, mousePos);
+        }
+
+        public UndertaleObject? PasteInto(Layer? layer)
+        {
+            if (Copied is null)
+                return null;
+
+            return AddObjectCopy(UndertaleHelper.IsGMS2 ? layer : null, Copied, true);
+        }
+
+        public GameObject AddObjectInstance()
+        {
+            var newObject = new GameObject { InstanceID = AppConstants.Data!.GeneralInfo.LastObj++ };
+            Room.GameObjects.Add(newObject);
+
+            return newObject;
+        }
+
+        public GameObject? AddGMS2ObjectInstance(Layer? layer)
+        {
+            GameObject newObject = new() { InstanceID = AppConstants.Data!.GeneralInfo.LastObj++ };
+            Room.GameObjects.Add(newObject);
+
+            if (layer is null)
+                return null;
+
+            layer.InstancesData.Instances.Add(newObject);
+            return newObject;
+        }
+
+        public Tile? AddLegacyTile(Layer? layer)
+        {
+            if (layer is null)
+                return null;
+
+            layer.AssetsData.LegacyTiles ??= new UndertalePointerList<Tile>();
+            layer.AssetsData.Sprites ??= new UndertalePointerList<SpriteInstance>();
+
+            var tile = new Tile { InstanceID = AppConstants.Data!.GeneralInfo.LastTile++ };
+            tile.spriteMode = true;
+            layer.AssetsData.LegacyTiles.Add(tile);
+
+            return tile;
+        }
+
+        public SpriteInstance? AddSprite(Layer? layer)
+        {
+            if (layer is null)
+                return null;
+
+            layer.AssetsData.Sprites ??= new UndertalePointerList<SpriteInstance>();
+
+            SpriteInstance spriteInstance = new()
+            {
+                Name = SpriteInstance.GenerateRandomName(AppConstants.Data)
+            };
+
+            layer.AssetsData.Sprites.Add(spriteInstance);
+
+            return spriteInstance;
+        }
+
+        public Tile AddGMS1Tile()
+        {
+            var tile = new Tile { InstanceID = AppConstants.Data!.GeneralInfo.LastTile++ };
+            Room.Tiles.Add(tile);
+
+            return tile;
+        }
+
         public void PushUndo(UndertaleObject obj)
         {
             if (obj is GameObject gameObj)
