@@ -22,7 +22,12 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
 {
     public partial class ReferenceResultNode : ObservableObject
     {
+        private const int PagingThreshold = 200;
+        private const int PageSize = 100;
+
+        private readonly FindReferencesResultsViewModel resultsVM;
         private readonly List<ReferenceResultNode> allChildren = new();
+        private List<ReferenceResultNode> visibleResults = new();
 
         [ObservableProperty]
         private bool isExpanded = true;
@@ -39,6 +44,8 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
 
         public ObservableRangeCollection<ReferenceResultNode> Children { get; } = new();
 
+        public IReadOnlyList<ReferenceResultNode> VisibleResults => visibleResults;
+
         public ICommand OpenInNewTabCommand { get; }
 
         public ICommand FindAllReferencesCommand { get; }
@@ -47,6 +54,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
         {
             Header = header;
             Model = model;
+            this.resultsVM = resultsVM;
             CanFindReferences = model is UndertaleObject && UndertaleResourceReferenceMap.IsTypeReferenceable(model.GetType());
 
             OpenInNewTabCommand = resultsVM.OpenInNewTabCommand;
@@ -56,7 +64,6 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
         public void AddChild(ReferenceResultNode child)
         {
             allChildren.Add(child);
-            Children.Add(child);
         }
 
         public void Filter(string? text)
@@ -64,11 +71,28 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
             if (IsResultItem)
                 return;
 
-            Children.Clear();
             if (string.IsNullOrEmpty(text))
-                Children.AddRange(allChildren);
+                visibleResults = allChildren;
             else
-                Children.AddRange(allChildren.Where(x => x.Header.Contains(text, StringComparison.OrdinalIgnoreCase)));
+                visibleResults = allChildren.Where(x => x.Header.Contains(text, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            Children.Clear();
+            if (visibleResults.Count <= PagingThreshold)
+            {
+                Children.AddRange(visibleResults);
+                return;
+            }
+
+            var pages = new List<ReferenceResultNode>();
+            for (int i = 0; i < visibleResults.Count; i += PageSize)
+            {
+                var chunk = visibleResults.Skip(i).Take(PageSize).ToList();
+                var page = new ReferenceResultNode($"{Header} ({i + 1} - {i + chunk.Count})", null, resultsVM);
+                page.IsExpanded = false;
+                page.Children.AddRange(chunk);
+                pages.Add(page);
+            }
+            Children.AddRange(pages);
         }
     }
 
@@ -154,6 +178,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
                     else if (obj is not null)
                         category.AddChild(new ReferenceResultNode(GetItemName(obj), obj, this));
                 }
+                category.Filter(SearchText);
                 Results.Add(category);
             }
         }
@@ -242,11 +267,11 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
                     continue;
                 }
 
-                if (node.Children.Count == 0)
+                if (node.VisibleResults.Count == 0)
                     continue;
 
                 sb.AppendLine(node.Header + ':');
-                foreach (ReferenceResultNode child in node.Children)
+                foreach (ReferenceResultNode child in node.VisibleResults)
                     sb.AppendLine($"    {child.Header}");
                 sb.AppendLine();
             }
