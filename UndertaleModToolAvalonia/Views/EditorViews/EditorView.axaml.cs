@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using System;
 using UndertaleModLib;
@@ -17,7 +18,9 @@ namespace UndertaleModToolAvalonia.Views.EditorViews
         public EditorView()
         {
             InitializeComponent();
+            Focusable = true;
             TabController.TabCloseRequested += TabController_TabCloseRequested;
+            TabController.SelectionChanged += (s, e) => Dispatcher.UIThread.Post(KeepFocusInEditor, DispatcherPriority.Background);
             MainTree.DoubleTapped += (s, e) =>
             {
                 if (DataContext is EditorViewModel vm && vm.SelectedNode?.Model != null)
@@ -26,6 +29,7 @@ namespace UndertaleModToolAvalonia.Views.EditorViews
                 }
             };
             
+            AddHandler(PointerPressedEvent, EditorView_PointerPressed, RoutingStrategies.Bubble, handledEventsToo: true);
             MainTree.AddHandler(PointerPressedEvent, MainTree_PointerPressed, RoutingStrategies.Bubble, handledEventsToo: true);
             MainTree.AddHandler(PointerMovedEvent, MainTree_PointerMoved, RoutingStrategies.Bubble, handledEventsToo: true);
             MainTree.AddHandler(PointerReleasedEvent, (s, e) => dragPress = null, RoutingStrategies.Bubble, handledEventsToo: true);
@@ -37,6 +41,24 @@ namespace UndertaleModToolAvalonia.Views.EditorViews
         private Point dragPressPoint;
         private UndertaleObject? dragResource;
         
+        private void KeepFocusInEditor()
+        {
+            if (TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is null)
+                Focus();
+        }
+
+        private void EditorView_PointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            if (DataContext is not EditorViewModel vm)
+                return;
+
+            var properties = e.GetCurrentPoint(this).Properties;
+            if (properties.IsXButton1Pressed && vm.GoBackCommand.CanExecute(null))
+                vm.GoBackCommand.Execute(null);
+            else if (properties.IsXButton2Pressed && vm.GoForwardCommand.CanExecute(null))
+                vm.GoForwardCommand.Execute(null);
+        }
+
         private void MainTree_PointerPressed(object? sender, PointerPressedEventArgs e)
         {
             dragPress = null;

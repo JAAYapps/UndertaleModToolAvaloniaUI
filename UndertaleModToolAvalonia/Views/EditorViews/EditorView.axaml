@@ -19,6 +19,11 @@
 	<UserControl.KeyBindings>
 		<KeyBinding Gesture="Ctrl+W" Command="{Binding CloseCurrentTabCommand}"/>
 		<KeyBinding Gesture="Ctrl+Shift+W" Command="{Binding CloseAllTabsCommand}"/>
+		<KeyBinding Gesture="Ctrl+Shift+T" Command="{Binding RestoreClosedTabCommand}"/>
+		<KeyBinding Gesture="Ctrl+Tab" Command="{Binding SwitchToNextTabCommand}"/>
+		<KeyBinding Gesture="Ctrl+Shift+Tab" Command="{Binding SwitchToPreviousTabCommand}"/>
+		<KeyBinding Gesture="Alt+Left" Command="{Binding GoBackCommand}"/>
+		<KeyBinding Gesture="Alt+Right" Command="{Binding GoForwardCommand}"/>
 	</UserControl.KeyBindings>
 	<Grid>
 		<DockPanel>

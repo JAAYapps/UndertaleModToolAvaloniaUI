@@ -34,6 +34,8 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
         /// <summary>The current position in the opened object history.</summary>
         public int HistoryPosition { get; set; }
 
+        public int TabIndex { get; set; }
+
         /// <summary>Initializes a new instance of <see cref="Tab"/>.</summary>
         /// <param name="obj">The object that should be open.</param>
         /// <param name="tabIndex">The tab index.</param>
@@ -41,6 +43,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
         public TabViewModel(object obj, int tabIndex, string tabTitle = null, ICommand closeCommand = null, ICommand closeOtherTabsCommand = null, ICommand closeAllTabsCommand = null)
         {
             CurrentObject = obj;
+            TabIndex = tabIndex;
             CloseCommand = closeCommand;
             CloseOtherTabsCommand = closeOtherTabsCommand;
             CloseAllTabsCommand = closeAllTabsCommand;

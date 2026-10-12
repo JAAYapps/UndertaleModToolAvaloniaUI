@@ -850,7 +850,11 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         private void OpenAssetInTab(object asset)
         {
             if (asset == null) return;
+            if (CurrentTab?.CurrentObject is EditorContentViewModel current && ReferenceEquals(current.Asset, asset))
+                return;
             var assetObject = GetViewModelFromObject(asset);
+            if (!ReferenceEquals(assetObject, asset))
+                assetObject.Asset = asset;
             OpenInTab(assetObject, false, assetObject.MainText);
         }
 
@@ -859,6 +863,8 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         {
             if (asset == null) return;
             var assetObject = GetViewModelFromObject(asset);
+            if (!ReferenceEquals(assetObject, asset))
+                assetObject.Asset = asset;
             OpenInTab(assetObject, true, assetObject.MainText);
         }
 
@@ -884,6 +890,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         {
             foreach (TabViewModel other in Tabs.Where(t => t != tab).Reverse().ToList())
             {
+                other.TabIndex = Tabs.IndexOf(other);
                 if (!other.AutoClose)
                     ClosedTabsHistory.Add(other);
                 Tabs.Remove(other);
@@ -900,6 +907,39 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                 return;
 
             ResetTabs();
+        }
+
+        [RelayCommand]
+        private void RestoreClosedTab()
+        {
+            if (ClosedTabsHistory.Count == 0)
+                return;
+
+            TabViewModel lastTab = ClosedTabsHistory[^1];
+            ClosedTabsHistory.RemoveAt(ClosedTabsHistory.Count - 1);
+
+            if (CurrentTab is { AutoClose: true })
+                CloseTab(false);
+
+            Tabs.Insert(Math.Min(lastTab.TabIndex, Tabs.Count), lastTab);
+            CurrentTab = lastTab;
+            CloseOtherTabsCommand.NotifyCanExecuteChanged();
+        }
+
+        [RelayCommand]
+        private void SwitchToNextTab()
+        {
+            int index = Tabs.IndexOf(CurrentTab);
+            if (index >= 0 && index < Tabs.Count - 1)
+                CurrentTab = Tabs[index + 1];
+        }
+
+        [RelayCommand]
+        private void SwitchToPreviousTab()
+        {
+            int index = Tabs.IndexOf(CurrentTab);
+            if (index > 0)
+                CurrentTab = Tabs[index - 1];
         }
 
         private bool CanGoBack() => CurrentTab is { HistoryPosition: > 0 };
@@ -1106,6 +1146,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             if (tabIndex >= 0 && tabIndex < Tabs.Count)
             {
                 TabViewModel closingTab = Tabs[tabIndex];
+                closingTab.TabIndex = tabIndex;
 
                 int currIndex = Tabs.IndexOf(CurrentTab);
 

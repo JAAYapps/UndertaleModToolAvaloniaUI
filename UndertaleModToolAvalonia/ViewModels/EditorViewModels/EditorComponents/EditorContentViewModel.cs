@@ -21,6 +21,8 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
         [ObservableProperty]
         private string mainText;
 
+        public object? Asset { get; set; }
+
         public EditorContentViewModel(string title)
         {
             MainText = title;
