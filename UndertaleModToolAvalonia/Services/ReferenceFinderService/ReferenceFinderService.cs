@@ -20,11 +20,14 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
     public class ReferenceFinderService : IReferenceFinderService
     {
         private ILoadingDialogService loadingDialog;
+        private readonly Dictionary<string, object[]> emptyResultArr = new();
+        private readonly Dictionary<string, List<object>> emptyResultList = new();
 
         private UndertaleData data;
         private Dictionary<UndertaleCode, HashSet<UndertaleString>> stringReferences;
         private Dictionary<UndertaleCode, HashSet<UndertaleFunction>> funcReferences;
         private Dictionary<UndertaleCode, HashSet<UndertaleVariable>> variReferences;
+        private bool ignoreArgumentsVar = false;
         private readonly Dictionary<Type, PredicateForVersion[]> typeMap;
 
         public ReferenceFinderService(ILoadingDialogService loadingDialog)
@@ -1267,6 +1270,10 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
                             if (objSrc is not UndertaleVariable obj)
                                 return null;
 
+                            if (ignoreArgumentsVar && obj.InstanceType == UndertaleInstruction.InstanceType.Local
+                                && obj.NameStringID == 0 && obj.Name?.Content == "arguments")
+                                return emptyResultArr;
+
                             IEnumerable<UndertaleCode> variRefs;
                             if (variReferences is not null)
                                 variRefs = variReferences.Where(x => x.Value.Contains(obj))
@@ -1421,7 +1428,10 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
 
         public Dictionary<string, List<object>>? GetReferencesOfObject(object obj, UndertaleData data, HashSetTypesOverride types, bool checkOne = false)
         {
-            return FindReferencesOfObject(obj, data, types, checkOne);
+            var results = FindReferencesOfObject(obj, data, types, checkOne);
+            if (results == emptyResultList)
+                return null;
+            return results;
         }
 
         private Dictionary<string, List<object>>? FindReferencesOfObject(object obj, UndertaleData data, HashSetTypesOverride types, bool checkOne)
@@ -1433,6 +1443,8 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
                 return null;
 
             this.data = data;
+
+            bool onlyEmptyResult = true;
 
             var ver = (data.GeneralInfo.Major, data.GeneralInfo.Minor, data.GeneralInfo.Release);
             Dictionary<string, List<object>> outDict = new();
@@ -1458,13 +1470,22 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
                 {
                     var result = predicateForVer.Predicate(obj, types, checkOne);
                     if (result is null)
+                    {
+                        onlyEmptyResult = false;
                         continue;
+                    }
+                    if (onlyEmptyResult && result == emptyResultArr)
+                        continue;
+
+                    onlyEmptyResult = false;
 
                     foreach (var entry in result)
                         outDict.Add(entry.Key, new(entry.Value));
                 }
             }
 
+            if (onlyEmptyResult)
+                return emptyResultList;
             if (outDict.Count == 0)
                 return null;
 
@@ -1528,6 +1549,8 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
 
                 if (assets.Count > 0) // A Partitioner can't be created on an empty list.
                 {
+                    ignoreArgumentsVar = true;
+
                     var assetsPart = Partitioner.Create(0, assets.Count);
 
                     await Task.Run(() =>
@@ -1560,6 +1583,8 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
                                 dicts.Add(resultDict);
                         });
                     });
+
+                    ignoreArgumentsVar = false;
                 }
 
                 Dictionary<string, int> outArrSizes = new();
