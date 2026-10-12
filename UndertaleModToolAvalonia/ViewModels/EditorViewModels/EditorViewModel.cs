@@ -938,6 +938,11 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                         shader.HLSL9_Vertex = AppConstants.Data.Strings.MakeString("", true);
                         shader.HLSL9_Fragment = AppConstants.Data.Strings.MakeString("", true);
                     }
+                    else if (obj is UndertaleSound soundResource)
+                    {
+                        soundResource.Flags = UndertaleSound.AudioEntryFlags.IsEmbedded | UndertaleSound.AudioEntryFlags.Regular;
+                        soundResource.GroupID = 0;
+                    }
                 }
                 else
                 {

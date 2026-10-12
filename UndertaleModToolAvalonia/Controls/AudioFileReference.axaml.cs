@@ -1,10 +1,16 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using System.Runtime.Serialization;
 using System.Windows.Input;
+using UndertaleModLib;
 using UndertaleModLib.Models;
+using UndertaleModToolAvalonia.Messages;
+using UndertaleModToolAvalonia.Utilities;
 
 namespace UndertaleModToolAvalonia.Controls;
 
@@ -15,11 +21,10 @@ public partial class AudioFileReference : UserControl
         nameof(AudioReference), defaultValue: null, inherits: false, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
     public static readonly StyledProperty<UndertaleAudioGroup?> GroupReferenceProperty =
-        AvaloniaProperty.Register<AudioFileReference, UndertaleAudioGroup?>(
-        nameof(GroupReference), defaultValue: null, inherits: false, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
+        AvaloniaProperty.Register<AudioFileReference, UndertaleAudioGroup?>(nameof(GroupReference), defaultValue: null, inherits: false, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
     public static readonly StyledProperty<int?> AudioIDProperty =
-        AvaloniaProperty.Register<AudioFileReference, int?>(nameof(AudioID));
+        AvaloniaProperty.Register<AudioFileReference, int?>(nameof(AudioID), defaultValue: null, inherits: false, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
     public static readonly StyledProperty<int?> GroupIDProperty =
         AvaloniaProperty.Register<AudioFileReference, int?>(nameof(GroupID));
@@ -96,6 +101,23 @@ public partial class AudioFileReference : UserControl
     public AudioFileReference()
     {
         InitializeComponent();
+        ObjectText.AddHandler(DragDrop.DragOverEvent, TextBox_DragOver);
+        ObjectText.AddHandler(DragDrop.DropEvent, TextBox_Drop);
+        ObjectText.AddHandler(PointerPressedEvent, Details_MouseDown, RoutingStrategies.Tunnel);
+        RemoveCommand = new RelayCommand(() =>
+        {
+            AudioReference = null;
+            AudioID = -1;
+        });
+
+        OpenInTabCommand = new RelayCommand(() => SendOpen(AudioReference, inNewTab: false));
+        OpenInNewTabCommand = new RelayCommand<object>(asset => SendOpen(asset, inNewTab: true));
+    }
+
+    private static void SendOpen(object? asset, bool inNewTab)
+    {
+        if (asset is not null)
+            WeakReferenceMessenger.Default.Send(new OpenAssetMessage(asset, inNewTab));
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -134,7 +156,7 @@ public partial class AudioFileReference : UserControl
         }
     }
 
-    private void Details_MouseDown(object sender, PointerPressedEventArgs e)
+    private void Details_MouseDown(object? sender, PointerPressedEventArgs e)
     {
         if (AudioReference is null)
             return;
@@ -145,6 +167,45 @@ public partial class AudioFileReference : UserControl
             {
                 OpenInNewTabCommand.Execute(AudioReference);
             }
+            e.Handled = true;
         }
+        else if (point.Properties.IsLeftButtonPressed && e.ClickCount == 2)
+        {
+            if (OpenInTabCommand?.CanExecute(null) == true)
+            {
+                OpenInTabCommand.Execute(null);
+            }
+            e.Handled = true;
+        }
+    }
+
+    private UndertaleEmbeddedAudio? AcceptedResource(DragEventArgs e)
+    {
+        if (GroupID != 0)
+            return null;
+
+        return ResourceDragDrop.GetResource(e) as UndertaleEmbeddedAudio;
+    }
+
+    private void TextBox_DragOver(object? sender, DragEventArgs e)
+    {
+        e.DragEffects = AcceptedResource(e) is null ? DragDropEffects.None : DragDropEffects.Link;
+        e.Handled = true;
+    }
+
+    private void TextBox_Drop(object? sender, DragEventArgs e)
+    {
+        if (AcceptedResource(e) is UndertaleEmbeddedAudio resource)
+        {
+            AudioReference = resource;
+            AudioID = AppConstants.Data.EmbeddedAudio.IndexOf(resource);
+            e.DragEffects = DragDropEffects.Link;
+        }
+        else
+        {
+            e.DragEffects = DragDropEffects.None;
+        }
+
+        e.Handled = true;
     }
 }
