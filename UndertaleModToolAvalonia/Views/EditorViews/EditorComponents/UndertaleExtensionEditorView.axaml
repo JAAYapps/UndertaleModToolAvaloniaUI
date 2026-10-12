@@ -7,6 +7,7 @@
 			 xmlns:undertale="using:UndertaleModLib.Models"
 			 xmlns:converters="using:UndertaleModToolAvalonia.Converters"
 			 xmlns:local="using:UndertaleModToolAvalonia.Views.EditorViews.EditorComponents"
+			 xmlns:utils="using:UndertaleModToolAvalonia.Utilities"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleExtensionEditorView"
 			 x:DataType="vm:UndertaleExtensionEditorViewModel">
@@ -46,7 +47,7 @@
 
 			<TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Files</TextBlock>
 			<DataGrid Grid.Row="3" Grid.Column="1" Margin="3" ItemsSource="{Binding UndertaleExtension.Files, Mode=OneWay}"
-					  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
+					  AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
 					  HeadersVisibility="Column" SelectionMode="Single">
 				<DataGrid.Styles>
 					<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
@@ -68,7 +69,7 @@
 			<TextBlock Grid.Row="5" Grid.Column="0" Margin="3,13,3,3" Text="Options"
 					   IsVisible="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2022.6}"/>
 			<DataGrid Grid.Row="5" Grid.Column="1" Margin="3,13,3,3" x:Name="OptionsGrid" ItemsSource="{Binding UndertaleExtension.Options, Mode=OneWay}"
-					  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
+					  AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
 					  HeadersVisibility="Column" SelectionMode="Single"
 					  IsVisible="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2022.6}">
 				<DataGrid.Styles>

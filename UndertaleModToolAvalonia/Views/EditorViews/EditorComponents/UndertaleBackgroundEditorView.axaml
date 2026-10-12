@@ -9,6 +9,7 @@
 			xmlns:controls="using:UndertaleModToolAvalonia.Controls"
 			xmlns:util="using:UndertaleModToolAvalonia.Utilities"
 			xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents"
+			xmlns:utils="using:UndertaleModToolAvalonia.Utilities"
             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
             x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleBackgroundEditorView"
 			x:DataType="vm:UndertaleBackgroundEditorViewModel">
@@ -96,7 +97,7 @@
 				<TextBlock Grid.Row="10" Grid.Column="0" Margin="3">Tile IDs</TextBlock>
 				<DataGrid Grid.Row="10" Grid.Column="1" x:Name="TileIdList"
 						  ItemsSource="{Binding UndertaleBackground.GMS2TileIds}" MaxHeight="279" Margin="0,0,0,3"
-						  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
+						  AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
 						  HeadersVisibility="Column" SelectionMode="Single" CanUserReorderColumns="True" CanUserResizeColumns="True">
 					<DataGrid.Styles>
 						<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">

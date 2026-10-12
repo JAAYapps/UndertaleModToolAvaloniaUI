@@ -6,6 +6,7 @@
              xmlns:undertale="using:UndertaleModLib.Models"
              xmlns:converters="using:UndertaleModToolAvalonia.Converters"
              xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents"
+             xmlns:utils="using:UndertaleModToolAvalonia.Utilities"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertalePathEditorView"
              x:DataType="vm:UndertalePathEditorViewModel">
@@ -41,7 +42,7 @@
 			<ScrollViewer Grid.Row="4" Grid.Column="1" Margin="3" MaxHeight="400" MaxWidth="600">
 				<Grid  RowDefinitions="*,*">
 					<DataGrid Grid.Row="0" ItemsSource="{Binding UndertalePath.Points}"
-							  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
+							  AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
 							  HeadersVisibility="Column" SelectionMode="Single">
 						<DataGrid.Styles>
 							<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">

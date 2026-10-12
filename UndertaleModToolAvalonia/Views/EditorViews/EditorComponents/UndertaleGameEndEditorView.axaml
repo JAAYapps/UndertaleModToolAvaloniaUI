@@ -5,6 +5,7 @@
 			 xmlns:controls="using:UndertaleModToolAvalonia.Controls"
 			 xmlns:undertaleModels="using:UndertaleModLib.Models"
 			 xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents"
+			 xmlns:utils="using:UndertaleModToolAvalonia.Utilities"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleGameEndEditorView"
 			 x:DataType="vm:UndertaleGameEndEditorViewModel">
@@ -12,7 +13,7 @@
 		<StackPanel Margin="15">
 			<TextBlock Text="Game End scripts" FontWeight="Bold"/>
 			<Separator/>
-			<DataGrid Grid.Row="20" Grid.Column="1" Margin="3" ItemsSource="{Binding GameEnds}" AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
+			<DataGrid Grid.Row="20" Grid.Column="1" Margin="3" ItemsSource="{Binding GameEnds}" AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
 				<DataGrid.Styles>
 					<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
 						<Setter Property="Background" Value="#FF26A0DA"/>

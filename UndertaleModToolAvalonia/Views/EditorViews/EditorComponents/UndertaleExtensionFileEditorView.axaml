@@ -5,6 +5,7 @@
 			 xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents"
 			 xmlns:controls="using:UndertaleModToolAvalonia.Controls"
 			 xmlns:undertale="using:UndertaleModLib.Models"
+			 xmlns:utils="using:UndertaleModToolAvalonia.Utilities"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleExtensionFileEditorView"
 			 x:DataType="vm:UndertaleExtensionFileEditorViewModel">
@@ -38,7 +39,7 @@
 			<TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Functions</TextBlock>
 			<Grid Grid.Row="4" Grid.Column="1" Margin="3" RowDefinitions="*,*">
 				<DataGrid Grid.Row="0" ItemsSource="{Binding UndertaleExtensionFile.Functions, Mode=OneWay}" x:Name="FunctionsList"
-						  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
+						  AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
 						  HeadersVisibility="None" SelectionMode="Single">
 					<DataGrid.Styles>
 						<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">

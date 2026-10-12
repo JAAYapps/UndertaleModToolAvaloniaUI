@@ -5,6 +5,7 @@
 			 xmlns:controls="using:UndertaleModToolAvalonia.Controls"
              xmlns:undertale="using:UndertaleModLib.Models"
              xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents"
+             xmlns:utils="using:UndertaleModToolAvalonia.Utilities"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleTextureGroupInfoEditorView"
 			 x:DataType="vm:UndertaleTextureGroupInfoEditorViewModel">
@@ -32,7 +33,7 @@
 				<Expander Grid.Row="1" Grid.Column="1" Margin="3" Name="TextureListExpander" Header="List">
 					<Grid RowDefinitions="*,*">
 						<DataGrid Grid.Row="0" ItemsSource="{Binding UndertaleTextureGroupInfo.TexturePages}" MaxHeight="370" x:Name="TextureListGrid"
-							  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
+							  AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
 							<DataGrid.Styles>
 								<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
 									<Setter Property="Background" Value="{DynamicResource SystemAccentColorBrush}"/>
@@ -58,7 +59,7 @@
 				<Expander Grid.Row="2" Grid.Column="1" Margin="3" Name="SpriteListExpander" Header="List">
 					<Grid RowDefinitions="*,*">
 						<DataGrid Grid.Row="0" ItemsSource="{Binding UndertaleTextureGroupInfo.Sprites}" MaxHeight="370" x:Name="SpriteListGrid"
-							  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
+							  AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
 							<DataGrid.Styles>
 								<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
 									<Setter Property="Background" Value="{DynamicResource SystemAccentColorBrush}"/>
@@ -84,7 +85,7 @@
 				<Expander Grid.Row="3" Grid.Column="1" Margin="3" Name="SpineSprListExpander" Header="List">
 					<Grid RowDefinitions="*,*">
 						<DataGrid Grid.Row="0" ItemsSource="{Binding UndertaleTextureGroupInfo.SpineSprites}" MaxHeight="370" x:Name="SpineSprListGrid"
-							  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
+							  AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
 							<DataGrid.Styles>
 								<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
 									<Setter Property="Background" Value="{DynamicResource SystemAccentColorBrush}"/>
@@ -110,7 +111,7 @@
 				<Expander Grid.Row="4" Grid.Column="1" Margin="3" Name="FontListExpander" Header="List">
 					<Grid RowDefinitions="*,*">
 						<DataGrid Grid.Row="0" ItemsSource="{Binding UndertaleTextureGroupInfo.Fonts}" MaxHeight="370" x:Name="FontListGrid"
-							  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
+							  AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
 							<DataGrid.Styles>
 								<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
 									<Setter Property="Background" Value="{DynamicResource SystemAccentColorBrush}"/>
@@ -136,7 +137,7 @@
 				<Expander Grid.Row="5" Grid.Column="1" Margin="3" Name="TilesetListExpander" Header="List">
 					<Grid RowDefinitions="*,*">
 						<DataGrid Grid.Row="0" ItemsSource="{Binding UndertaleTextureGroupInfo.Tilesets}" MaxHeight="370" x:Name="TilesetListGrid"
-							  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
+							  AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
 							<DataGrid.Styles>
 								<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
 									<Setter Property="Background" Value="{DynamicResource SystemAccentColorBrush}"/>

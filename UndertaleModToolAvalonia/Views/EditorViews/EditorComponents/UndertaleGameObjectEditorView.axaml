@@ -7,6 +7,7 @@
 			 xmlns:undertale="using:UndertaleModLib.Models"
 			 xmlns:converters="using:UndertaleModToolAvalonia.Converters"
 			 xmlns:app="using:UndertaleModToolAvalonia"
+			 xmlns:utils="using:UndertaleModToolAvalonia.Utilities"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
              x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleGameObjectEditorView"
 			 x:DataType="vm:UndertaleGameObjectEditorViewModel">
@@ -137,7 +138,7 @@
 				<TextBlock Grid.Row="23" Grid.Column="0" Margin="3">Physics shape vertices</TextBlock>
 				<Grid Grid.Row="23" Grid.Column="1" Margin="3" RowDefinitions="*,*">
 					<DataGrid Grid.Row="0" ItemsSource="{Binding UndertaleGameObject.PhysicsVertices, Mode=OneWay}"
-							  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
+							  AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
 							  HeadersVisibility="Column" SelectionMode="Single">
 						<DataGrid.Styles>
 							<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
@@ -177,7 +178,7 @@
 						<StackPanel>
 							<TextBlock Margin="3" Text="{Binding Name}"/>
 							<Grid RowDefinitions="*,*">
-								<DataGrid Grid.Row="0" ItemsSource="{Binding Events}" AutoGenerateColumns="False"
+								<DataGrid Grid.Row="0" ItemsSource="{Binding Events}" AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True"
 										  HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
 										  HeadersVisibility="Column" SelectionMode="Single">
 									<DataGrid.Styles>
@@ -211,7 +212,7 @@
 										<DataGridTemplateColumn Header="Actions" Width="5*">
 											<DataGridTemplateColumn.CellTemplate>
 												<DataTemplate>
-													<DataGrid ItemsSource="{Binding Actions}" AutoGenerateColumns="False"
+													<DataGrid ItemsSource="{Binding Actions}" AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True"
 															  HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None"
 															  SelectionMode="Single">
 														<DataGrid.Columns>

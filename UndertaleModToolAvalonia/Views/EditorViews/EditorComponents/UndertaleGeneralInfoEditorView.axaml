@@ -9,6 +9,7 @@
 			 xmlns:undertale="using:UndertaleModLib"
 			 xmlns:undertaleModels="using:UndertaleModLib.Models"
 			 xmlns:util="using:UndertaleModToolAvalonia.Utilities"
+			 xmlns:utils="using:UndertaleModToolAvalonia.Utilities"
              mc:Ignorable="d" MaxWidth="1920"
              x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleGeneralInfoEditorView"
 			 x:DataType="vm:UndertaleGeneralInfoEditorViewModel">
@@ -154,7 +155,7 @@
 					<Expander Grid.Row="20" Grid.Column="1" Margin="3" Header="List" Name="RoomListExpander">
 						<Grid RowDefinitions="*, auto">
 							<DataGrid Grid.Row="0" ItemsSource="{Binding Info.RoomOrder}" MaxWidth="600" MaxHeight="369" x:Name="RoomListGrid"
-											AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
+											AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single">
 								<DataGrid.Styles>
 									<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
 										<Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
@@ -271,7 +272,7 @@
 
 					<TextBlock Grid.Row="14" Grid.Column="0" Margin="3">Constants</TextBlock>
 					<DataGrid Grid.Row="14" Grid.Column="1" Margin="3" ItemsSource="{Binding Options.Constants}"
-							  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray"
+							  AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray"
 							  VerticalGridLinesBrush="LightGray" HeadersVisibility="Column"
 							  SelectionMode="Single" HorizontalAlignment="Left">
 						<DataGrid.Styles>

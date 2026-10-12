@@ -6,6 +6,7 @@
              xmlns:controls="using:UndertaleModToolAvalonia.Controls"
              xmlns:undertale="using:UndertaleModLib.Models"
              xmlns:avedit="using:AvaloniaEdit"
+             xmlns:utils="using:UndertaleModToolAvalonia.Utilities"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleShaderEditorView"
              x:DataType="vm:UndertaleShaderEditorViewModel">
@@ -101,7 +102,7 @@
             </Expander>
 			<TextBlock Grid.Row="8" Grid.Column="0" Margin="3">Vertex shader attributes</TextBlock>
 			<Grid Grid.Row="8" Grid.Column="1" Margin="3" RowDefinitions="*,*">
-			    <DataGrid Grid.Row="0" ItemsSource="{Binding Shader.VertexShaderAttributes}" AutoGenerateColumns="False">
+			    <DataGrid Grid.Row="0" ItemsSource="{Binding Shader.VertexShaderAttributes}" AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True">
 				    <DataGrid.Styles>
 					    <Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
 						    <Setter Property="Background" Value="#FF26A0DA"/>

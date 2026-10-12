@@ -99,7 +99,7 @@
 			<TextBlock Grid.Row="10" Grid.Column="0" Margin="3">Textures</TextBlock>
 			<Grid Grid.Row="10" Grid.Column="1" RowDefinitions="*,*">
 				<DataGrid Grid.Row="0" Margin="3" ItemsSource="{Binding UndertaleSprite.Textures, Mode=OneWay}" SelectedItem="{Binding SelectedItem, Mode=TwoWay}" x:Name="TextureList"
-						AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
+						AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
 					  HeadersVisibility="None" SelectionMode="Single">
 					<DataGrid.KeyBindings>
 						<KeyBinding Gesture="Delete" Command="{Binding RemoveSpriteCommand}" CommandParameter="{Binding #TextureList.SelectedItem}"/>
@@ -143,7 +143,7 @@
 			<TextBlock Grid.Row="13" Grid.Column="0" Margin="3">Collision masks</TextBlock>
 			<Grid Grid.Row="13" Grid.Column="1" RowDefinitions="*,*">
 				<DataGrid Grid.Row="0" Grid.Column="1" Margin="3" ItemsSource="{Binding UndertaleSprite.CollisionMasks, Mode=OneWay}" SelectedItem="{Binding SelectedMaskItem}" x:Name="MaskList"
-						  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
+						  AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
 						  HeadersVisibility="None" SelectionMode="Single">
 					<DataGrid.KeyBindings>
 						<KeyBinding Gesture="Delete" Command="{Binding RemoveMaskCommand}" CommandParameter="{Binding #MaskList.SelectedItem}"/>

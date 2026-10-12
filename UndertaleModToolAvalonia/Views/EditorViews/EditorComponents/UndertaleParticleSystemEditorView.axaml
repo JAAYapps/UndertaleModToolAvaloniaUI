@@ -42,7 +42,7 @@
 			<Expander Grid.Row="3" Grid.Column="1" Margin="3" Header="List" Name="EmitterListExpander" IsExpanded="True">
 				<Grid RowDefinitions="auto,auto">
 					<DataGrid Grid.Row="0" ItemsSource="{Binding UndertaleParticleSystem.Emitters}" x:Name="EmitterListGrid"
-										AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single"
+										AutoGenerateColumns="False" utils:DataGridRows.CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None" SelectionMode="Single"
 										ScrollViewer.AllowAutoHide="False" ScrollViewer.VerticalScrollBarVisibility="Visible">
 						<DataGrid.Styles>
 							<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
