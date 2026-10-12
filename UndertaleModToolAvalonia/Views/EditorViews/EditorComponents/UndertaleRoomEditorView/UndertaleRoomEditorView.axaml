@@ -6,6 +6,7 @@
              xmlns:undertale="using:UndertaleModLib.Models"
              xmlns:converters="using:UndertaleModToolAvalonia.Converters"
              xmlns:controlConverters="using:UndertaleModToolAvalonia.Converters.ControlConverters"
+             xmlns:local="using:UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleRoomEditorView"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleRoomEditorView.UndertaleRoomEditorView"
              x:DataType="vm:UndertaleRoomEditorViewModel">
@@ -15,6 +16,7 @@
             <controlConverters:IsGMS2Converter x:Key="IsGMS2Converter"/>
             <controlConverters:NonexistentColorConverter x:Key="NonexistentColorConverter"/>
             <controlConverters:EnabledColorConverter x:Key="EnabledColorConverter"/>
+            <controlConverters:MultiCollectionBinding x:Key="MultiCollectionBinding"/>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
@@ -33,7 +35,8 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <TreeView Grid.Column="0" Margin="0,0,3,0">
+            <TreeView Grid.Column="0" Margin="0,0,3,0" Name="RoomObjectsTree" SelectionChanged="RoomObjectsTree_SelectionChanged"
+                      KeyDown="RoomObjectsTree_KeyDown" DoubleTapped="RoomObjectsTree_DoubleTapped" PointerPressed="RoomObjectsTree_PointerPressed">
                 <TreeView.DataTemplates>
                     <DataTemplate DataType="{x:Type undertale:UndertaleRoom+GameObject}">
                         <TextBlock Background="Transparent"
@@ -48,7 +51,7 @@
                             <TextBlock.ContextFlyout>
                                 <MenuFlyout>
                                     <MenuItem Header="Copy object" Click="MenuItem_Copy_Click" InputGesture="Ctrl+C"/>
-                                    <MenuItem Header="Delete tile" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
+                                    <MenuItem Header="Delete object" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
                                 </MenuFlyout>
                             </TextBlock.ContextFlyout>
                         </TextBlock>
@@ -105,11 +108,6 @@
                 
                 <TreeViewItem Header="{Binding Room.Name.Content}" Name="RoomRootItem" IsExpanded="True" Background="Transparent">
                     <TreeViewItem Name="BGItems" Header="Backgrounds" ItemsSource="{Binding Room.Backgrounds, Mode=OneWay}" IsVisible="{Binding Room.Flags, Mode=OneTime, Converter={StaticResource IsGMS2Converter}}" IsExpanded="True" Background="Transparent">
-                        <TreeViewItem.ContextFlyout>
-                            <MenuFlyout>
-                                <MenuItem Header="Delete background" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
-                            </MenuFlyout>
-                        </TreeViewItem.ContextFlyout>
                         <TreeViewItem.DataTemplates>
                             <DataTemplate DataType="{x:Type undertale:UndertaleRoom+Background}">
                                 <TextBlock Text="{Binding BackgroundDefinition, Mode=OneWay, TargetNullValue='(no name)'}" Background="Transparent">
@@ -126,11 +124,6 @@
                         </TreeViewItem.DataTemplates>
                     </TreeViewItem>
                     <TreeViewItem Name="ViewItems" Header="Views" ItemsSource="{Binding Room.Views, Mode=OneWay}" IsExpanded="True" Background="Transparent">
-                        <TreeViewItem.ContextFlyout>
-                            <MenuFlyout>
-                                <MenuItem Header="Disable view" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
-                            </MenuFlyout>
-                        </TreeViewItem.ContextFlyout>
                         <TreeViewItem.DataTemplates>
                             <DataTemplate DataType="{x:Type undertale:UndertaleRoom+View}">
                                 <TextBlock Text="View" Background="Transparent">
@@ -146,8 +139,104 @@
                             </DataTemplate>
                         </TreeViewItem.DataTemplates>
                     </TreeViewItem>
+                    <TreeViewItem Name="GameObjItems" Header="{Binding GameObjectsHeader}" ItemsSource="{Binding Room.GameObjects, Mode=OneWay}" Background="Transparent"
+                                  Foreground="{Binding IsNotGMS2Room, Converter={StaticResource EnabledColorConverter}}"/>
+                    <TreeViewItem Name="TileItems" Header="Tiles" ItemsSource="{Binding Room.Tiles, Mode=OneWay}" IsVisible="{Binding Room.Flags, Mode=OneTime, Converter={StaticResource IsGMS2Converter}}" Background="Transparent"/>
+                    <TreeViewItem Name="LayerItems" Header="Layers" ItemsSource="{Binding Room.Layers, Mode=OneWay}" IsExpanded="True" IsVisible="{Binding Room.Flags, Mode=OneTime, Converter={StaticResource IsGMS2Converter}, ConverterParameter=invert}" Background="Transparent">
+                        <TreeViewItem.DataTemplates>
+                            <local:LayerDataTemplateSelector>
+                                <local:LayerDataTemplateSelector.PathDataTemplate>
+                                    <TreeDataTemplate x:DataType="undertale:UndertaleRoom+Layer">
+                                        <TextBlock Text="{Binding LayerName.Content, Mode=OneWay}" Background="Transparent"
+                                                   Foreground="{Binding IsVisible, Converter={StaticResource EnabledColorConverter}}"/>
+                                    </TreeDataTemplate>
+                                </local:LayerDataTemplateSelector.PathDataTemplate>
+                                <local:LayerDataTemplateSelector.InstancesDataTemplate>
+                                    <TreeDataTemplate x:DataType="undertale:UndertaleRoom+Layer" ItemsSource="{Binding InstancesData.Instances, Mode=OneWay}">
+                                        <TextBlock Text="{Binding LayerName.Content, Mode=OneWay}" Background="Transparent"
+                                                   Foreground="{Binding IsVisible, Converter={StaticResource EnabledColorConverter}}">
+                                            <TextBlock.ContextFlyout>
+                                                <MenuFlyout>
+                                                    <MenuItem Header="Delete layer" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
+                                                </MenuFlyout>
+                                            </TextBlock.ContextFlyout>
+                                        </TextBlock>
+                                    </TreeDataTemplate>
+                                </local:LayerDataTemplateSelector.InstancesDataTemplate>
+                                <local:LayerDataTemplateSelector.TilesDataTemplate>
+                                    <TreeDataTemplate x:DataType="undertale:UndertaleRoom+Layer">
+                                        <TextBlock Text="{Binding LayerName.Content, Mode=OneWay}" Background="Transparent"
+                                                   Foreground="{Binding IsVisible, Converter={StaticResource EnabledColorConverter}}">
+                                            <TextBlock.ContextFlyout>
+                                                <MenuFlyout>
+                                                    <MenuItem Header="Delete layer" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
+                                                </MenuFlyout>
+                                            </TextBlock.ContextFlyout>
+                                        </TextBlock>
+                                    </TreeDataTemplate>
+                                </local:LayerDataTemplateSelector.TilesDataTemplate>
+                                <local:LayerDataTemplateSelector.AssetsDataTemplate>
+                                    <TreeDataTemplate x:DataType="undertale:UndertaleRoom+Layer">
+                                        <TreeDataTemplate.ItemsSource>
+                                            <MultiBinding Mode="OneWay" Converter="{StaticResource MultiCollectionBinding}">
+                                                <Binding Path="AssetsData.LegacyTiles"/>
+                                                <Binding Path="AssetsData.Sprites"/>
+                                                <Binding Path="AssetsData.Sequences"/>
+                                                <Binding Path="AssetsData.NineSlices"/>
+                                                <Binding Path="AssetsData.ParticleSystems"/>
+                                            </MultiBinding>
+                                        </TreeDataTemplate.ItemsSource>
+                                        <TextBlock Text="{Binding LayerName.Content, Mode=OneWay}" Background="Transparent"
+                                                   Foreground="{Binding IsVisible, Converter={StaticResource EnabledColorConverter}}">
+                                            <TextBlock.ContextFlyout>
+                                                <MenuFlyout>
+                                                    <MenuItem Header="Delete layer" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
+                                                </MenuFlyout>
+                                            </TextBlock.ContextFlyout>
+                                        </TextBlock>
+                                    </TreeDataTemplate>
+                                </local:LayerDataTemplateSelector.AssetsDataTemplate>
+                                <local:LayerDataTemplateSelector.BackgroundDataTemplate>
+                                    <TreeDataTemplate x:DataType="undertale:UndertaleRoom+Layer">
+                                        <TextBlock Text="{Binding LayerName.Content, Mode=OneWay}" Background="Transparent"
+                                                   Foreground="{Binding IsVisible, Converter={StaticResource EnabledColorConverter}}">
+                                            <TextBlock.ContextFlyout>
+                                                <MenuFlyout>
+                                                    <MenuItem Header="Delete layer" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
+                                                </MenuFlyout>
+                                            </TextBlock.ContextFlyout>
+                                        </TextBlock>
+                                    </TreeDataTemplate>
+                                </local:LayerDataTemplateSelector.BackgroundDataTemplate>
+                                <local:LayerDataTemplateSelector.EffectDataTemplate>
+                                    <TreeDataTemplate x:DataType="undertale:UndertaleRoom+Layer">
+                                        <TextBlock Text="{Binding LayerName.Content, Mode=OneWay}" Background="Transparent"
+                                                   Foreground="{Binding IsVisible, Converter={StaticResource EnabledColorConverter}}">
+                                            <TextBlock.ContextFlyout>
+                                                <MenuFlyout>
+                                                    <MenuItem Header="Delete layer" Click="MenuItem_Delete_Click" InputGesture="Delete"/>
+                                                </MenuFlyout>
+                                            </TextBlock.ContextFlyout>
+                                        </TextBlock>
+                                    </TreeDataTemplate>
+                                </local:LayerDataTemplateSelector.EffectDataTemplate>
+                            </local:LayerDataTemplateSelector>
+                        </TreeViewItem.DataTemplates>
+                    </TreeViewItem>
                 </TreeViewItem>
             </TreeView>
+
+            <Border Grid.Column="1" BorderBrush="#828790" BorderThickness="0,1,1,1"
+                    VerticalAlignment="Top" Margin="-3,0,0,0">
+                <StackPanel Name="MoveButtonsPanel" Margin="1,1,1,1" IsEnabled="{Binding CanMoveSelectedObject}">
+                    <RepeatButton FontSize="14" Content="&#x25B2;" Margin="0,0,0,2"
+                                  ToolTip.Tip="Move item up (-)"
+                                  Click="TreeViewMoveUpButton_Click"/>
+                    <RepeatButton FontSize="14" Content="&#x25BC;"
+                                  ToolTip.Tip="Move item down (+)"
+                                  Click="TreeViewMoveDownButton_Click"/>
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>
