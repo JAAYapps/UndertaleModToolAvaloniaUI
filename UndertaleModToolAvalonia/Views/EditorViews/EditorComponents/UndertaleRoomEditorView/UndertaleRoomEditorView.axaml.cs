@@ -5,15 +5,20 @@ using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Messaging;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using UndertaleModLib;
 using UndertaleModLib.Models;
 using UndertaleModToolAvalonia.Converters;
+using UndertaleModToolAvalonia.Controls;
 using UndertaleModToolAvalonia.Messages;
+using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.UndertaleRoomEditorViewModel;
 using static UndertaleModLib.Models.UndertaleRoom;
 
@@ -25,9 +30,22 @@ public partial class UndertaleRoomEditorView : UserControl
     private UndertaleRoomEditorViewModel? currentViewModel;
     private Control? flashingElement;
 
+    private UndertaleObject? selectedObject;
+    private bool selectedInAllGameObjectsList;
+    private UndertaleObject? movingObj;
+    private double hotpointX, hotpointY;
+    private bool leftDrag, rightDrag, topDrag, bottomDrag;
+    private Point dragObjectOrigin;
+    private bool placingTiles = false;
+    private readonly List<Point> placedTiles = new();
+    private double scaleOriginX, scaleOriginY;
+
     public UndertaleRoomEditorView()
     {
         InitializeComponent();
+        RoomObjectsTree.AddHandler(GotFocusEvent, RoomObjectsTree_GotFocus, RoutingStrategies.Bubble, handledEventsToo: true);
+        ZoomBorder.AddHandler(DragDrop.DragOverEvent, RoomGraphics_DragOver);
+        ZoomBorder.AddHandler(DragDrop.DropEvent, RoomGraphics_Drop);
     }
 
     protected override void OnDataContextChanged(EventArgs e)
@@ -79,7 +97,17 @@ public partial class UndertaleRoomEditorView : UserControl
         if (ReferenceEquals(selected, RoomRootItem))
             vm.SelectedObject = vm.Room;
         else if (selected is UndertaleObject obj)
+        {
             vm.SelectedObject = obj;
+            selectedObject = obj;
+        }
+    }
+
+    private void RoomObjectsTree_GotFocus(object? sender, FocusChangedEventArgs e)
+    {
+        TreeViewItem? treeViewItem = (e.Source as Visual)?.FindAncestorOfType<TreeViewItem>(includeSelf: true);
+        if (treeViewItem?.DataContext is GameObject)
+            selectedInAllGameObjectsList = ReferenceEquals(ItemsControl.ItemsControlFromItemContainer(treeViewItem), GameObjItems);
     }
 
     private async void RoomObjectsTree_KeyDown(object? sender, KeyEventArgs e)
@@ -160,12 +188,7 @@ public partial class UndertaleRoomEditorView : UserControl
         if (obj is null || DataContext is not UndertaleRoomEditorViewModel vm)
             return;
 
-        bool isInAllGameObjectsList = false;
-        if (obj is GameObject && vm.IsGMS2Room)
-        {
-            if (GameObjItems.ContainerFromItem(obj) is TreeViewItem { IsSelected: true })
-                isInAllGameObjectsList = true;
-        }
+        bool isInAllGameObjectsList = obj is GameObject && vm.IsGMS2Room && selectedInAllGameObjectsList;
 
         if (await vm.MoveItem(obj, dist, isInAllGameObjectsList))
             SelectObject(obj, focus, isInAllGameObjectsList);
@@ -175,6 +198,14 @@ public partial class UndertaleRoomEditorView : UserControl
     {
         if (DataContext is not UndertaleRoomEditorViewModel vm)
             return;
+
+        selectedObject = obj;
+        obj = obj switch
+        {
+            Layer.LayerBackgroundData bgData => bgData.ParentLayer,
+            Layer.LayerTilesData tileData => tileData.ParentLayer,
+            _ => obj
+        };
 
         UndertaleRoom room = vm.Room;
         TreeViewItem? resListView = null;
@@ -231,18 +262,454 @@ public partial class UndertaleRoomEditorView : UserControl
                 break;
         }
 
+        vm.SelectedObject = obj;
+
         if (resListView is null)
             return;
 
         resListView.IsExpanded = true;
         resListView.UpdateLayout();
+        RoomObjectsTree.SelectedItem = obj;
 
-        if (resListView.ContainerFromItem(obj) is TreeViewItem resItem)
+        if (!ShowTreeItem(resListView, obj, focus))
+            Dispatcher.UIThread.Post(() => ShowTreeItem(resListView, obj, focus), DispatcherPriority.Background);
+    }
+
+    private static bool ShowTreeItem(TreeViewItem resListView, UndertaleObject obj, bool focus)
+    {
+        if (resListView.ContainerFromItem(obj) is not TreeViewItem resItem)
+            return false;
+
+        resItem.BringIntoView();
+        if (focus)
+            resItem.Focus();
+
+        return true;
+    }
+
+    private Point GetGridMouseCoordinates(Point mousePos, UndertaleRoom room, KeyModifiers modifiers)
+    {
+        int gridWidth = Math.Max(Convert.ToInt32(room.GridWidth), 1);
+        int gridHeight = Math.Max(Convert.ToInt32(room.GridHeight), 1);
+
+        if (modifiers.HasFlag(KeyModifiers.Control))
         {
-            resItem.IsSelected = true;
-            resItem.BringIntoView();
-            if (focus)
-                resItem.Focus();
+            if (gridWidth > 1)
+                gridWidth /= 2;
+            if (gridHeight > 1)
+                gridHeight /= 2;
+        }
+        else if (modifiers.HasFlag(KeyModifiers.Shift))
+        {
+            gridWidth *= 2;
+            gridHeight *= 2;
+        }
+
+        return new Point(Math.Floor(mousePos.X / gridWidth) * gridWidth, Math.Floor(mousePos.Y / gridHeight) * gridHeight);
+    }
+
+    private static bool IsTileLayerEmptyAt(Layer.LayerTilesData tilesData, Point pos)
+    {
+        if (tilesData.Background is null || tilesData.Background.GMS2TileWidth == 0 || tilesData.Background.GMS2TileHeight == 0)
+            return true;
+        if (pos.X < 0 || pos.Y < 0)
+            return true;
+
+        int x1 = (int)pos.X / (int)tilesData.Background.GMS2TileWidth;
+        int y1 = (int)pos.Y / (int)tilesData.Background.GMS2TileHeight;
+
+        return x1 > tilesData.TilesX - 1 ||
+               y1 > tilesData.TilesY - 1 ||
+               tilesData.TileData[y1][x1] == 0;
+    }
+
+    private static void CollectRoomObjectElements(Visual visual, List<Control> elements)
+    {
+        if (!visual.IsVisible)
+            return;
+
+        if (visual is Control element && visual is not ContentPresenter && visual is not ItemsControl
+            && element.DataContext is GameObject or Tile or SpriteInstance or ParticleSystemInstance or UndertaleRoom.Background
+                                      or Layer.LayerBackgroundData or Layer.LayerTilesData)
+            elements.Add(element);
+
+        foreach (Visual child in visual.GetVisualChildren().OrderBy(x => x.ZIndex))
+            CollectRoomObjectElements(child, elements);
+    }
+
+    private Control? GetRoomObjectElementAt(Point mousePos)
+    {
+        List<Control> elements = new();
+        CollectRoomObjectElements(RoomGraphics, elements);
+
+        for (int i = elements.Count - 1; i >= 0; i--)
+        {
+            Control element = elements[i];
+            if (RoomGraphics.TranslatePoint(mousePos, element) is not Point pos)
+                continue;
+
+            if (element is RoomBackgroundDisplay bgDisplay)
+            {
+                if (bgDisplay.DrawnBounds.Contains(pos))
+                    return element;
+                continue;
+            }
+            if (!new Rect(element.Bounds.Size).Contains(pos))
+                continue;
+            if (element.DataContext is Layer.LayerTilesData tilesData && IsTileLayerEmptyAt(tilesData, pos))
+                continue;
+
+            return element;
+        }
+
+        return null;
+    }
+
+    private void RoomGraphics_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is not UndertaleRoomEditorViewModel vm)
+            return;
+        if (!e.GetCurrentPoint(RoomGraphics).Properties.IsLeftButtonPressed)
+            return;
+
+        UndertaleRoom room = vm.Room;
+        Point mousePos = e.GetPosition(RoomGraphics);
+        Control? element = GetRoomObjectElementAt(mousePos);
+        UndertaleObject? clickedObj = element?.DataContext as UndertaleObject;
+
+        e.Pointer.Capture(ZoomBorder);
+
+        if (clickedObj is null)
+        {
+            placedTiles.Clear();
+
+            PaintObjects(GetGridMouseCoordinates(mousePos, room, e.KeyModifiers), selectedObject, vm, true, e.KeyModifiers);
+            return;
+        }
+
+        e.Handled = true;
+
+        Layer? layer = null;
+        if (room.Layers.Count > 0)
+            layer = vm.GetLayerOf(clickedObj);
+
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Alt))
+        {
+            IList? collection = clickedObj switch
+            {
+                GameObject => layer is null ? room.GameObjects : layer.InstancesData.Instances,
+                Tile => layer is null ? room.Tiles : layer.AssetsData.LegacyTiles,
+                SpriteInstance => layer?.AssetsData.Sprites,
+                ParticleSystemInstance => layer?.AssetsData.ParticleSystems,
+                _ => null
+            };
+            if (collection is not null)
+            {
+                int index = collection.IndexOf(clickedObj) + 1;
+                Point pos = clickedObj switch
+                {
+                    IRoomObject roomObj => new(roomObj.X, roomObj.Y),
+                    SpriteInstance sprInst => new(sprInst.X, sprInst.Y),
+                    ParticleSystemInstance partSysInst => new(partSysInst.X, partSysInst.Y),
+                    _ => new()
+                };
+                clickedObj = vm.AddObjectCopy(layer, clickedObj, true, index, pos);
+                element = null;
+            }
+        }
+        if (clickedObj is null)
+            return;
+
+        leftDrag = false;
+        rightDrag = false;
+        topDrag = false;
+        bottomDrag = false;
+        if (ReferenceEquals(selectedObject, clickedObj) && element is Image objElement && clickedObj is GameObject { ObjectDefinition.Sprite: not null } gameObject)
+        {
+            Point relativeMousePos = e.GetPosition(objElement);
+            Size objSize = objElement.Bounds.Size;
+            const int edgeMargin = 4;
+
+            dragObjectOrigin = new Point(gameObject.X, gameObject.Y);
+            double originX = dragObjectOrigin.X;
+            double originY = dragObjectOrigin.Y;
+            if (Math.Abs(relativeMousePos.X) < edgeMargin)
+            {
+                leftDrag = true;
+                originX += (gameObject.ScaleX * (gameObject.ObjectDefinition.Sprite.Width + gameObject.SpriteXOffset));
+            }
+            else if (Math.Abs(objSize.Width - relativeMousePos.X) < edgeMargin)
+            {
+                rightDrag = true;
+                originX -= (gameObject.ScaleX * -gameObject.SpriteXOffset);
+            }
+            if (Math.Abs(relativeMousePos.Y) < edgeMargin)
+            {
+                topDrag = true;
+                originY += (gameObject.ScaleY * (gameObject.ObjectDefinition.Sprite.Height + gameObject.SpriteYOffset));
+            }
+            else if (Math.Abs(objSize.Height - relativeMousePos.Y) < edgeMargin)
+            {
+                bottomDrag = true;
+                originY += (gameObject.ScaleY * gameObject.SpriteYOffset);
+            }
+            dragObjectOrigin = new Point(originX, originY);
+        }
+
+        SelectObject(clickedObj);
+
+        if (clickedObj is GameObject || clickedObj is Tile || clickedObj is SpriteInstance || clickedObj is ParticleSystemInstance)
+        {
+            movingObj = clickedObj;
+            vm.PushUndo(clickedObj);
+
+            Point objPos = clickedObj switch
+            {
+                IRoomObject roomObj => new(roomObj.X, roomObj.Y),
+                SpriteInstance sprInst => new(sprInst.X, sprInst.Y),
+                ParticleSystemInstance partSysInst => new(partSysInst.X, partSysInst.Y),
+                _ => new()
+            };
+            hotpointX = mousePos.X - objPos.X;
+            hotpointY = mousePos.Y - objPos.Y;
+        }
+    }
+
+    private void RoomGraphics_PointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (e.InitialPressMouseButton != MouseButton.Left)
+            return;
+
+        e.Pointer.Capture(null);
+
+        placingTiles = false;
+        placedTiles.Clear();
+
+        leftDrag = false;
+        rightDrag = false;
+        topDrag = false;
+        bottomDrag = false;
+
+        movingObj = null;
+    }
+
+    private void PaintObjects(Point gridMouse, UndertaleObject? other, UndertaleRoomEditorViewModel vm, bool isLeftButtonPressed, KeyModifiers modifiers)
+    {
+        if (!isLeftButtonPressed || !modifiers.HasFlag(KeyModifiers.Alt) || other is null)
+        {
+            placingTiles = false;
+            return;
+        }
+
+        if (placedTiles.Contains(gridMouse))
+            return;
+
+        Layer? layer = null;
+        if (vm.Room.Layers.Count > 0)
+            layer = vm.GetLayerOf(other);
+
+        if (layer is not null && layer.AssetsData is null && layer.InstancesData is null)
+            return;
+
+        placedTiles.Add(gridMouse);
+        placingTiles = true;
+
+        UndertaleObject? newObj = vm.AddObjectCopy(layer, other, false, -1, gridMouse);
+
+        if (newObj is not null)
+            SelectObject(newObj);
+    }
+
+    private void RoomGraphics_PointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (DataContext is not UndertaleRoomEditorViewModel vm)
+            return;
+
+        UndertaleRoom room = vm.Room;
+        Point mousePos = e.GetPosition(RoomGraphics);
+
+        if (placingTiles)
+        {
+            PaintObjects(GetGridMouseCoordinates(mousePos, room, e.KeyModifiers), selectedObject, vm,
+                         e.GetCurrentPoint(RoomGraphics).Properties.IsLeftButtonPressed, e.KeyModifiers);
+            return;
+        }
+
+        if (movingObj is null)
+            return;
+
+        int tgtX = (int)(mousePos.X - hotpointX);
+        int tgtY = (int)(mousePos.Y - hotpointY);
+        var modifierValue = 1;
+        int gridWidth = Math.Max(Convert.ToInt32(room.GridWidth), 1);
+        int gridHeight = Math.Max(Convert.ToInt32(room.GridHeight), 1);
+
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            gridWidth = 1;
+            gridHeight = 1;
+            modifierValue = 10;
+        }
+        else if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            gridWidth /= 2;
+            gridHeight /= 2;
+            modifierValue = 2;
+        }
+
+        if (gridWidth > 0)
+            tgtX = ((tgtX + gridWidth / 2) / gridWidth) * gridWidth;
+        if (gridHeight > 0)
+            tgtY = ((tgtY + gridHeight / 2) / gridHeight) * gridHeight;
+
+        if (movingObj is GameObject gameObj)
+        {
+            if ((leftDrag || rightDrag || topDrag || bottomDrag) && gameObj.ObjectDefinition?.Sprite is not null)
+            {
+                Point objOrigin = dragObjectOrigin;
+                float spriteWidth = gameObj.ObjectDefinition.Sprite.Width;
+                float spriteHeight = gameObj.ObjectDefinition.Sprite.Height;
+                float offsetX = -gameObj.SpriteXOffset;
+                float offsetY = -gameObj.SpriteYOffset;
+                if (leftDrag)
+                {
+                    double newXScale = Math.Ceiling(((objOrigin.X - mousePos.X) / spriteWidth) * modifierValue) / modifierValue;
+                    double newXPos = objOrigin.X - (newXScale * (-offsetX + spriteWidth));
+                    if (newXScale != 0 && !double.IsNaN(newXScale) && !double.IsInfinity(newXScale) &&
+                                          !double.IsNaN(newXPos) && !double.IsInfinity(newXPos))
+                    {
+                        gameObj.ScaleX = (float)newXScale;
+                        gameObj.X = (int)newXPos;
+                    }
+                }
+                else if (rightDrag)
+                {
+                    double newXScale = Math.Ceiling(((mousePos.X - objOrigin.X) / spriteWidth) * modifierValue) / modifierValue;
+                    double newXPos = objOrigin.X + (newXScale * offsetX);
+                    if (newXScale != 0 && !double.IsNaN(newXScale) && !double.IsInfinity(newXScale) &&
+                                          !double.IsNaN(newXPos) && !double.IsInfinity(newXPos))
+                    {
+                        gameObj.ScaleX = (float)newXScale;
+                        gameObj.X = (int)newXPos;
+                    }
+                }
+                if (topDrag)
+                {
+                    double newYScale = Math.Ceiling(((objOrigin.Y - mousePos.Y) / spriteHeight) * modifierValue) / modifierValue;
+                    double newYPos = objOrigin.Y - (newYScale * (-offsetY + spriteHeight));
+                    if (newYScale != 0 && !double.IsNaN(newYScale) && !double.IsInfinity(newYScale) &&
+                                          !double.IsNaN(newYPos) && !double.IsInfinity(newYPos))
+                    {
+                        gameObj.ScaleY = (float)newYScale;
+                        gameObj.Y = (int)newYPos;
+                    }
+                }
+                else if (bottomDrag)
+                {
+                    double newYScale = Math.Ceiling(((mousePos.Y - objOrigin.Y) / spriteHeight) * modifierValue) / modifierValue;
+                    double newYPos = objOrigin.Y + (newYScale * offsetY);
+                    if (newYScale != 0 && !double.IsNaN(newYScale) && !double.IsInfinity(newYScale) &&
+                                          !double.IsNaN(newYPos) && !double.IsInfinity(newYPos))
+                    {
+                        gameObj.ScaleY = (float)newYScale;
+                        gameObj.Y = (int)newYPos;
+                    }
+                }
+                return;
+            }
+
+            gameObj.X = tgtX;
+            gameObj.Y = tgtY;
+        }
+        else if (movingObj is Tile tile)
+        {
+            tile.X = tgtX;
+            tile.Y = tgtY;
+        }
+        else if (movingObj is SpriteInstance spr)
+        {
+            spr.X = tgtX;
+            spr.Y = tgtY;
+        }
+        else if (movingObj is ParticleSystemInstance partSys)
+        {
+            partSys.X = tgtX;
+            partSys.Y = tgtY;
+        }
+    }
+
+    private void RoomGraphics_DragOver(object? sender, DragEventArgs e)
+    {
+        bool canDrop = DataContext is UndertaleRoomEditorViewModel vm && vm.CanDropAsset(ResourceDragDrop.GetResource(e));
+
+        e.DragEffects = canDrop ? DragDropEffects.Link : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void RoomGraphics_Drop(object? sender, DragEventArgs e)
+    {
+        UndertaleObject? sourceItem = ResourceDragDrop.GetResource(e);
+        if (DataContext is UndertaleRoomEditorViewModel vm && sourceItem is not null && vm.CanDropAsset(sourceItem))
+        {
+            Point mousePos = e.GetPosition(RoomGraphics);
+            UndertaleObject? newObj = vm.DropAsset(sourceItem, mousePos, GetGridMouseCoordinates(mousePos, vm.Room, e.KeyModifiers));
+            if (newObj is not null)
+                SelectObject(newObj);
+
+            e.DragEffects = DragDropEffects.Link;
+        }
+        else
+            e.DragEffects = DragDropEffects.None;
+
+        e.Handled = true;
+    }
+
+    private void RectangleTile_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (sender is not Canvas { DataContext: Tile clickedTile } element || DataContext is not UndertaleRoomEditorViewModel vm)
+            return;
+
+        UndertaleRoom room = vm.Room;
+        Point gridMouseCoordinates = GetGridMouseCoordinates(e.GetPosition(element), room, e.KeyModifiers);
+        scaleOriginX = gridMouseCoordinates.X;
+        scaleOriginY = gridMouseCoordinates.Y;
+        clickedTile.SourceX = (int)gridMouseCoordinates.X;
+        clickedTile.SourceY = (int)gridMouseCoordinates.Y;
+        clickedTile.Width = (uint)room.GridWidth;
+        clickedTile.Height = (uint)room.GridHeight;
+    }
+
+    private void RectangleTile_PointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (sender is not Canvas { DataContext: Tile clickedTile } element || DataContext is not UndertaleRoomEditorViewModel vm)
+            return;
+        if (!e.GetCurrentPoint(element).Properties.IsLeftButtonPressed)
+            return;
+
+        UndertaleRoom room = vm.Room;
+        Point gridMouseCoordinates = GetGridMouseCoordinates(e.GetPosition(element), room, e.KeyModifiers);
+
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Alt) && clickedTile.Tpag is not null)
+        {
+            double differenceX = gridMouseCoordinates.X - scaleOriginX;
+            double differenceY = gridMouseCoordinates.Y - scaleOriginY;
+            clickedTile.Width = (uint)Math.Clamp(Math.Abs(differenceX), 0, clickedTile.Tpag.BoundingWidth) + (uint)room.GridWidth;
+            clickedTile.Height = (uint)Math.Clamp(Math.Abs(differenceY), 0, clickedTile.Tpag.BoundingHeight) + (uint)room.GridHeight;
+
+            if (differenceX < 0)
+                clickedTile.SourceX = (int)gridMouseCoordinates.X;
+            else
+                clickedTile.SourceX = (int)scaleOriginX;
+
+            if (differenceY < 0)
+                clickedTile.SourceY = (int)gridMouseCoordinates.Y;
+            else
+                clickedTile.SourceY = (int)scaleOriginY;
+        }
+        else
+        {
+            clickedTile.SourceX = (int)gridMouseCoordinates.X;
+            clickedTile.SourceY = (int)gridMouseCoordinates.Y;
         }
     }
 

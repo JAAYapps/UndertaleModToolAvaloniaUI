@@ -23,6 +23,8 @@ namespace UndertaleModToolAvalonia.Controls
             set => SetValue(BackgroundObjectProperty, value);
         }
 
+        public Rect DrawnBounds { get; private set; }
+
         static RoomBackgroundDisplay()
         {
             AffectsRender<RoomBackgroundDisplay>(BackgroundObjectProperty);
@@ -88,6 +90,8 @@ namespace UndertaleModToolAvalonia.Controls
 
         public override void Render(DrawingContext context)
         {
+            DrawnBounds = default;
+
             UndertaleTexturePageItem? texture;
             bool tiledH, tiledV, stretch, isLayer;
             double scaleX, scaleY, xOffset, yOffset, left, top;
@@ -176,6 +180,8 @@ namespace UndertaleModToolAvalonia.Controls
 
             double startX = tiledH ? phaseX - Math.Ceiling((phaseX - left) / texW) * texW : phaseX;
             double startY = tiledV ? phaseY - Math.Ceiling((phaseY - top) / texH) * texH : phaseY;
+
+            DrawnBounds = new Rect(left * scaleX, top * scaleY, width * scaleX, height * scaleY);
 
             using (context.PushTransform(Matrix.CreateScale(scaleX, scaleY)))
             using (context.PushClip(new Rect(left, top, width, height)))

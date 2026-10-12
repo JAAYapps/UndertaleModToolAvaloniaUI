@@ -608,6 +608,8 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
                             <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Position</TextBlock>
@@ -638,14 +640,37 @@
                                 <TextBox Grid.Column="3" Margin="3" Text="{Binding Height}" ToolTip.Tip="Height"/>
                             </Grid>
 
-                            <TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Depth</TextBlock>
-                            <TextBox Grid.Row="3" Grid.Column="2" Margin="3" Text="{Binding TileDepth}"/>
+                            <TextBlock Grid.Row="3" Grid.Column="2" Margin="3" HorizontalAlignment="Center" Foreground="DarkGray" FontStyle="Italic" TextWrapping="Wrap">
+                                Hint: You can select a tile by clicking on it.<LineBreak/>
+                                To select a <Run FontWeight="DemiBold" Foreground="#FFB23131">region</Run> of tile, hold down ALT.
+                            </TextBlock>
+                            <Viewbox Grid.Row="4" Grid.Column="2" Margin="3" Stretch="Uniform" StretchDirection="DownOnly">
+                                <Canvas Width="{Binding Tpag.BoundingWidth, Mode=OneWay}" Height="{Binding Tpag.BoundingHeight, Mode=OneWay}"
+                                        PointerPressed="RectangleTile_PointerPressed" PointerMoved="RectangleTile_PointerMoved">
+                                    <Border Background="{StaticResource TransparencyGridBrushBrush}" Tag="{Binding Tpag, Mode=OneWay}">
+                                        <controls:UndertaleTexturePageItemDisplay TextureItem="{Binding $parent[Border].Tag}"
+                                                                                  Editor="{Binding $parent[UserControl].DataContext.(vm:UndertaleRoomEditorViewModel).Editor}"
+                                                                                  TextureCacheService="{Binding $parent[UserControl].DataContext.(vm:UndertaleRoomEditorViewModel).TextureCacheService}"
+                                                                                  FileService="{Binding $parent[UserControl].DataContext.(vm:UndertaleRoomEditorViewModel).FileService}"/>
+                                    </Border>
+                                    <Rectangle Name="TileSelector" Canvas.Left="{Binding SourceX, Mode=OneWay}" Canvas.Top="{Binding SourceY, Mode=OneWay}"
+                                               Width="{Binding Width, Mode=OneWay}" Height="{Binding Height, Mode=OneWay}"
+                                               Stroke="#FFB23131" ZIndex="50" StrokeThickness="2" IsHitTestVisible="False">
+                                        <Rectangle.Fill>
+                                            <SolidColorBrush Color="Red" Opacity=".1"/>
+                                        </Rectangle.Fill>
+                                    </Rectangle>
+                                </Canvas>
+                            </Viewbox>
 
-                            <TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Instance ID</TextBlock>
-                            <TextBox Grid.Row="4" Grid.Column="2" Margin="3" Text="{Binding InstanceID}"/>
+                            <TextBlock Grid.Row="5" Grid.Column="0" Margin="3">Depth</TextBlock>
+                            <TextBox Grid.Row="5" Grid.Column="2" Margin="3" Text="{Binding TileDepth}"/>
 
-                            <TextBlock Grid.Row="5" Grid.Column="0" Margin="3">Scale</TextBlock>
-                            <Grid Grid.Row="5" Grid.Column="2">
+                            <TextBlock Grid.Row="6" Grid.Column="0" Margin="3">Instance ID</TextBlock>
+                            <TextBox Grid.Row="6" Grid.Column="2" Margin="3" Text="{Binding InstanceID}"/>
+
+                            <TextBlock Grid.Row="7" Grid.Column="0" Margin="3">Scale</TextBlock>
+                            <Grid Grid.Row="7" Grid.Column="2">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
@@ -654,8 +679,8 @@
                                 <TextBox Grid.Column="1" Margin="3" Text="{Binding ScaleY}" ToolTip.Tip="Y"/>
                             </Grid>
 
-                            <TextBlock Grid.Row="6" Grid.Column="0" Margin="3">Color</TextBlock>
-                            <controls:ColorPicker Grid.Row="6" Grid.Column="2" Margin="3" Color="{Binding Color}"/>
+                            <TextBlock Grid.Row="8" Grid.Column="0" Margin="3">Color</TextBlock>
+                            <controls:ColorPicker Grid.Row="8" Grid.Column="2" Margin="3" Color="{Binding Color}"/>
                         </Grid>
                     </DataTemplate>
 
@@ -943,7 +968,8 @@
 
         <ScrollViewer Name="RoomGraphicsScroll" Margin="0,8,0,0" Grid.Column="0" Grid.Row="2" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" AllowAutoHide="False">
             <paz:ZoomBorder Name="ZoomBorder" Stretch="None" ZoomSpeed="1.2" ClipToBounds="True" Focusable="True" Background="Gray"
-                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch" PanButton="Middle"
+                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch" PanButton="Middle" DragDrop.AllowDrop="True"
+                            PointerPressed="RoomGraphics_PointerPressed" PointerMoved="RoomGraphics_PointerMoved" PointerReleased="RoomGraphics_PointerReleased"
                             MinZoomX="0.001" MinZoomY="0.001" MaxZoomX="1000" MaxZoomY="1000">
                 <Panel Name="RoomGraphics" Width="{Binding Room.Width, Mode=OneWay}" Height="{Binding Room.Height, Mode=OneWay}"
                        HorizontalAlignment="Left" VerticalAlignment="Top" RenderOptions.BitmapInterpolationMode="None">
