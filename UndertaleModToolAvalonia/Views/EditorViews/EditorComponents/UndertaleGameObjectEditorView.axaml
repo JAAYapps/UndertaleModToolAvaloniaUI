@@ -1,0 +1,249 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents"
+			 xmlns:controls="using:UndertaleModToolAvalonia.Controls"
+			 xmlns:undertale="using:UndertaleModLib.Models"
+			 xmlns:converters="using:UndertaleModToolAvalonia.Converters"
+			 xmlns:app="using:UndertaleModToolAvalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
+             x:Class="UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleGameObjectEditorView"
+			 x:DataType="vm:UndertaleGameObjectEditorViewModel">
+	<UserControl.Resources>
+		<converters:GameObjectByIdConverter x:Key="GameObjectByIdConverter"/>
+	</UserControl.Resources>
+	<ScrollViewer VerticalScrollBarVisibility="Visible" AllowAutoHide="False">
+		<StackPanel Margin="15">
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="1*"/>
+					<ColumnDefinition Width="3*"/>
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
+
+				<TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Name</TextBlock>
+				<controls:UndertaleStringReference Grid.Row="0" Grid.Column="1" Margin="3" ObjectReference="{Binding UndertaleGameObject.Name}"/>
+
+				<TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Sprite</TextBlock>
+				<controls:UndertaleObjectReference Grid.Row="1" Grid.Column="1" Margin="3" ObjectReference="{Binding UndertaleGameObject.Sprite}" ObjectType="{x:Type undertale:UndertaleSprite}"/>
+
+				<ListBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding UndertaleGameObject.Sprite.Textures, Mode=OneWay}" Background="Transparent" BorderThickness="0"
+						 ScrollViewer.HorizontalScrollBarVisibility="Auto">
+					<ListBox.ItemsPanel>
+						<ItemsPanelTemplate>
+							<StackPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
+						</ItemsPanelTemplate>
+					</ListBox.ItemsPanel>
+					<ListBox.ItemTemplate>
+						<DataTemplate>
+							<Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+								<Border Background="{StaticResource TransparencyGridBrushBrush}" Tag="{Binding Texture, Mode=OneWay}">
+									<controls:UndertaleTexturePageItemDisplay TextureItem="{Binding $parent[Border].Tag}"
+																			  Editor="{Binding $parent[UserControl].DataContext.(vm:UndertaleGameObjectEditorViewModel).Editor}"
+																			  TextureCacheService="{Binding $parent[UserControl].DataContext.(vm:UndertaleGameObjectEditorViewModel).TextureCacheService}"
+																			  FileService="{Binding $parent[UserControl].DataContext.(vm:UndertaleGameObjectEditorViewModel).FileService}"/>
+								</Border>
+							</Viewbox>
+						</DataTemplate>
+					</ListBox.ItemTemplate>
+				</ListBox>
+
+				<TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Visible</TextBlock>
+				<CheckBox Grid.Row="3" Grid.Column="1" Margin="3" IsChecked="{Binding UndertaleGameObject.Visible}"/>
+
+				<TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Solid</TextBlock>
+				<CheckBox Grid.Row="4" Grid.Column="1" Margin="3" IsChecked="{Binding UndertaleGameObject.Solid}"/>
+
+				<TextBlock Grid.Row="5" Grid.Column="0" Margin="3" IsVisible="{Binding IsDepthVisible}">Depth</TextBlock>
+				<TextBox Grid.Row="5" Grid.Column="1" Margin="3" IsVisible="{Binding IsDepthVisible}" Text="{Binding UndertaleGameObject.Depth}"/>
+
+				<TextBlock Grid.Row="6" Grid.Column="0" Margin="3">Persistent</TextBlock>
+				<CheckBox Grid.Row="6" Grid.Column="1" Margin="3" IsChecked="{Binding UndertaleGameObject.Persistent}"/>
+
+				<TextBlock Grid.Row="7" Grid.Column="0" Margin="3">Parent</TextBlock>
+				<controls:UndertaleObjectReference Grid.Row="7" Grid.Column="1" Margin="3" ObjectReference="{Binding UndertaleGameObject.ParentId}" ObjectType="{x:Type undertale:UndertaleGameObject}"/>
+
+				<Button Grid.Row="8" Grid.ColumnSpan="2" Margin="5" HorizontalAlignment="Center" Width="220"
+						Content="{Binding ShowChildrenText}" Command="{Binding ShowChildrenCommand}"/>
+
+				<TextBlock Grid.Row="9" Grid.Column="0" Margin="3">Texture mask id</TextBlock>
+				<controls:UndertaleObjectReference Grid.Row="9" Grid.Column="1" Margin="3" ObjectReference="{Binding UndertaleGameObject.TextureMaskId}" ObjectType="{x:Type undertale:UndertaleSprite}"/>
+
+				<TextBlock Grid.Row="10" Grid.Column="0" Margin="3">Uses physics</TextBlock>
+				<CheckBox Grid.Row="10" Grid.Column="1" Margin="3" IsChecked="{Binding UndertaleGameObject.UsesPhysics}"/>
+
+				<TextBlock Grid.Row="11" Grid.Column="0" Margin="3">Is sensor</TextBlock>
+				<CheckBox Grid.Row="11" Grid.Column="1" Margin="3" IsChecked="{Binding UndertaleGameObject.IsSensor}"/>
+
+				<TextBlock Grid.Row="12" Grid.Column="0" Margin="3">Collision shape</TextBlock>
+				<ComboBox ItemsSource="{Binding CollisionShapes}" SelectedItem="{Binding UndertaleGameObject.CollisionShape}"
+									Grid.Row="12" Grid.Column="1" Margin="3"/>
+
+				<Separator Grid.Row="13" Grid.Column="0" Grid.ColumnSpan="2"/>
+
+				<TextBlock Grid.Row="14" Grid.Column="0" Margin="3" FontWeight="Bold">Physics</TextBlock>
+
+				<TextBlock Grid.Row="15" Grid.Column="0" Margin="3">Density</TextBlock>
+				<TextBox Grid.Row="15" Grid.Column="1" Margin="3" Text="{Binding UndertaleGameObject.Density}"/>
+
+				<TextBlock Grid.Row="16" Grid.Column="0" Margin="3">Restitution</TextBlock>
+				<TextBox Grid.Row="16" Grid.Column="1" Margin="3" Text="{Binding UndertaleGameObject.Restitution}"/>
+
+				<TextBlock Grid.Row="17" Grid.Column="0" Margin="3">Group</TextBlock>
+				<TextBox Grid.Row="17" Grid.Column="1" Margin="3" Text="{Binding UndertaleGameObject.Group}"/>
+
+				<TextBlock Grid.Row="18" Grid.Column="0" Margin="3">Linear damping</TextBlock>
+				<TextBox Grid.Row="18" Grid.Column="1" Margin="3" Text="{Binding UndertaleGameObject.LinearDamping}"/>
+
+				<TextBlock Grid.Row="19" Grid.Column="0" Margin="3">Angular damping</TextBlock>
+				<TextBox Grid.Row="19" Grid.Column="1" Margin="3" Text="{Binding UndertaleGameObject.AngularDamping}"/>
+
+				<TextBlock Grid.Row="20" Grid.Column="0" Margin="3">Friction</TextBlock>
+				<TextBox Grid.Row="20" Grid.Column="1" Margin="3" Text="{Binding UndertaleGameObject.Friction}"/>
+
+				<TextBlock Grid.Row="21" Grid.Column="0" Margin="3">Is awake</TextBlock>
+				<CheckBox Grid.Row="21" Grid.Column="1" Margin="3" IsChecked="{Binding UndertaleGameObject.Awake}"/>
+
+				<TextBlock Grid.Row="22" Grid.Column="0" Margin="3">Is kinematic</TextBlock>
+				<CheckBox Grid.Row="22" Grid.Column="1" Margin="3" IsChecked="{Binding UndertaleGameObject.Kinematic}"/>
+
+				<TextBlock Grid.Row="23" Grid.Column="0" Margin="3">Physics shape vertices</TextBlock>
+				<Grid Grid.Row="23" Grid.Column="1" Margin="3" RowDefinitions="*,*">
+					<DataGrid Grid.Row="0" ItemsSource="{Binding UndertaleGameObject.PhysicsVertices, Mode=OneWay}"
+							  AutoGenerateColumns="False" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
+							  HeadersVisibility="Column" SelectionMode="Single">
+						<DataGrid.Styles>
+							<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
+								<Setter Property="Background" Value="#FF26A0DA"/>
+							</Style>
+						</DataGrid.Styles>
+						<DataGrid.Columns>
+							<DataGridTemplateColumn Header="X" Width="*">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<TextBox Text="{Binding X, Mode=TwoWay}" Margin="20,0,0,0"/>
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+							<DataGridTemplateColumn Header="Y" Width="*">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<TextBox Text="{Binding Y, Mode=TwoWay}"/>
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+						</DataGrid.Columns>
+					</DataGrid>
+					<Button Grid.Row="1" HorizontalAlignment="Stretch" Margin="5" DoubleTapped="Button_DoubleTapped">
+						<TextBlock Margin="5" TextAlignment="Center" FontStyle="Italic">Double click to add</TextBlock>
+					</Button>
+				</Grid>
+
+				<Separator Grid.Row="24" Grid.Column="0" Grid.ColumnSpan="2"/>
+			</Grid>
+
+			<TextBlock Margin="3" FontWeight="Bold">Events</TextBlock>
+
+			<ItemsControl ItemsSource="{Binding EventTypes, Mode=OneWay}">
+				<ItemsControl.ItemTemplate>
+					<DataTemplate>
+						<StackPanel>
+							<TextBlock Margin="3" Text="{Binding Name}"/>
+							<Grid RowDefinitions="*,*">
+								<DataGrid Grid.Row="0" ItemsSource="{Binding Events}" AutoGenerateColumns="False"
+										  HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray"
+										  HeadersVisibility="Column" SelectionMode="Single">
+									<DataGrid.Styles>
+										<Style Selector="DataGridCell:selected /template/ ContentPresenter#PART_ContentPresenter">
+											<Setter Property="Background" Value="#FF26A0DA"/>
+										</Style>
+									</DataGrid.Styles>
+									<DataGrid.Columns>
+										<DataGridTemplateColumn Header="Subtype ID" Width="1*">
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<StackPanel Margin="3">
+														<TextBlock TextAlignment="Center" IsVisible="{Binding $parent[DataGrid].DataContext.(vm:GameObjectEventTypeViewModel).HasNoSubtype}">n/a</TextBlock>
+														<ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.(vm:UndertaleGameObjectEditorViewModel).EventSubtypeKeys}" SelectedItem="{Binding EventSubtypeKey, Mode=TwoWay}"
+																  HorizontalAlignment="Stretch" IsVisible="{Binding $parent[DataGrid].DataContext.(vm:GameObjectEventTypeViewModel).IsKeyEvent}"/>
+														<ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.(vm:UndertaleGameObjectEditorViewModel).EventSubtypeSteps}" SelectedItem="{Binding EventSubtypeStep, Mode=TwoWay}"
+																  HorizontalAlignment="Stretch" IsVisible="{Binding $parent[DataGrid].DataContext.(vm:GameObjectEventTypeViewModel).IsStepEvent}"/>
+														<ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.(vm:UndertaleGameObjectEditorViewModel).EventSubtypeMouses}" SelectedItem="{Binding EventSubtypeMouse, Mode=TwoWay}"
+																  HorizontalAlignment="Stretch" IsVisible="{Binding $parent[DataGrid].DataContext.(vm:GameObjectEventTypeViewModel).IsMouseEvent}"/>
+														<ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.(vm:UndertaleGameObjectEditorViewModel).EventSubtypeOthers}" SelectedItem="{Binding EventSubtypeOther, Mode=TwoWay}"
+																  HorizontalAlignment="Stretch" IsVisible="{Binding $parent[DataGrid].DataContext.(vm:GameObjectEventTypeViewModel).IsOtherEvent}"/>
+														<ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.(vm:UndertaleGameObjectEditorViewModel).EventSubtypeDraws}" SelectedItem="{Binding EventSubtypeDraw, Mode=TwoWay}"
+																  HorizontalAlignment="Stretch" IsVisible="{Binding $parent[DataGrid].DataContext.(vm:GameObjectEventTypeViewModel).IsDrawEvent}"/>
+														<controls:UndertaleObjectReference ObjectReference="{Binding EventSubtype, Converter={StaticResource GameObjectByIdConverter}, Mode=TwoWay}" ObjectType="{x:Type undertale:UndertaleGameObject}" CanRemove="False"
+																						   IsVisible="{Binding $parent[DataGrid].DataContext.(vm:GameObjectEventTypeViewModel).IsCollisionEvent}"/>
+														<TextBox Text="{Binding EventSubtype, Mode=TwoWay}" IsVisible="{Binding $parent[DataGrid].DataContext.(vm:GameObjectEventTypeViewModel).IsSubtypeTextVisible}"/>
+													</StackPanel>
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+										</DataGridTemplateColumn>
+										<DataGridTemplateColumn Header="Actions" Width="5*">
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<DataGrid ItemsSource="{Binding Actions}" AutoGenerateColumns="False"
+															  HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="None"
+															  SelectionMode="Single">
+														<DataGrid.Columns>
+															<DataGridTemplateColumn Header="Code" Width="*">
+																<DataGridTemplateColumn.CellTemplate>
+																	<DataTemplate>
+																		<controls:UndertaleObjectReference ObjectReference="{Binding CodeId, Mode=TwoWay}" ObjectType="{x:Type undertale:UndertaleCode}" Margin="23,3,3,3" CanRemove="True"
+																										   Loaded="UndertaleObjectReference_Loaded" GotFocus="UndertaleObjectReference_GotFocus"
+																										   UndertaleData="{x:Static Member=app:AppConstants.Data}"
+																										   GameObject="{Binding $parent[UserControl].DataContext.(vm:UndertaleGameObjectEditorViewModel).UndertaleGameObject, Mode=OneWay}"
+																										   ObjectEventType="{Binding $parent[DataGrid;1].DataContext.(vm:GameObjectEventTypeViewModel).EventType, Mode=OneWay}"
+																										   RemoveCommand="{Binding $parent[UserControl].DataContext.(vm:UndertaleGameObjectEditorViewModel).RemoveActionCommand}"
+																										   RemoveCommandParameter="{Binding}"/>
+																	</DataTemplate>
+																</DataGridTemplateColumn.CellTemplate>
+															</DataGridTemplateColumn>
+														</DataGrid.Columns>
+													</DataGrid>
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+										</DataGridTemplateColumn>
+									</DataGrid.Columns>
+								</DataGrid>
+								<Button Grid.Row="1" HorizontalAlignment="Stretch" Margin="5" DoubleTapped="EventButton_DoubleTapped">
+									<TextBlock Margin="5" TextAlignment="Center" FontStyle="Italic">Double click to add</TextBlock>
+								</Button>
+							</Grid>
+							<Separator/>
+						</StackPanel>
+					</DataTemplate>
+				</ItemsControl.ItemTemplate>
+			</ItemsControl>
+		</StackPanel>
+	</ScrollViewer>
+</UserControl>

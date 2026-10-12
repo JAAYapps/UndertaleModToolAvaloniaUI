@@ -260,6 +260,7 @@ namespace UndertaleModToolAvalonia.Utilities
                         Version = (1, 0, 0),
                         Types = new[]
                         {
+                            (typeof(UndertaleGameObject), "Game objects (children)"),
                             (typeof(UndertaleRoom.GameObject), "Room object instance")
                         }
                     },

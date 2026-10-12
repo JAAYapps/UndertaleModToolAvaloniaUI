@@ -1071,7 +1071,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     UndertaleShader => new UndertaleShaderEditorViewModel(name, (UndertaleShader)asset),
                     UndertaleFont => new UndertaleFontEditorViewModel(name, (UndertaleFont)asset, this, textureCacheService, fileService, dialogService),
                     UndertaleTimeline => new UndertaleTimelineEditorViewModel(name, (UndertaleTimeline)asset),
-                    //UndertaleGameObject => "Game Object",
+                    UndertaleGameObject => new UndertaleGameObjectEditorViewModel(name, (UndertaleGameObject)asset, this, fileService, textureCacheService, referenceFinderService, dialogService),
                     UndertaleRoom => new UndertaleRoomEditorViewModel(name, (UndertaleRoom)asset, this, fileService, textureCacheService),
                     //UndertaleExtension => "Extension",
                     UndertaleTexturePageItem => new UndertaleTexturePageItemEditorViewModel(name, (UndertaleTexturePageItem)asset, this, textureCacheService, fileService),
