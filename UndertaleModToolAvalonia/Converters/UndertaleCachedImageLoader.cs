@@ -49,7 +49,6 @@ namespace UndertaleModToolAvalonia.Converters
         {
             if (value is null)
                 return null;
-            Console.WriteLine("value " + value.GetType());
             bool isTile = false;
             bool cacheEnabled = true;
             bool generate = false;
@@ -341,7 +340,7 @@ namespace UndertaleModToolAvalonia.Converters
             if (values[0] is null) // tile
                 return null;
 
-            if ((uint)values[1] == 0 || (uint)values[2] == 0) // width, height
+            if (values[1] is not uint width || values[2] is not uint height || width == 0 || height == 0) // width, height
                 return null;
 
             return loader.Convert(values[0], null, "tile", null);
@@ -436,7 +435,8 @@ namespace UndertaleModToolAvalonia.Converters
                 WriteableBitmap data = BitmapInfo.BitmapToWritableBitmap(tilePageBMP);//tilePageBMP.LockBits(new Rectangle(0, 0, tilePageBMP.Width, tilePageBMP.Height), ImageLockMode.ReadOnly, tilePageBMP.PixelFormat);
                 int depth = BitmapInfo.GetDepth(tilePageBMP); //Image.GetPixelFormatSize(data.PixelFormat) / 8;
                 byte[] buffer = new byte[(int)(BitmapInfo.GetStride(tilePageBMP) * tilePageBMP.Size.Height)];
-                Marshal.Copy(data.Lock().Address, buffer, 0, buffer.Length);
+                using (var dataBuffer = data.Lock())
+                    Marshal.Copy(dataBuffer.Address, buffer, 0, buffer.Length);
                 //tilePageBMP.UnlockBits(data);
 
                 int w = (int)tilesBG.GMS2TileWidth;
@@ -479,7 +479,8 @@ namespace UndertaleModToolAvalonia.Converters
                         }
 
                         WriteableBitmap tileBMP = new WriteableBitmap(new PixelSize(w, h), new Vector(96, 96), format);
-                        Marshal.Copy(bufferRes, 0, tileBMP.Lock().Address, bufferResLen);
+                        using (var tileBuffer = tileBMP.Lock())
+                            Marshal.Copy(bufferRes, 0, tileBuffer.Address, bufferResLen);
                         ArrayPool<byte>.Shared.Return(bufferRes);
 
                         TileCache.TryAdd(new(texName, (uint)((tilesBG.GMS2TileColumns * y) + x)), tileBMP);

@@ -28,10 +28,8 @@ public class BGColorConverter : IMultiValueConverter
         
         Color color = Colors.Black;
         if (rawColorObj is uint uVal)
-            color = Color.FromUInt32(uVal); 
-        
-        
+            color = (Color)colorConv.Convert(uVal, typeof(Color), null, culture);
 
-        return null;
+        return new SolidColorBrush(Color.FromRgb(color.R, color.G, color.B));
     }
 }

@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -7,9 +8,11 @@ using Avalonia.Markup.Xaml;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Messaging;
 using System;
+using System.ComponentModel;
 using System.Linq;
 using UndertaleModLib;
 using UndertaleModLib.Models;
+using UndertaleModToolAvalonia.Converters;
 using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.UndertaleRoomEditorViewModel;
 using static UndertaleModLib.Models.UndertaleRoom;
@@ -18,9 +21,53 @@ namespace UndertaleModToolAvalonia.Views.EditorViews.EditorComponents.UndertaleR
 
 public partial class UndertaleRoomEditorView : UserControl
 {
+    private static UndertaleRoom? lastRoom;
+    private UndertaleRoomEditorViewModel? currentViewModel;
+    private Control? flashingElement;
+
     public UndertaleRoomEditorView()
     {
         InitializeComponent();
+    }
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+
+        if (currentViewModel is not null)
+            currentViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+        currentViewModel = DataContext as UndertaleRoomEditorViewModel;
+        if (currentViewModel is null)
+            return;
+
+        if (!ReferenceEquals(lastRoom, currentViewModel.Room))
+        {
+            UndertaleCachedImageLoader.Reset();
+            CachedTileDataLoader.Reset();
+            lastRoom = currentViewModel.Room;
+        }
+
+        currentViewModel.SetupRoom();
+        currentViewModel.PropertyChanged += ViewModel_PropertyChanged;
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(UndertaleRoomEditorViewModel.SelectedObject))
+            FlashObject(currentViewModel?.SelectedObject);
+    }
+
+    private void FlashObject(object? obj)
+    {
+        flashingElement?.Classes.Remove("flash");
+        flashingElement = null;
+
+        if (obj is null or UndertaleRoom or View or Layer { IsVisible: false })
+            return;
+
+        flashingElement = RoomGraphics.GetVisualDescendants().OfType<Control>()
+                                      .FirstOrDefault(x => x is not ContentPresenter && ReferenceEquals(x.DataContext, obj));
+        flashingElement?.Classes.Add("flash");
     }
 
     private void RoomObjectsTree_SelectionChanged(object? sender, SelectionChangedEventArgs e)

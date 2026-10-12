@@ -58,6 +58,23 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
         public AnimationSpeedType[] AnimationSpeedTypes { get; } = 
             Enum.GetValues<AnimationSpeedType>();
 
+        public void SetupRoom()
+        {
+            if (Settings.Instance.GridWidthEnabled)
+                Room.GridWidth = Settings.Instance.GlobalGridWidth;
+            if (Settings.Instance.GridHeightEnabled)
+                Room.GridHeight = Settings.Instance.GlobalGridHeight;
+
+            if (Settings.Instance.GridThicknessEnabled)
+                Room.GridThicknessPx = Settings.Instance.GlobalGridThickness;
+            else
+                Room.GridThicknessPx = 1;
+            Room.SetupRoom(!Settings.Instance.GridWidthEnabled, !Settings.Instance.GridHeightEnabled);
+
+            if (Room.Layers.Count > 0 && !Room.CheckLayersDepthOrder())
+                Room.RearrangeLayers();
+        }
+
         partial void OnSelectedObjectChanged(object value)
         {
             if (value is UndertaleRoom.Layer layer)
