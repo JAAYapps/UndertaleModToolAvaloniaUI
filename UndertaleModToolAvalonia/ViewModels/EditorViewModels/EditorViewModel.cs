@@ -978,6 +978,8 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
         private EditorContentViewModel GetViewModelFromObject(object asset)
         {
+            if (asset is EditorContentViewModel editorContent)
+                return editorContent;
             if (asset is Description)
                 return new DescriptionViewModel(GetTitleForObject(asset) ?? "Unknown", (Description)asset);
             if (asset is UndertaleGeneralInfo)

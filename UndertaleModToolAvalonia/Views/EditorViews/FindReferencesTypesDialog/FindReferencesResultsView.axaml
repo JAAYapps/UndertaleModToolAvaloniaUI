@@ -2,8 +2,79 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+		xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTypesDialog"
+        x:DataType="vm:FindReferencesResultsViewModel"
+        mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="600"
         x:Class="UndertaleModToolAvalonia.Views.EditorViews.FindReferencesTypesDialog.FindReferencesResultsView"
-        Title="FindReferencesResultsView">
-	This is temporarily left blank until other views are working properly.
+        Title="{Binding Title}" Height="600" Width="450">
+	<Window.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.ThemeDictionaries>
+				<ResourceDictionary x:Key="Light">
+					<SolidColorBrush x:Key='ForegroundBrush'>Black</SolidColorBrush>
+					<SolidColorBrush x:Key='Background'>LightGray</SolidColorBrush>
+				</ResourceDictionary>
+				<ResourceDictionary x:Key="Dark">
+					<SolidColorBrush x:Key='ForegroundBrush'>White</SolidColorBrush>
+					<SolidColorBrush x:Key='Background'>Gray</SolidColorBrush>
+				</ResourceDictionary>
+			</ResourceDictionary.ThemeDictionaries>
+		</ResourceDictionary>
+	</Window.Resources>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*" MinHeight="60"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+		<TextBlock Grid.Row="0" Text="{Binding Heading}" HorizontalAlignment="Left" Padding="5" Margin="10,10,0,0"
+				   FontSize="22" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="70"/>
+		<Rectangle Grid.Row="1" Margin="10,0,20,0" Height="2" Fill="{DynamicResource ForegroundBrush}" />
+
+		<TextBox Grid.Row="2" Name="SearchBox" Text="{Binding SearchText}" PlaceholderText="Filter by name..."
+				 ToolTip.Tip="Search" Margin="10,15,20,0" FontSize="14"/>
+
+		<TreeView Grid.Row="3" Name="ResultsTree" Margin="10,5,20,0" FontSize="14"
+				  ItemsSource="{Binding Results}"
+				  SelectedItem="{Binding SelectedResult}"
+				  Background="{DynamicResource Background}">
+			<TreeView.Styles>
+				<Style Selector="TreeViewItem" x:DataType="vm:ReferenceResultNode">
+					<Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+					<Setter Property="ContextFlyout">
+						<MenuFlyout>
+							<MenuItem Header="Open in new tab"
+									  Command="{Binding OpenInNewTabCommand}"
+									  CommandParameter="{Binding}"
+									  IsVisible="{Binding IsResultItem}"/>
+
+							<MenuItem Header="Find all references"
+									  Command="{Binding FindAllReferencesCommand}"
+									  CommandParameter="{Binding}"
+									  IsVisible="{Binding CanFindReferences}" />
+						</MenuFlyout>
+					</Setter>
+				</Style>
+			</TreeView.Styles>
+			<TreeView.DataTemplates>
+				<TreeDataTemplate DataType="vm:ReferenceResultNode"
+								  ItemsSource="{Binding Children}">
+					<TextBlock Text="{Binding Header}" />
+				</TreeDataTemplate>
+			</TreeView.DataTemplates>
+		</TreeView>
+		<TextBlock Grid.Row="3" Text="{Binding EmptyText}" IsVisible="{Binding !HasResults}" FontSize="16"
+				   HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"/>
+
+		<TextBlock Grid.Row="4" Text="Note: the results may be not 100% correct and/or comprehensive.&#x0a;Search in code as well via the &quot;Find&quot; menu if necessary.&#x0a;(You may need to directly search for asset IDs, too.)"
+				   Margin="10,0,20,0" FontStyle="Italic" Foreground="Gray"/>
+
+		<StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,20">
+			<Button Content="Export results" FontSize="18" Width="144" Height="40" Command="{Binding ExportResultsCommand}" Margin="0,0,10,0"/>
+			<Button Name="DoneButton" Content="Done" FontSize="18" Width="134" Height="40"/>
+		</StackPanel>
+	</Grid>
 </Window>
