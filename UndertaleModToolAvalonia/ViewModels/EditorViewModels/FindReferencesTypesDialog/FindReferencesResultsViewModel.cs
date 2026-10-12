@@ -15,6 +15,7 @@ using UndertaleModLib.Models;
 using UndertaleModLib.Util;
 using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.Models;
+using UndertaleModToolAvalonia.Services.ClipboardService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents;
 
@@ -50,6 +51,8 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
 
         public ICommand FindAllReferencesCommand { get; }
 
+        public ICommand CopyNameCommand { get; }
+
         public ReferenceResultNode(string header, object? model, FindReferencesResultsViewModel resultsVM)
         {
             Header = header;
@@ -59,6 +62,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
 
             OpenInNewTabCommand = resultsVM.OpenInNewTabCommand;
             FindAllReferencesCommand = resultsVM.FindAllReferencesCommand;
+            CopyNameCommand = resultsVM.CopyNameCommand;
         }
 
         public void AddChild(ReferenceResultNode child)
@@ -98,6 +102,8 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
 
     public partial class FindReferencesResultsViewModel : ViewModelBase, IInitializable<FindReferencesResultsParameters>
     {
+        private readonly IClipboardService? clipboardService;
+
         private UndertaleData? data;
         private string? sourceObjName;
 
@@ -121,6 +127,13 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
         public ObservableCollection<ReferenceResultNode> Results { get; } = new();
 
         public bool HasResults => Results.Count > 0;
+
+        public FindReferencesResultsViewModel() { }
+
+        public FindReferencesResultsViewModel(IClipboardService clipboardService)
+        {
+            this.clipboardService = clipboardService;
+        }
 
         public Task<bool> InitializeAsync(FindReferencesResultsParameters parameters)
         {
@@ -241,6 +254,23 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
             }
 
             WeakReferenceMessenger.Default.Send(new FindReferencesMessage(node.Model));
+        }
+
+        [RelayCommand]
+        private async Task CopyName(ReferenceResultNode? node)
+        {
+            if (node?.Model is null)
+                return;
+
+            try
+            {
+                await clipboardService!.SetTextAsync(node.Header);
+            }
+            catch (Exception ex)
+            {
+                await App.Current!.ShowError("Can't copy the item name to clipboard due to this error:\n" +
+                                     ex.Message + ".\nYou probably should try again.");
+            }
         }
 
         [RelayCommand(CanExecute = nameof(HasResults))]

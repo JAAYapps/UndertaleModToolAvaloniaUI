@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using System;
 using UndertaleModToolAvalonia.Messages;
+using UndertaleModToolAvalonia.Services.ClipboardService;
 using UndertaleModToolAvalonia.Services.DialogService;
 using UndertaleModToolAvalonia.Services.FileService;
 using UndertaleModToolAvalonia.Services.LoadingDialogService;
@@ -157,6 +158,7 @@ public partial class App : Application
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IReferenceFinderService, ReferenceFinderService>();
         services.AddSingleton<ITextureCacheService, TextureCacheService>();
+        services.AddSingleton<IClipboardService, ClipboardService>();
 
         if (OperatingSystem.IsWindows() || OperatingSystem.IsMacOS() || OperatingSystem.IsLinux() || OperatingSystem.IsFreeBSD())
         {

@@ -51,6 +51,11 @@
 									  CommandParameter="{Binding}"
 									  IsVisible="{Binding IsResultItem}"/>
 
+							<MenuItem Header="Copy name to clipboard"
+									  Command="{Binding CopyNameCommand}"
+									  CommandParameter="{Binding}"
+									  IsVisible="{Binding IsResultItem}"/>
+
 							<MenuItem Header="Find all references"
 									  Command="{Binding FindAllReferencesCommand}"
 									  CommandParameter="{Binding}"

@@ -24,6 +24,7 @@ using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.Models;
 using UndertaleModToolAvalonia.Models.EditorModels;
 using UndertaleModToolAvalonia.Models.UndertaleReferenceTypes;
+using UndertaleModToolAvalonia.Services.ClipboardService;
 using UndertaleModToolAvalonia.Services.DialogService;
 using UndertaleModToolAvalonia.Services.FileService;
 using UndertaleModToolAvalonia.Services.LoadingDialogService;
@@ -60,6 +61,8 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         private IFileService fileService;
 
         private ITextureCacheService textureCacheService;
+
+        private IClipboardService clipboardService;
 
         [ObservableProperty]
         private ObservableCollection<TabViewModel> tabs = new();
@@ -148,7 +151,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             OpenInTab(asset, false, asset.MainText);
         }
 
-        public EditorViewModel(ILoadingDialogService loadingDialogService, IProfileService profileService, IDialogService dialogService, IReferenceFinderService referenceFinderService, IPlayer playerService, IFileService fileService, ITextureCacheService textureCacheService)
+        public EditorViewModel(ILoadingDialogService loadingDialogService, IProfileService profileService, IDialogService dialogService, IReferenceFinderService referenceFinderService, IPlayer playerService, IFileService fileService, ITextureCacheService textureCacheService, IClipboardService clipboardService)
         {
             this.loadingDialogService = loadingDialogService;
             this.profileService = profileService;
@@ -157,6 +160,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             this.playerService = playerService;
             this.fileService = fileService;
             this.textureCacheService = textureCacheService;
+            this.clipboardService = clipboardService;
             Highlighted = new Description("Welcome to UndertaleModTool!", "Open a data.win file to get started, then double click on the items on the left to view them.");
             var asset = GetViewModelFromObject(Highlighted);
             OpenInTab(asset, false, asset.MainText);
@@ -779,9 +783,30 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         }
 
         [RelayCommand]
-        private void CopyItemToClipboard(ResourceNodeViewModel? node)
+        private async Task CopyItemToClipboard(ResourceNodeViewModel? node)
         {
-            // TODO Add clipboard service
+            string? name = null;
+
+            if (node?.Model is UndertaleNamedResource namedRes)
+                name = namedRes.Name?.Content;
+            else if (node?.Model is UndertaleString str && str.Content?.Length > 0)
+                name = StringTitleConverter.Instance.Convert(str.Content, null, null, null) as string;
+
+            if (name is null)
+            {
+                await App.Current!.ShowWarning("Item name is null.");
+                return;
+            }
+
+            try
+            {
+                await clipboardService.SetTextAsync(name);
+            }
+            catch (Exception ex)
+            {
+                await App.Current!.ShowError("Can't copy the item name to clipboard due to this error:\n" +
+                                     ex.Message + ".\nYou probably should try again.");
+            }
         }
 
         [RelayCommand]
