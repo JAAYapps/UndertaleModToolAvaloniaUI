@@ -1,13 +1,20 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows.Input;
+using UndertaleModLib;
+using UndertaleModLib.Models;
 using UndertaleModToolAvalonia.Models.EditorModels;
 
 namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
 {
     public partial class TabViewModel : ViewModelBase
     {
+        private readonly Func<object, string?>? getTitleForObject;
+        private INotifyPropertyChanged? titleSource;
+        private INotifyPropertyChanged? titleNameSource;
+
         public ICommand CloseCommand { get; }
 
         public ICommand CloseOtherTabsCommand { get; }
@@ -40,8 +47,9 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
         /// <param name="obj">The object that should be open.</param>
         /// <param name="tabIndex">The tab index.</param>
         /// <param name="tabTitle">The tab title.</param>
-        public TabViewModel(object obj, int tabIndex, string tabTitle = null, ICommand closeCommand = null, ICommand closeOtherTabsCommand = null, ICommand closeAllTabsCommand = null)
+        public TabViewModel(object obj, int tabIndex, string tabTitle = null, ICommand closeCommand = null, ICommand closeOtherTabsCommand = null, ICommand closeAllTabsCommand = null, Func<object, string?>? getTitleForObject = null)
         {
+            this.getTitleForObject = getTitleForObject;
             CurrentObject = obj;
             TabIndex = tabIndex;
             CloseCommand = closeCommand;
@@ -57,6 +65,57 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
                 else
                     TabTitle = tabTitle;
             }
+        }
+
+        partial void OnCurrentObjectChanged(object value)
+        {
+            if (titleSource is not null)
+                titleSource.PropertyChanged -= TitleSource_PropertyChanged;
+            titleSource = null;
+
+            object? asset = (value as EditorContentViewModel)?.Asset;
+            if (asset is UndertaleString or UndertaleNamedResource)
+                titleSource = asset as INotifyPropertyChanged;
+            if (titleSource is not null)
+                titleSource.PropertyChanged += TitleSource_PropertyChanged;
+
+            SubscribeToTitleName();
+            UpdateTitle();
+        }
+
+        private void SubscribeToTitleName()
+        {
+            if (titleNameSource is not null)
+                titleNameSource.PropertyChanged -= TitleSource_PropertyChanged;
+
+            titleNameSource = ((CurrentObject as EditorContentViewModel)?.Asset as UndertaleNamedResource)?.Name as INotifyPropertyChanged;
+            if (titleNameSource is not null)
+                titleNameSource.PropertyChanged += TitleSource_PropertyChanged;
+        }
+
+        private void TitleSource_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (ReferenceEquals(sender, titleSource) && e.PropertyName == nameof(UndertaleNamedResource.Name))
+                SubscribeToTitleName();
+            else if (e.PropertyName != nameof(UndertaleString.Content))
+                return;
+
+            UpdateTitle();
+        }
+
+        private void UpdateTitle()
+        {
+            if (getTitleForObject is null || CurrentObject is not EditorContentViewModel content)
+                return;
+            if (content.GetType() == typeof(EditorContentViewModel) || content.Asset is not (UndertaleString or UndertaleNamedResource))
+                return;
+
+            string? title = getTitleForObject(content.Asset);
+            if (title is null)
+                return;
+
+            content.MainText = title;
+            TabTitle = title;
         }
 
         /// <inheritdoc/>

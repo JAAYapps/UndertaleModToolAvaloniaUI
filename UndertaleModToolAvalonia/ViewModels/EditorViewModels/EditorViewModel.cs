@@ -1336,7 +1336,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             if (isNewTab || Tabs.Count == 0)
             {
                 int newIndex = Tabs.Count;
-                TabViewModel newTab = new(obj, newIndex, tabTitle, CloseAssetTabCommand, CloseOtherTabsCommand, CloseAllTabsCommand);
+                TabViewModel newTab = new(obj, newIndex, tabTitle, CloseAssetTabCommand, CloseOtherTabsCommand, CloseAllTabsCommand, GetTitleForObject);
 
                 Tabs.Add(newTab);
                 // CurrentTabIndex = newIndex;
