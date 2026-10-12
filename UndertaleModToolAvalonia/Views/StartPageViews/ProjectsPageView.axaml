@@ -28,6 +28,9 @@
 			<MenuItem Name="RootScriptItem" Header="_Scripts">
 				<MenuItem Header="(...loading...)" IsEnabled="False"/>
 			</MenuItem>
+			<MenuItem Header="F_ind">
+				<MenuItem Header="Find unreferenced _assets" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).FindUnreferencedAssetsCommand}"/>
+			</MenuItem>
 			<MenuItem Header="_Help">
 				<MenuItem Header="_GitHub" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).OpenGitHubCommand}"/>
 				<MenuItem Header="_About" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).OpenAboutCommand}"/>

@@ -14,7 +14,7 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
 
         (Type, string)[] GetTypeMapForVersion(Type type, UndertaleData data);
 
-        public Task<Dictionary<string, List<object>>?> GetReferencesOfObject(object obj, UndertaleData data, HashSetTypesOverride types, bool checkOne = false);
+        public Dictionary<string, List<object>>? GetReferencesOfObject(object obj, UndertaleData data, HashSetTypesOverride types, bool checkOne = false);
 
         Task<Dictionary<string, List<object>>?> GetUnreferencedObjects(
             UndertaleData data, Dictionary<Type, string> typesDict);

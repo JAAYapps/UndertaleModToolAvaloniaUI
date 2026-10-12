@@ -29,6 +29,7 @@ using UndertaleModToolAvalonia.Services.PlayerService;
 using UndertaleModToolAvalonia.Services.ProfileService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
+using UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTypesDialog;
 using UndertaleModToolAvalonia.ViewModels.StartPageViewModels;
 
 namespace UndertaleModToolAvalonia.ViewModels
@@ -67,6 +68,7 @@ namespace UndertaleModToolAvalonia.ViewModels
             RunGameCommand.NotifyCanExecuteChanged();
             RunSpecialCommand.NotifyCanExecuteChanged();
             RunDebugCommand.NotifyCanExecuteChanged();
+            FindUnreferencedAssetsCommand.NotifyCanExecuteChanged();
         }
 
         public MainWindowViewModel(IServiceProvider services, EditorViewModel editorViewModel, IProfileService profileService, IDialogService dialogService, IPlayer playerService, IFileService fileService, ILoadingDialogService loadingDialogService)
@@ -607,6 +609,22 @@ result in loss of work.");
                 Process.Start(runtime.DebuggerPath, "-d=\"" + Path.ChangeExtension(AppConstants.FilePath, ".yydebug") + "\" -t=\"127.0.0.1\" -tp=" + AppConstants.Data.GeneralInfo.DebuggerPort + " -p=\"" + tempProject + "\"");
             }
             AppConstants.Data.GeneralInfo.IsDebuggerDisabled = origDbg;
+        }
+
+        private bool CanFindUnreferencedAssets => AppConstants.Data is not null;
+
+        [RelayCommand(CanExecute = nameof(CanFindUnreferencedAssets))]
+        private async Task FindUnreferencedAssets()
+        {
+            try
+            {
+                await dialogService.ShowAsync<FindReferencesTypesDialogViewModel, UndertaleReferenceParameters>(new UndertaleReferenceParameters(null, AppConstants.Data!));
+            }
+            catch (Exception ex)
+            {
+                await App.Current!.ShowError("An error occurred in the object references related window.\n" +
+                                     $"Please report this on GitHub.\n\n{ex}");
+            }
         }
 
         [RelayCommand]

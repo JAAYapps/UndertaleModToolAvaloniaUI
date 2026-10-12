@@ -155,7 +155,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
 
                 try
                 {
-                    var results = await referenceFinder!.GetReferencesOfObject(SourceObj!, Data!, typesList);
+                    var results = referenceFinder!.GetReferencesOfObject(SourceObj!, Data!, typesList);
                     await dialogService!.ShowAsync<FindReferencesResultsViewModel, FindReferencesResultsParameters>(new FindReferencesResultsParameters(SourceObj!, Data!, results));
                 }
                 catch (Exception ex)

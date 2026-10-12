@@ -937,7 +937,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                 IsEnabled = false;
                 var typeList = new HashSetTypesOverride() { typeof(UndertaleRoom.Layer) };
                 var tuple = (tileSet, selectedID);
-                var results = await referenceFinderService.GetReferencesOfObject(tuple, AppConstants.Data!, typeList);
+                var results = referenceFinderService.GetReferencesOfObject(tuple, AppConstants.Data!, typeList);
                 await dialogService.ShowAsync<FindReferencesResultsViewModel, FindReferencesResultsParameters>(new FindReferencesResultsParameters(tuple, AppConstants.Data!, results));
             }
             catch (Exception ex)

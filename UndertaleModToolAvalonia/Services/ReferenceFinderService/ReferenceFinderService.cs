@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using UndertaleModLib;
 using UndertaleModLib.Models;
@@ -1407,7 +1408,12 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
             return UndertaleResourceReferenceMap.GetTypeMapForVersion(type, data);
         }
 
-        public async Task<Dictionary<string, List<object>>?> GetReferencesOfObject(object obj, UndertaleData data, HashSetTypesOverride types, bool checkOne = false)
+        public Dictionary<string, List<object>>? GetReferencesOfObject(object obj, UndertaleData data, HashSetTypesOverride types, bool checkOne = false)
+        {
+            return FindReferencesOfObject(obj, data, types, checkOne);
+        }
+
+        private Dictionary<string, List<object>>? FindReferencesOfObject(object obj, UndertaleData data, HashSetTypesOverride types, bool checkOne)
         {
             if (obj is null)
                 return null;
@@ -1523,7 +1529,7 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
                             for (int i = range.Item1; i < range.Item2; i++)
                             {
                                 var asset = assets[i];
-                                var assetReferences = GetReferencesOfObject(asset.Item1, data, new HashSetTypesOverride(true, data.Code is null), true);
+                                var assetReferences = FindReferencesOfObject(asset.Item1, data, new HashSetTypesOverride(true, data.Code is null), true);
                                 if (assetReferences is null)
                                 {
                                     if (resultDict.TryGetValue(asset.Item2, out var list))
@@ -1536,10 +1542,11 @@ namespace UndertaleModToolAvalonia.Services.ReferenceFinderService
                                     }
                                 }
 
-                                loadingDialog.UpdateProgressAsync(++count, assets.Count);
+                                loadingDialog.UpdateProgressAsync(Interlocked.Increment(ref count), assets.Count);
                             }
 
-                            dicts.Add(resultDict);
+                            lock (dicts)
+                                dicts.Add(resultDict);
                         });
                     });
                 }
