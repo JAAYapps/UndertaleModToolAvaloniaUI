@@ -67,6 +67,7 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
             editorViewModel.IsEnabled = false;
 
             await RunScriptNow(path);
+            editorViewModel.ReloadTree();
             editorViewModel.IsEnabled = true;
         }
 

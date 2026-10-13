@@ -326,6 +326,24 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             }
         }
 
+        public void ReloadTree()
+        {
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                ApplyFilter(AppConstants.Data!);
+                return;
+            }
+
+            foreach (ResourceNodeViewModel root in FilteredRootNodes)
+            {
+                foreach (ResourceNodeViewModel category in root.Children)
+                {
+                    if (category.SourceList is not null)
+                        category.ReloadChildren();
+                }
+            }
+        }
+
         private List<ResourceNodeViewModel> FilterNodeList(IEnumerable<ResourceNodeViewModel> sourceList)
         {
             var filteredList = new List<ResourceNodeViewModel>();
