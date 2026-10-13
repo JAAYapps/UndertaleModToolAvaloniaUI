@@ -19,7 +19,10 @@ public partial class FindReferencesResultsView : Window
         ResultsTree.DoubleTapped += (s, e) =>
         {
             if (DataContext is FindReferencesResultsViewModel vm)
+            {
                 vm.OpenCommand.Execute(vm.SelectedResult);
+                ActivateMainWindow();
+            }
         };
         ResultsTree.AddHandler(KeyDownEvent, ResultsTree_KeyDown, RoutingStrategies.Tunnel);
         ResultsTree.AddHandler(PointerPressedEvent, ResultsTree_PointerPressed, RoutingStrategies.Bubble, handledEventsToo: true);
@@ -53,6 +56,7 @@ public partial class FindReferencesResultsView : Window
         if (DataContext is FindReferencesResultsViewModel { SelectedResult.IsResultItem: true } vm)
         {
             vm.OpenCommand.Execute(vm.SelectedResult);
+            ActivateMainWindow();
             e.Handled = true;
         }
     }
@@ -67,6 +71,13 @@ public partial class FindReferencesResultsView : Window
         {
             vm.SelectedResult = node;
             vm.OpenInNewTabCommand.Execute(node);
+            ActivateMainWindow();
         }
+    }
+
+    private static void ActivateMainWindow()
+    {
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            desktop.MainWindow?.Activate();
     }
 }

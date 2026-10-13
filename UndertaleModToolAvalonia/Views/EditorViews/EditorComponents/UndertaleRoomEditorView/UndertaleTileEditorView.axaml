@@ -11,7 +11,10 @@
 		x:DataType="vm:UndertaleTileEditorViewModel"
 		Title="Edit Tile Data"
 		Height="400" Width="800" MinHeight="300" MinWidth="300"
-		WindowStartupLocation="CenterOwner">
+		WindowStartupLocation="CenterOwner"
+		Closing="Window_Closing" Closed="Window_Closed"
+		PointerExited="Window_MouseLeave"
+		PointerReleased="Tiles_MouseUp" PointerMoved="Tiles_MouseMove">
 	<Window.Resources>
 		<converters:CachedTileDataLoader x:Key="CachedTileDataLoader"/>
 	</Window.Resources>
@@ -115,7 +118,7 @@
                 Background="DarkGray"
             >
 				<paz:ZoomBorder Name="ZoomBorder" ClipToBounds="True" Stretch="None" ZoomSpeed="1.2" PanButton="Middle">
-					<Canvas	Name="TilesCanvas"
+					<Canvas	Name="TilesCanvas" HorizontalAlignment="Left" VerticalAlignment="Top"
 							Width="{Binding EditWidth, Mode=OneWay}"
 							Height="{Binding EditHeight, Mode=OneWay}"
 							PointerPressed="Tiles_MouseDown"
@@ -148,12 +151,12 @@
 							IsVisible="{Binding BrushPreviewVisibility, Mode=OneWay}"
 							CheckTransparency="False"
 						>
-							<Image.Source>
+							<controls:PixelPerfectImage.Source>
 								<MultiBinding Converter="{StaticResource CachedTileDataLoader}">
 									<Binding Path="BrushTilesData" Mode="OneWay"/>
 									<Binding Path="RefreshBrush" Mode="OneWay"/>
 								</MultiBinding>
-							</Image.Source>
+							</controls:PixelPerfectImage.Source>
 						</controls:PixelPerfectImage>
 						<Rectangle
 							Width="{Binding EditWidth, Mode=OneWay}"
@@ -238,7 +241,7 @@ Persists when the tile editor is closed, but not when the file is saved and reop
             >
 				<paz:ZoomBorder Name="PaletteZoomBorder" ClipToBounds="True" Stretch="None" ZoomSpeed="1.2" PanButton="Middle">
 					<Canvas
-						Name="PaletteCanvas"
+						Name="PaletteCanvas" HorizontalAlignment="Left" VerticalAlignment="Top"
 						Width="{Binding PaletteWidth, Mode=OneWay}"
 						Height="{Binding PaletteHeight, Mode=OneWay}"
 						PointerPressed="Tiles_MouseDown"
@@ -265,12 +268,12 @@ Persists when the tile editor is closed, but not when the file is saved and reop
 							Stretch="None"
 							CheckTransparency="False"
 						>
-							<Image.Source>
+							<controls:PixelPerfectImage.Source>
 								<MultiBinding Converter="{StaticResource CachedTileDataLoader}">
 									<Binding Path="PaletteTilesData" Mode="OneWay"/>
 									<Binding Path="PaletteColumns" Mode="OneWay"/>
 								</MultiBinding>
-							</Image.Source>
+							</controls:PixelPerfectImage.Source>
 						</controls:PixelPerfectImage>
 						<Rectangle
 							Width="{Binding PaletteWidth, Mode=OneWay}"
@@ -321,6 +324,38 @@ Persists when the tile editor is closed, but not when the file is saved and reop
 					</Canvas>
 				</paz:ZoomBorder>
 			</ScrollViewer>
+		</Grid>
+		<Grid Grid.Row="1">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
+			</Grid.ColumnDefinitions>
+
+			<Grid Grid.Column="0">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
+				<TextBlock
+                    Grid.Row="0" VerticalAlignment="Center"
+                    Text="{Binding StatusText, Mode=OneWay}"
+                ></TextBlock>
+				<TextBlock
+                    Grid.Row="1" VerticalAlignment="Center"
+                    Text="Ctrl+LMB: Fill (+Shift: Global)    Alt+LMB: Pick    MMB: Scroll/Pick"
+                ></TextBlock>
+			</Grid>
+			<Button
+                x:Name="CancelButton"
+                Grid.Column="1" Margin="3,3" Padding="5,3"
+                VerticalAlignment="Center" Content="Cancel" Click="CancelButton_Click"
+            ></Button>
+			<Button
+                x:Name="ApplyButton"
+                Grid.Column="2" Margin="3,3" Padding="5,3"
+                VerticalAlignment="Center" Content="Apply" Click="ApplyButton_Click"
+            ></Button>
 		</Grid>
 	</Grid>
 </Window>

@@ -8,6 +8,7 @@ namespace UndertaleModToolAvalonia.Messages
     {
         public object Asset { get; }
         public bool InNewTab { get; }
+        public object? SelectedObject { get; init; }
 
         public OpenAssetMessage(object asset, bool inNewTab)
         {

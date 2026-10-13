@@ -1,11 +1,14 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Remote.Protocol.Input;
 using System;
+using System.ComponentModel;
 using UndertaleModToolAvalonia.Controls;
+using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.UndertaleRoomEditorViewModel;
 using static UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.UndertaleRoomEditorViewModel.UndertaleTileEditorViewModel;
 
@@ -17,9 +20,65 @@ public partial class UndertaleTileEditorView : Window
 
     private PixelPerfectImage FocusedTilesImage { get; set; }
 
+    private UndertaleTileEditorViewModel? currentViewModel;
+    private bool closeConfirmed;
+
     public UndertaleTileEditorView()
     {
         InitializeComponent();
+    }
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+
+        if (currentViewModel is not null)
+            currentViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+        currentViewModel = DataContext as UndertaleTileEditorViewModel;
+        if (currentViewModel is not null)
+            currentViewModel.PropertyChanged += ViewModel_PropertyChanged;
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(UndertaleTileEditorViewModel.RefreshTiles))
+            LayerImage.InvalidateVisual();
+    }
+
+    private async void Window_Closing(object? sender, WindowClosingEventArgs e)
+    {
+        if (DataContext is not UndertaleTileEditorViewModel vm)
+            return;
+        if (closeConfirmed || vm.Apply || !vm.Modified)
+            return;
+
+        e.Cancel = true;
+        var res = await App.Current!.ShowQuestion("Cancel changes to the tilemap?", MsBox.Avalonia.Enums.Icon.Warning, "Confirmation");
+        if (res == MsBox.Avalonia.Enums.ButtonResult.Yes)
+        {
+            closeConfirmed = true;
+            Close();
+        }
+    }
+
+    private void Window_Closed(object? sender, EventArgs e)
+    {
+        if (DataContext is UndertaleTileEditorViewModel vm)
+            vm.Finish();
+    }
+
+    private void CancelButton_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is UndertaleTileEditorViewModel vm)
+            vm.Apply = false;
+        Close();
+    }
+
+    private void ApplyButton_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is UndertaleTileEditorViewModel vm)
+            vm.Apply = true;
+        Close();
     }
 
     #region Tile painting and picking
@@ -121,14 +180,15 @@ public partial class UndertaleTileEditorView : Window
             vm.RefreshBrush++;
         }
         vm.EndDrawing(e.GetPosition(LayerImage));
-        //TODO FocusedTilesScroll = null; //<- A ScrollViewer
-        //TODO FocusedTilesImage = null;  //<- A PixelPerfectImage
+        FocusedTilesScroll = null;
+        FocusedTilesImage = null;
     }
     private void Tiles_MouseMove(object sender, PointerEventArgs e)
     {
         if (DataContext is not UndertaleTileEditorViewModel vm)
             return;
 
+        vm.IsMouseOver = TilesCanvas.IsPointerOver;
         vm.PositionToTile(e.GetPosition(LayerImage), vm.TilesData, out int mapX, out int mapY);
         vm.StatusText = $"x: {mapX}  y: {mapY}";
 
@@ -189,6 +249,10 @@ public partial class UndertaleTileEditorView : Window
             return;
 
         vm.EndDrawing(e.GetPosition(LayerImage));
+        FocusedTilesScroll = null;
+        FocusedTilesImage = null;
+        vm.IsMouseOver = false;
+        vm.UpdateBrushVisibility(false);
     }
 
 

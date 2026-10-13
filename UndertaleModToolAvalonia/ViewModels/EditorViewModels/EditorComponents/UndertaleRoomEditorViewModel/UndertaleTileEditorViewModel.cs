@@ -38,7 +38,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
         public bool showGridBool = true;
     }
 
-    public partial class UndertaleTileEditorViewModel : ViewModelBase, IInitializable<Layer>
+    public partial class UndertaleTileEditorViewModel : ViewModelBase, IInitializable<TileEditorParameters>
     {
         public TileEditorSettings settings { get; set; } = TileEditorSettings.instance;
 
@@ -46,17 +46,26 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
 
         public Layer EditingLayer { get; set; }
 
-        public WriteableBitmap TilesBitmap { get; set; }
+        [ObservableProperty]
 
-        public double EditWidth { get; set; }
-        public double EditHeight { get; set; }
-        public double PaletteWidth { get; set; }
-        public double PaletteHeight { get; set; }
+        private WriteableBitmap tilesBitmap;
+
+        [ObservableProperty]
+
+        private double editWidth;
+        [ObservableProperty]
+        private double editHeight;
+        [ObservableProperty]
+        private double paletteWidth;
+        [ObservableProperty]
+        private double paletteHeight;
 
         public List<Dictionary<Tuple<int, int>, uint>> UndoStack { get; set; } = new();
         public List<Dictionary<Tuple<int, int>, uint>> RedoStack { get; set; } = new();
-        public bool UndoEnabled { get; set; } = false;
-        public bool RedoEnabled { get; set; } = false;
+        [ObservableProperty]
+        private bool undoEnabled = false;
+        [ObservableProperty]
+        private bool redoEnabled = false;
 
         private const uint TILE_FLIP_H = 0b00010000000000000000000000000000;
         private const uint TILE_FLIP_V = 0b00100000000000000000000000000000;
@@ -88,8 +97,10 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
         };
 
         private uint[][] OldTileData { get; set; }
-        public Layer.LayerTilesData TilesData { get; set; }
-        public Layer.LayerTilesData PaletteTilesData { get; set; }
+        [ObservableProperty]
+        private Layer.LayerTilesData tilesData;
+        [ObservableProperty]
+        private Layer.LayerTilesData paletteTilesData;
         public uint PaletteColumns
         {
             get { return PaletteTilesData.TilesX; }
@@ -98,34 +109,58 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
                 PaletteTilesData.TilesX = Math.Max(value, 1);
                 SetPaletteColumns(PaletteTilesData.Background, PaletteTilesData.TilesX);
                 PopulatePalette();
+                OnPropertyChanged();
             }
         }
-        public double PaletteCursorX { get; set; }
-        public double PaletteCursorY { get; set; }
-        public double PaletteCursorWidth { get; set; }
-        public double PaletteCursorHeight { get; set; }
-        public bool PaletteCursorVisibility { get; set; }
+        [ObservableProperty]
+        private double paletteCursorX;
+        [ObservableProperty]
+        private double paletteCursorY;
+        [ObservableProperty]
+        private double paletteCursorWidth;
+        [ObservableProperty]
+        private double paletteCursorHeight;
+        [ObservableProperty]
+        private bool paletteCursorVisibility;
 
-        public Layer.LayerTilesData BrushTilesData { get; set; }
+        [ObservableProperty]
+
+        private Layer.LayerTilesData brushTilesData;
         private bool BrushEmpty { get; set; } = true;
-        public double BrushWidth { get; set; }
-        public double BrushHeight { get; set; }
-        public double BrushPreviewX { get; set; } = 0;
-        public double BrushPreviewY { get; set; } = 0;
-        public bool BrushPreviewVisibility { get; set; }
-        public bool BrushOutlineVisibility { get; set; }
-        public bool BrushPickVisibility { get; set; }
-        public long RefreshBrush { get; set; } = 0;
+        [ObservableProperty]
+        private double brushWidth;
+        [ObservableProperty]
+        private double brushHeight;
+        [ObservableProperty]
+        private double brushPreviewX = 0;
+        [ObservableProperty]
+        private double brushPreviewY = 0;
+        [ObservableProperty]
+        private bool brushPreviewVisibility;
+        [ObservableProperty]
+        private bool brushOutlineVisibility;
+        [ObservableProperty]
+        private bool brushPickVisibility;
+        [ObservableProperty]
+        private long refreshBrush = 0;
 
 
-        public RenderTargetBitmap RoomPreview { get; set; }
-        public float RoomPrevOffsetX { get; set; }
-        public float RoomPrevOffsetY { get; set; }
+        [ObservableProperty]
+
+
+        private RenderTargetBitmap roomPreview;
+        [ObservableProperty]
+        private float roomPrevOffsetX;
+        [ObservableProperty]
+        private float roomPrevOffsetY;
         public Point ScrollViewStart { get; set; }
         public Point DrawingStart { get; set; }
         public Point LastMousePos { get; set; }
 
-        private bool apply { get; set; } = false;
+        public bool Apply { get; set; } = false;
+
+        [ObservableProperty]
+        private long refreshTiles = 0;
 
         [ObservableProperty]
         private Layer.LayerTilesData focusedTilesData;
@@ -148,11 +183,17 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
         private byte[] emptyTile { get; set; }
         private Dictionary<uint, byte[]> TileCache { get; set; }
 
-        public Rect GridRect { get; set; }
-        public Point GridPoint1 { get; set; }
-        public Point GridPoint2 { get; set; }
+        [ObservableProperty]
 
-        public string StatusText { get; set; } = "";
+        private RelativeRect gridRect;
+        [ObservableProperty]
+        private Point gridPoint1;
+        [ObservableProperty]
+        private Point gridPoint2;
+
+        [ObservableProperty]
+
+        private string statusText = "";
 
         private static List<(WeakReference<UndertaleBackground>, uint)> PaletteColumnsMap { get; set; } = new();
         public static uint GetPaletteColumns(UndertaleBackground background)
@@ -207,9 +248,10 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
         [ObservableProperty]
         private bool isMouseOver = false;
 
-        public async Task<bool> InitializeAsync(Layer layer)
+        public async Task<bool> InitializeAsync(TileEditorParameters parameters)
         {
-            EditingLayer = layer;
+            EditingLayer = parameters.Layer;
+            RoomPreview = parameters.RoomPreview;
 
             RoomPrevOffsetX = -EditingLayer.XOffset;
             RoomPrevOffsetY = -EditingLayer.YOffset;
@@ -238,7 +280,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
             );
             Array.Fill<byte>(emptyTile, 0);
 
-            GridRect = new(0, 0, TilesData.Background.GMS2TileWidth, TilesData.Background.GMS2TileHeight);
+            GridRect = new(0, 0, TilesData.Background.GMS2TileWidth, TilesData.Background.GMS2TileHeight, RelativeUnit.Absolute);
             GridPoint1 = new(TilesData.Background.GMS2TileWidth, 0);
             GridPoint2 = new(0, TilesData.Background.GMS2TileHeight);
 
@@ -366,6 +408,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
                     tilesData.Background, tileID,
                     TilesBitmap, x, y
                 );
+                RefreshTiles++;
             }
         }
 
@@ -657,9 +700,9 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
                 for (int bx = 0; bx < width; bx++)
                 {
                     SKColor color = skBitmap.GetPixel(bx, by);
-                    arr[i++] = color.Blue;
-                    arr[i++] = color.Green;
-                    arr[i++] = color.Red;
+                    arr[i++] = (byte)(color.Blue * color.Alpha / 255);
+                    arr[i++] = (byte)(color.Green * color.Alpha / 255);
+                    arr[i++] = (byte)(color.Red * color.Alpha / 255);
                     arr[i++] = color.Alpha;
                 }
             }
@@ -881,6 +924,18 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
                 );
                 data[kvp.Key] = oldTile;
             }
+            RefreshTiles++;
+        }
+
+        public void Finish()
+        {
+            PaletteTilesData.Dispose();
+            if (Apply)
+            {
+                EditingLayer.TilesData.TileDataUpdated();
+            }
+            else if (Modified)
+                EditingLayer.TilesData.TileData = OldTileData;
         }
         #endregion
 

@@ -37,6 +37,8 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
 
         public object? Model { get; }
 
+        public object? SelectedObject { get; }
+
         public bool IsCategory => Model is null;
 
         public bool IsResultItem => !IsCategory;
@@ -53,8 +55,9 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
 
         public ICommand CopyNameCommand { get; }
 
-        public ReferenceResultNode(string header, object? model, FindReferencesResultsViewModel resultsVM)
+        public ReferenceResultNode(string header, object? model, FindReferencesResultsViewModel resultsVM, object? selectedObject = null)
         {
+            SelectedObject = selectedObject;
             Header = header;
             Model = model;
             this.resultsVM = resultsVM;
@@ -186,7 +189,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
                     if (obj is object[] inst)
                     {
                         if (inst.Length > 0)
-                            category.AddChild(new ReferenceResultNode(GetItemName(obj), inst[^1], this));
+                            category.AddChild(new ReferenceResultNode(GetItemName(obj), inst[^1], this, inst.Length > 1 ? inst[0] : null));
                     }
                     else if (obj is not null)
                         category.AddChild(new ReferenceResultNode(GetItemName(obj), obj, this));
@@ -238,7 +241,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTyp
                 return;
             }
 
-            WeakReferenceMessenger.Default.Send(new OpenAssetMessage(node.Model, inNewTab));
+            WeakReferenceMessenger.Default.Send(new OpenAssetMessage(node.Model, inNewTab) { SelectedObject = node.SelectedObject });
         }
 
         [RelayCommand]

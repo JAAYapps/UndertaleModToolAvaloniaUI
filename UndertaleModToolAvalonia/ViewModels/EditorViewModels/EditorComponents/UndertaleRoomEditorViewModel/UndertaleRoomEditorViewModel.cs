@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using UndertaleModLib;
 using UndertaleModLib.Models;
+using UndertaleModToolAvalonia.Models;
+using UndertaleModToolAvalonia.Services.DialogService;
 using UndertaleModToolAvalonia.Services.FileService;
 using UndertaleModToolAvalonia.Services.TextureCacheService;
 using UndertaleModToolAvalonia.Utilities;
@@ -17,7 +22,7 @@ using static UndertaleModLib.Models.UndertaleRoom;
 
 namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.UndertaleRoomEditorViewModel
 {
-    public partial class UndertaleRoomEditorViewModel(string title, UndertaleRoom room, EditorViewModel editor, IFileService fileService, ITextureCacheService textureCacheService) : EditorContentViewModel(title)
+    public partial class UndertaleRoomEditorViewModel(string title, UndertaleRoom room, EditorViewModel editor, IFileService fileService, ITextureCacheService textureCacheService, IDialogService dialogService) : EditorContentViewModel(title)
     {
         private static readonly Regex trailingNumberRegex = new(@"\d+$", RegexOptions.Compiled);
         private readonly Stack<UndertaleObject> undoStack = new();
@@ -50,6 +55,10 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
 
         [ObservableProperty]
         private double scrollY;
+
+        public bool[]? ObjectTreeItemsStates { get; set; }
+
+        public Vector ObjectsTreeScrollPosition { get; set; }
 
         public bool IsGMS2Room => Room.Flags.HasFlag(RoomEntryFlags.IsGMS2) || Room.Flags.HasFlag(RoomEntryFlags.IsGM2024_13);
 
@@ -177,6 +186,173 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.
             data.TilesY = (uint)Math.Ceiling(
                 Convert.ToDouble(Room.Height) / Convert.ToDouble(data.Background.GMS2TileHeight)
             );
+        }
+
+        public async Task<bool> CanEditTiles(Layer layer)
+        {
+            Layer.LayerTilesData data = layer.TilesData;
+
+            if (data.Background is null)
+            {
+                await App.Current!.ShowMessage("The layer must have a tileset set!");
+                return false;
+            }
+            if (data.TilesX <= 0 && data.TilesY <= 0)
+            {
+                await App.Current!.ShowMessage("The layer's horizontal and vertical size must be larger than 0 tiles!\n(Use the Auto button to set the tilemap size based on the room size.)");
+                return false;
+            }
+            else if (data.TilesX <= 0)
+            {
+                await App.Current!.ShowMessage("The layer's horizontal size must be larger than 0 tiles!\n(Use the Auto button to set the tilemap size based on the room size.)");
+                return false;
+            }
+            else if (data.TilesY <= 0)
+            {
+                await App.Current!.ShowMessage("The layer's vertical size must be larger than 0 tiles!\n(Use the Auto button to set the tilemap size based on the room size.)");
+                return false;
+            }
+
+            return true;
+        }
+
+        public async Task EditTiles(Layer layer, RenderTargetBitmap? roomPreview)
+        {
+            await dialogService.ShowAsync<UndertaleTileEditorViewModel, TileEditorParameters>(new TileEditorParameters(layer, roomPreview));
+        }
+
+        [RelayCommand]
+        private async Task ExportTileData(Layer.LayerTilesData tilesData)
+        {
+            if (tilesData?.ParentLayer is not Layer layer)
+                return;
+
+            if (layer.TilesData.TileData.Length == 0)
+            {
+                await App.Current!.ShowError("Tile data is empty.");
+                return;
+            }
+
+            StringBuilder sb = new();
+            foreach (uint[] dataRow in layer.TilesData.TileData)
+                sb.AppendLine(String.Join(";", dataRow.Select(x => x.ToString())));
+
+            string filePath;
+            try
+            {
+                string dataFolder = Path.GetDirectoryName(AppConstants.FilePath)!;
+                filePath = UndertaleModLib.Util.Paths.JoinVerifyWithinDirectory(dataFolder, $"{layer.LayerName.Content}_tiledata.csv");
+                File.WriteAllText(filePath, sb.ToString());
+            }
+            catch (Exception ex)
+            {
+                await App.Current!.ShowError($"Error while saving the file - \"{ex.Message}\".");
+                return;
+            }
+
+            await App.Current!.ShowMessage("Exported file path: " + filePath);
+        }
+
+        public async Task ImportTileData(Layer layer, IStorageProvider storageProvider)
+        {
+            if (layer.TilesData.TilesX == 0 || layer.TilesData.TilesY == 0)
+            {
+                await App.Current!.ShowError("Tile data size can't be zero.");
+                return;
+            }
+
+            var files = await FileService.LoadTextFileAsync(storageProvider);
+            if (files.Count == 0)
+                return;
+
+            uint[][] tileDataNew = (uint[][])layer.TilesData.TileData.Clone();
+            string[]? tileDataLines = null;
+            try
+            {
+                await using Stream stream = await files[0].OpenReadAsync();
+                using StreamReader reader = new(stream);
+                tileDataLines = (await reader.ReadToEndAsync()).Split('\n').Select(x => x.TrimEnd('\r')).ToArray();
+                if (tileDataLines.Length > 0 && tileDataLines[^1].Length == 0)
+                    tileDataLines = tileDataLines[..^1];
+            }
+            catch (Exception ex)
+            {
+                await App.Current!.ShowError($"Error while opening file - \"{ex.Message}\".");
+                return;
+            }
+
+            if (tileDataLines?.Length != tileDataNew.Length)
+            {
+                await App.Current!.ShowError("Error - selected file line count doesn't match tile layer height.");
+                return;
+            }
+
+            char delimChar = ';';
+            Func<string, uint> numParseFunc = (x) => UInt32.Parse(x);
+            if (tileDataLines[0].Count(x => x == ',') > 1)
+            {
+                var res = await App.Current!.ShowQuestion("Was the data exported from \"Tiled\"?");
+                if (res == MsBox.Avalonia.Enums.ButtonResult.Yes)
+                {
+                    delimChar = ',';
+                    numParseFunc = (x) =>
+                    {
+                        uint val;
+                        unchecked { val = (uint)Int32.Parse(x); }
+                        if (val == uint.MaxValue)
+                            return 0;
+
+                        uint id = val & 0x0FFFFFFF;
+                        uint flags = val & 0xF0000000;
+                        flags = flags switch
+                        {
+                            0 => 0,
+                            2147483648 => 1,
+                            1073741824 => 2,
+                            3221225472 => 3,
+                            2684354560 => 4,
+                            3758096384 => 5,
+                            536870912 => 6,
+                            1610612736 => 7,
+                            _ => throw new InvalidDataException($"{flags} is not a valid tile flag value.")
+                        };
+                        flags <<= 28;
+
+                        return (id | flags);
+                    };
+                }
+                else
+                {
+                    await App.Current!.ShowError("The file has invalid data.");
+                    return;
+                }
+            }
+
+            for (int i = 0; i < tileDataLines.Length; i++)
+            {
+                uint[] dataRow;
+                try
+                {
+                    dataRow = tileDataLines[i].Split(delimChar).Select(numParseFunc).ToArray();
+                }
+                catch (Exception ex)
+                {
+                    await App.Current!.ShowError($"Error while parsing line {i + 1} - \"{ex.Message}\".");
+                    return;
+                }
+
+                if (dataRow.Length != layer.TilesData.TilesX)
+                {
+                    await App.Current!.ShowError($"Length of line {i + 1} is not equal to the tile data width.");
+                    return;
+                }
+
+                tileDataNew[i] = dataRow;
+            }
+
+            layer.TilesData.TileData = tileDataNew;
+
+            await App.Current!.ShowMessage("Imported successfully.");
         }
 
         public async Task<bool> MoveItem(UndertaleObject obj, int dist, bool isInAllGameObjectsList)

@@ -57,7 +57,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="342"/>
+            <RowDefinition Height="420"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -291,7 +291,7 @@
                 </StackPanel>
             </Border>
 
-            <ScrollViewer Grid.Column="2" Margin="3,0,0,0" Name="ObjectEditor" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible"
+            <ScrollViewer Grid.Column="2" Margin="3,0,0,0" Name="ObjectEditor" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" AllowAutoHide="False"
                           Content="{Binding SelectedObject}">
                 <ScrollViewer.Styles>
                     <Style Selector="ScrollViewer#ObjectEditor TextBlock, ScrollViewer#ObjectEditor CheckBox">
@@ -781,6 +781,7 @@
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto"/>
                                                 <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
                                             </Grid.RowDefinitions>
 
                                             <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Size</TextBlock>
@@ -797,6 +798,17 @@
 
                                             <TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Tile set</TextBlock>
                                             <controls:UndertaleObjectReference Grid.Row="1" Grid.Column="2" Margin="3" ObjectReference="{Binding Background}" ObjectType="{x:Type undertale:UndertaleBackground}" CanRemove="False"/>
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Tile data</TextBlock>
+                                            <Grid Grid.Row="2" Grid.Column="2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Button Grid.Column="0" Margin="3" HorizontalAlignment="Stretch" Click="EditTiles_Click">Edit</Button>
+                                                <Button Grid.Column="1" Margin="3" HorizontalAlignment="Stretch" Command="{Binding $parent[UserControl].DataContext.(vm:UndertaleRoomEditorViewModel).ExportTileDataCommand}" CommandParameter="{Binding}">Export</Button>
+                                                <Button Grid.Column="2" Margin="3" HorizontalAlignment="Stretch" Click="TileDataImport_Click">Import</Button>
+                                            </Grid>
                                         </Grid>
                                     </DataTemplate>
 
@@ -1191,5 +1203,6 @@
                 </Panel>
             </paz:ZoomBorder>
         </ScrollViewer>
+        <Button Grid.Column="0" Grid.Row="3" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Content="Save as PNG" Click="ExportAsPNG_Click"/>
     </Grid>
 </UserControl>

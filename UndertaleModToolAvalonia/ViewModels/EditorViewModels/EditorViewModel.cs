@@ -172,6 +172,9 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     OpenAssetInNewTab(message.Asset);
                 else
                     OpenAssetInTab(message.Asset);
+
+                if (message.SelectedObject is not null && CurrentTab?.CurrentObject is UndertaleRoomEditorViewModel roomEditor)
+                    roomEditor.SelectedObject = message.SelectedObject;
             });
             WeakReferenceMessenger.Default.Register<FindReferencesMessage>(this, (recipient, message) =>
             {
@@ -1296,7 +1299,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     UndertaleFont => new UndertaleFontEditorViewModel(name, (UndertaleFont)asset, this, textureCacheService, fileService, dialogService),
                     UndertaleTimeline => new UndertaleTimelineEditorViewModel(name, (UndertaleTimeline)asset),
                     UndertaleGameObject => new UndertaleGameObjectEditorViewModel(name, (UndertaleGameObject)asset, this, fileService, textureCacheService, referenceFinderService, dialogService),
-                    UndertaleRoom => new UndertaleRoomEditorViewModel(name, (UndertaleRoom)asset, this, fileService, textureCacheService),
+                    UndertaleRoom => new UndertaleRoomEditorViewModel(name, (UndertaleRoom)asset, this, fileService, textureCacheService, dialogService),
                     UndertaleExtension => new UndertaleExtensionEditorViewModel(name, (UndertaleExtension)asset),
                     UndertaleExtensionFile => new UndertaleExtensionFileEditorViewModel(name, (UndertaleExtensionFile)asset),
                     UndertaleExtensionFunction => new UndertaleExtensionFunctionEditorViewModel(name, (UndertaleExtensionFunction)asset),

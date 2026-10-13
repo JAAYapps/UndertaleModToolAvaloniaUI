@@ -20,6 +20,7 @@ using UndertaleModToolAvalonia.Services.ReferenceFinderService;
 using UndertaleModToolAvalonia.Services.TextureCacheService;
 using UndertaleModToolAvalonia.Services.UpdateService;
 using UndertaleModToolAvalonia.Utilities;
+using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.UndertaleRoomEditorViewModel;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents.UndertaleFontEditorViewModel;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTypesDialog;
@@ -151,6 +152,7 @@ public partial class App : Application
         services.AddTransient<FindReferencesTypesDialogViewModel>();
         services.AddTransient<FindReferencesResultsViewModel>();
         services.AddTransient<EditGlyphRectangleViewModel>();
+        services.AddTransient<UndertaleTileEditorViewModel>();
 
         services.AddSingleton<IProfileService, ProfileService>();
         services.AddSingleton<IDialogService, DialogService>();

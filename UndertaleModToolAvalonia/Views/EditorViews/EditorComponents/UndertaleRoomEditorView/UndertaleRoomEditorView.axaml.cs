@@ -5,6 +5,7 @@ using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Messaging;
@@ -40,12 +41,15 @@ public partial class UndertaleRoomEditorView : UserControl
     private readonly List<Point> placedTiles = new();
     private double scaleOriginX, scaleOriginY;
     private Point lastMousePos;
+    private bool selectingObject;
+    private bool tabContentStateRestored;
 
     public UndertaleRoomEditorView()
     {
         InitializeComponent();
         RoomObjectsTree.AddHandler(GotFocusEvent, RoomObjectsTree_GotFocus, RoutingStrategies.Bubble, handledEventsToo: true);
         AddHandler(KeyDownEvent, UndertaleRoomEditorView_KeyDown, RoutingStrategies.Bubble);
+        ZoomBorder.ZoomChanged += ZoomBorder_ZoomChanged;
         ZoomBorder.AddHandler(DragDrop.DragOverEvent, RoomGraphics_DragOver);
         ZoomBorder.AddHandler(DragDrop.DropEvent, RoomGraphics_Drop);
     }
@@ -55,7 +59,10 @@ public partial class UndertaleRoomEditorView : UserControl
         base.OnDataContextChanged(e);
 
         if (currentViewModel is not null)
+        {
             currentViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+            SaveTabContentState(currentViewModel);
+        }
         currentViewModel = DataContext as UndertaleRoomEditorViewModel;
         if (currentViewModel is null)
             return;
@@ -70,12 +77,85 @@ public partial class UndertaleRoomEditorView : UserControl
         currentViewModel.SetupRoom();
         GameObjItems.ContextFlyout = currentViewModel.IsGMS2Room ? null : Resources["GameObjectsFlyout"] as MenuFlyout;
         currentViewModel.PropertyChanged += ViewModel_PropertyChanged;
+
+        tabContentStateRestored = false;
+        UndertaleRoomEditorViewModel vm = currentViewModel;
+        Dispatcher.UIThread.Post(() => RestoreTabContentState(vm), DispatcherPriority.Background);
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        if (currentViewModel is not null)
+            SaveTabContentState(currentViewModel);
+
+        base.OnDetachedFromVisualTree(e);
+    }
+
+    private void ZoomBorder_ZoomChanged(object sender, Avalonia.Controls.PanAndZoom.ZoomChangedEventArgs e)
+    {
+        if (currentViewModel is null || !tabContentStateRestored)
+            return;
+
+        currentViewModel.RoomScale = e.ZoomX;
+        currentViewModel.ScrollX = e.OffsetX;
+        currentViewModel.ScrollY = e.OffsetY;
+    }
+
+    private void SaveTabContentState(UndertaleRoomEditorViewModel vm)
+    {
+        vm.ObjectTreeItemsStates = new bool[]
+        {
+            BGItems.IsExpanded,
+            ViewItems.IsExpanded,
+            GameObjItems.IsExpanded,
+            TileItems.IsExpanded,
+            LayerItems.IsExpanded
+        };
+        if (RoomObjectsTree.FindDescendantOfType<ScrollViewer>() is ScrollViewer treeViewer)
+            vm.ObjectsTreeScrollPosition = treeViewer.Offset;
+    }
+
+    private void RestoreTabContentState(UndertaleRoomEditorViewModel vm)
+    {
+        if (!ReferenceEquals(vm, currentViewModel))
+            return;
+
+        ZoomBorder.SetMatrix(new Matrix(vm.RoomScale, 0, 0, vm.RoomScale, vm.ScrollX, vm.ScrollY));
+        tabContentStateRestored = true;
+
+        if (vm.ObjectTreeItemsStates is not null)
+        {
+            BGItems.IsExpanded = vm.ObjectTreeItemsStates[0];
+            ViewItems.IsExpanded = vm.ObjectTreeItemsStates[1];
+            GameObjItems.IsExpanded = vm.ObjectTreeItemsStates[2];
+            TileItems.IsExpanded = vm.ObjectTreeItemsStates[3];
+            LayerItems.IsExpanded = vm.ObjectTreeItemsStates[4];
+            RoomRootItem.UpdateLayout();
+        }
+
+        if (vm.SelectedObject is UndertaleRoom)
+            RoomObjectsTree.SelectedItem = RoomRootItem;
+        else if (vm.SelectedObject is UndertaleObject obj)
+            SelectObject(obj, false);
+
+        FlashObject(vm.SelectedObject);
+
+        Vector treeScrollPos = vm.ObjectsTreeScrollPosition;
+        if (vm.ObjectTreeItemsStates is not null && RoomObjectsTree.FindDescendantOfType<ScrollViewer>() is ScrollViewer treeViewer)
+            Dispatcher.UIThread.Post(() => treeViewer.Offset = treeScrollPos, DispatcherPriority.Background);
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(UndertaleRoomEditorViewModel.SelectedObject))
-            FlashObject(currentViewModel?.SelectedObject);
+        if (e.PropertyName != nameof(UndertaleRoomEditorViewModel.SelectedObject))
+            return;
+
+        object? selected = currentViewModel?.SelectedObject;
+        if (!selectingObject && selected is UndertaleObject obj and not UndertaleRoom
+            && !ReferenceEquals(RoomObjectsTree.SelectedItem, obj))
+            SelectObject(obj, false);
+
+        FlashObject(selected);
     }
 
     private void FlashObject(object? obj)
@@ -298,14 +378,22 @@ public partial class UndertaleRoomEditorView : UserControl
                 break;
         }
 
-        vm.SelectedObject = obj;
+        selectingObject = true;
+        try
+        {
+            vm.SelectedObject = obj;
 
-        if (resListView is null)
-            return;
+            if (resListView is null)
+                return;
 
-        resListView.IsExpanded = true;
-        resListView.UpdateLayout();
-        RoomObjectsTree.SelectedItem = obj;
+            resListView.IsExpanded = true;
+            resListView.UpdateLayout();
+            RoomObjectsTree.SelectedItem = obj;
+        }
+        finally
+        {
+            selectingObject = false;
+        }
 
         if (!ShowTreeItem(resListView, obj, focus))
             Dispatcher.UIThread.Post(() => ShowTreeItem(resListView, obj, focus), DispatcherPriority.Background);
@@ -814,6 +902,89 @@ public partial class UndertaleRoomEditorView : UserControl
     {
         if (DataContext is UndertaleRoomEditorViewModel vm)
             SelectNewObject(vm.PasteInto((sender as MenuItem)?.DataContext as Layer));
+    }
+
+    private RenderTargetBitmap? RenderRoom(bool showGrid)
+    {
+        int width = (int)RoomGraphics.Bounds.Width;
+        int height = (int)RoomGraphics.Bounds.Height;
+        if (width <= 0 || height <= 0)
+            return null;
+
+        Control? prevFlashing = flashingElement;
+        prevFlashing?.Classes.Remove("flash");
+        RoomGrid.IsVisible = showGrid;
+        var prevTransform = RoomGraphics.RenderTransform;
+        RoomGraphics.RenderTransform = null;
+        RoomGraphics.UpdateLayout();
+
+        RenderTargetBitmap target = new(new PixelSize(width, height), new Vector(96, 96));
+        target.Render(RoomGraphics);
+
+        RoomGrid.IsVisible = true;
+        RoomGraphics.RenderTransform = prevTransform;
+        prevFlashing?.Classes.Add("flash");
+        return target;
+    }
+
+    private RenderTargetBitmap? GetTileEditorPreview(Layer tilemap)
+    {
+        bool prevVisible = tilemap.IsVisible;
+        tilemap.IsVisible = false;
+
+        RenderTargetBitmap? target = RenderRoom(false);
+
+        tilemap.IsVisible = prevVisible;
+        return target;
+    }
+
+    private async void ExportAsPNG_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not UndertaleRoomEditorViewModel vm)
+            return;
+        if (TopLevel.GetTopLevel(this) is not TopLevel topLevel)
+            return;
+
+        var file = await vm.FileService.SaveImageFileAsync(topLevel.StorageProvider, vm.Room.Name.Content + ".png");
+        if (file is null)
+            return;
+
+        try
+        {
+            RenderTargetBitmap? target = RenderRoom(true);
+            if (target is null)
+                return;
+
+            await using var stream = await file.OpenWriteAsync();
+            target.Save(stream);
+        }
+        catch (Exception ex)
+        {
+            await App.Current!.ShowError("Failed to export file: " + ex.Message, "Failed to export file");
+        }
+    }
+
+    private async void EditTiles_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not UndertaleRoomEditorViewModel vm)
+            return;
+        if ((sender as Control)?.DataContext is not Layer.LayerTilesData { ParentLayer: Layer layer })
+            return;
+
+        if (await vm.CanEditTiles(layer))
+            await vm.EditTiles(layer, GetTileEditorPreview(layer));
+    }
+
+    private async void TileDataImport_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not UndertaleRoomEditorViewModel vm)
+            return;
+        if ((sender as Control)?.DataContext is not Layer.LayerTilesData { ParentLayer: Layer layer })
+            return;
+        if (TopLevel.GetTopLevel(this) is not TopLevel topLevel)
+            return;
+
+        await vm.ImportTileData(layer, topLevel.StorageProvider);
     }
 
     private void MenuItem_Copy_Click(object? sender, RoutedEventArgs e)
