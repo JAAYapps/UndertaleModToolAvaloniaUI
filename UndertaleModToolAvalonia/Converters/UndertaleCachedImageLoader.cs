@@ -381,6 +381,8 @@ namespace UndertaleModToolAvalonia.Converters
         // Tile text. page, tile ID - tile pixel data
         public static ConcurrentDictionary<Tuple<string, uint>, Bitmap> TileCache { get; set; } = new();
         private static readonly ConcurrentDictionary<string, Bitmap> tilePageCache = new();
+        private static readonly ConcurrentDictionary<string, bool> slicedTileSets = new();
+        private static readonly ConcurrentDictionary<Tuple<string, uint>, SKBitmap> skTileCache = new();
 
         public static void Reset()
         {
@@ -388,9 +390,13 @@ namespace UndertaleModToolAvalonia.Converters
                 bmp.Dispose();
             foreach (Bitmap bmp in tilePageCache.Values)
                 bmp.Dispose();
+            foreach (SKBitmap bmp in skTileCache.Values)
+                bmp.Dispose();
 
             TileCache.Clear();
             tilePageCache.Clear();
+            slicedTileSets.Clear();
+            skTileCache.Clear();
             TileRectanglesConverter.TileCache.Clear();
         }
 
@@ -432,60 +438,67 @@ namespace UndertaleModToolAvalonia.Converters
                     tilePageCache[texName] = tilePageBMP;
                 }
                 
-                WriteableBitmap data = BitmapInfo.BitmapToWritableBitmap(tilePageBMP);//tilePageBMP.LockBits(new Rectangle(0, 0, tilePageBMP.Width, tilePageBMP.Height), ImageLockMode.ReadOnly, tilePageBMP.PixelFormat);
-                int depth = BitmapInfo.GetDepth(tilePageBMP); //Image.GetPixelFormatSize(data.PixelFormat) / 8;
-                byte[] buffer = new byte[(int)(BitmapInfo.GetStride(tilePageBMP) * tilePageBMP.Size.Height)];
-                using (var dataBuffer = data.Lock())
-                    Marshal.Copy(dataBuffer.Address, buffer, 0, buffer.Length);
-                //tilePageBMP.UnlockBits(data);
-
                 int w = (int)tilesBG.GMS2TileWidth;
                 int h = (int)tilesBG.GMS2TileHeight;
                 int outX = (int)tilesBG.GMS2OutputBorderX;
                 int outY = (int)tilesBG.GMS2OutputBorderY;
                 int tileRows = (int)Math.Ceiling(tilesBG.GMS2TileCount / (double)tilesBG.GMS2TileColumns);
-                PixelFormat? format = tilePageBMP.Format;
 
                 bool outOfBounds = false;
-                _ = Parallel.For(0, tileRows, (y) =>
+                if (!slicedTileSets.ContainsKey(texName))
                 {
-                    int y1 = ((y + 1) * outY) + (y * (h + outY));
+                    WriteableBitmap data = BitmapInfo.BitmapToWritableBitmap(tilePageBMP);//tilePageBMP.LockBits(new Rectangle(0, 0, tilePageBMP.Width, tilePageBMP.Height), ImageLockMode.ReadOnly, tilePageBMP.PixelFormat);
+                    int depth = BitmapInfo.GetDepth(tilePageBMP); //Image.GetPixelFormatSize(data.PixelFormat) / 8;
+                    byte[] buffer = new byte[(int)(BitmapInfo.GetStride(tilePageBMP) * tilePageBMP.Size.Height)];
+                    using (var dataBuffer = data.Lock())
+                        Marshal.Copy(dataBuffer.Address, buffer, 0, buffer.Length);
+                    //tilePageBMP.UnlockBits(data);
 
-                    for (int x = 0; x < tilesBG.GMS2TileColumns; x++)
+                    PixelFormat? format = tilePageBMP.Format;
+
+                    _ = Parallel.For(0, tileRows, (y) =>
                     {
-                        int x1 = ((x + 1) * outX) + (x * (w + outX));
+                        int y1 = ((y + 1) * outY) + (y * (h + outY));
 
-                        if (x1 + w > data.Size.Width || y1 + h > data.Size.Height)
+                        for (int x = 0; x < tilesBG.GMS2TileColumns; x++)
                         {
-                            outOfBounds = true;
-                            return;
-                        }
+                            int x1 = ((x + 1) * outX) + (x * (w + outX));
 
-                        int bufferResLen = w * h * depth;
-                        byte[] bufferRes = ArrayPool<byte>.Shared.Rent(bufferResLen);
-
-                        if (!(x == 0 && y == 0))
-                        {
-                            for (int i = 0; i < h; i++)
+                            if (x1 + w > data.Size.Width || y1 + h > data.Size.Height)
                             {
-                                for (int j = 0; j < w * depth; j += depth)
-                                {
-                                    int origIndex = (y1 * BitmapInfo.GetStride(data)) + (i * BitmapInfo.GetStride(data)) + (x1 * depth) + j;
-                                    int croppedIndex = (i * w * depth) + j;
+                                outOfBounds = true;
+                                return;
+                            }
 
-                                    Buffer.BlockCopy(buffer, origIndex, bufferRes, croppedIndex, depth);
+                            int bufferResLen = w * h * depth;
+                            byte[] bufferRes = ArrayPool<byte>.Shared.Rent(bufferResLen);
+
+                            if (!(x == 0 && y == 0))
+                            {
+                                for (int i = 0; i < h; i++)
+                                {
+                                    for (int j = 0; j < w * depth; j += depth)
+                                    {
+                                        int origIndex = (y1 * BitmapInfo.GetStride(data)) + (i * BitmapInfo.GetStride(data)) + (x1 * depth) + j;
+                                        int croppedIndex = (i * w * depth) + j;
+
+                                        Buffer.BlockCopy(buffer, origIndex, bufferRes, croppedIndex, depth);
+                                    }
                                 }
                             }
+
+                            WriteableBitmap tileBMP = new WriteableBitmap(new PixelSize(w, h), new Vector(96, 96), format);
+                            using (var tileBuffer = tileBMP.Lock())
+                                Marshal.Copy(bufferRes, 0, tileBuffer.Address, bufferResLen);
+                            ArrayPool<byte>.Shared.Return(bufferRes);
+
+                            TileCache.TryAdd(new(texName, (uint)((tilesBG.GMS2TileColumns * y) + x)), tileBMP);
                         }
+                    });
 
-                        WriteableBitmap tileBMP = new WriteableBitmap(new PixelSize(w, h), new Vector(96, 96), format);
-                        using (var tileBuffer = tileBMP.Lock())
-                            Marshal.Copy(bufferRes, 0, tileBuffer.Address, bufferResLen);
-                        ArrayPool<byte>.Shared.Return(bufferRes);
-
-                        TileCache.TryAdd(new(texName, (uint)((tilesBG.GMS2TileColumns * y) + x)), tileBMP);
-                    }
-                });
+                    if (!outOfBounds)
+                        slicedTileSets[texName] = true;
+                }
 
                 if (outOfBounds)
                 {
@@ -507,9 +520,10 @@ namespace UndertaleModToolAvalonia.Converters
         {
             int finalWidth = w * (int)tilesData.TilesX;
             int finalHeight = h * (int)tilesData.TilesY;
+            string texName = tilesBG.Texture.Name.Content;
 
             // 1. Create a SkiaSharp canvas to draw on. This replaces `new Bitmap` and `Graphics.FromImage`.
-            var info = new SKImageInfo(finalWidth, finalHeight);
+            var info = new SKImageInfo(finalWidth, finalHeight, SKColorType.Bgra8888, SKAlphaType.Premul);
             using var surface = SKSurface.Create(info);
             using var canvas = surface.Canvas;
 
@@ -524,72 +538,74 @@ namespace UndertaleModToolAvalonia.Converters
                     if (id == 0)
                         continue;
 
-                    Bitmap? tileBitmap; // This will be our Avalonia Bitmap tile.
-
-                    if (id > maxID)
+                    if (!skTileCache.TryGetValue(new(texName, id), out SKBitmap? skTile))
                     {
-                        uint realID = id & 0x0FFFFFFF;
-                        if (realID > maxID)
-                        {
-                            Debug.WriteLine($"Tileset \"{tilesData.Background.Name.Content}\" doesn't contain tile ID {realID}");
-                            continue;
-                        }
+                        Bitmap? tileBitmap; // This will be our Avalonia Bitmap tile.
 
-                        // IMPORTANT: Assume TileCache now stores Avalonia Bitmaps.
-                        // You cannot clone an Avalonia Bitmap, but the RotateFlip method creates a new instance anyway.
-                        var originalTile = TileCache[new(tilesBG.Texture.Name.Content, realID)];
-
-                        // 2. Use the new RotateFlip extension method. It returns a NEW bitmap.
-                        RotateFlipType flipType = (id >> 28) switch
+                        if (id > maxID)
                         {
-                            1 => RotateFlipType.RotateNoneFlipX,
-                            2 => RotateFlipType.RotateNoneFlipY,
-                            3 => RotateFlipType.RotateNoneFlipXY,
-                            4 => RotateFlipType.Rotate90FlipNone,
-                            5 => RotateFlipType.Rotate90FlipY,
-                            6 => RotateFlipType.Rotate90FlipX,
-                            7 => RotateFlipType.Rotate90FlipXY,
-                            _ => RotateFlipType.RotateNoneFlipNone
-                        };
+                            uint realID = id & 0x0FFFFFFF;
+                            if (realID > maxID)
+                            {
+                                Debug.WriteLine($"Tileset \"{tilesData.Background.Name.Content}\" doesn't contain tile ID {realID}");
+                                continue;
+                            }
 
-                        if (flipType != RotateFlipType.RotateNoneFlipNone)
-                        {
-                            tileBitmap = originalTile.RotateFlip(flipType);
+                            // IMPORTANT: Assume TileCache now stores Avalonia Bitmaps.
+                            // You cannot clone an Avalonia Bitmap, but the RotateFlip method creates a new instance anyway.
+                            var originalTile = TileCache[new(texName, realID)];
+
+                            // 2. Use the new RotateFlip extension method. It returns a NEW bitmap.
+                            RotateFlipType flipType = (id >> 28) switch
+                            {
+                                1 => RotateFlipType.RotateNoneFlipX,
+                                2 => RotateFlipType.RotateNoneFlipY,
+                                3 => RotateFlipType.RotateNoneFlipXY,
+                                4 => RotateFlipType.Rotate90FlipNone,
+                                5 => RotateFlipType.Rotate90FlipY,
+                                6 => RotateFlipType.Rotate90FlipX,
+                                7 => RotateFlipType.Rotate90FlipXY,
+                                _ => RotateFlipType.RotateNoneFlipNone
+                            };
+
+                            if (flipType != RotateFlipType.RotateNoneFlipNone)
+                            {
+                                tileBitmap = originalTile.RotateFlip(flipType);
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"Tile of {tilesData.ParentLayer.LayerName} at ({x}, {y}) has unknown flag.");
+                                tileBitmap = originalTile; // Use the original if the flag is unknown
+                            }
                         }
                         else
                         {
-                            Debug.WriteLine($"Tile of {tilesData.ParentLayer.LayerName} at ({x}, {y}) has unknown flag.");
-                            tileBitmap = originalTile; // Use the original if the flag is unknown
+                            // Assume TileCache now stores Avalonia Bitmaps.
+                            tileBitmap = TileCache[new(texName, id)];
                         }
-                    }
-                    else
-                    {
-                        // Assume TileCache now stores Avalonia Bitmaps.
-                        tileBitmap = TileCache[new(tilesBG.Texture.Name.Content, id)];
-                    }
 
-                    // 3. Draw the tile onto the SkiaSharp canvas.
-                    if (tileBitmap != null)
-                    {
+                        if (tileBitmap is null)
+                            continue;
+
                         // Convert the Avalonia tile Bitmap to an SKBitmap to draw it.
                         using var ms = new MemoryStream();
                         tileBitmap.Save(ms);
                         ms.Position = 0;
-                        using var skTile = SKBitmap.Decode(ms);
-
-                        // Draw the tile at the correct position. This replaces `g.DrawImageUnscaled`.
-                        canvas.DrawBitmap(skTile, x * w, y * h);
+                        skTile = SKBitmap.Decode(ms);
+                        skTileCache[new(texName, id)] = skTile;
                     }
+
+                    // 3. Draw the tile onto the SkiaSharp canvas. This replaces `g.DrawImageUnscaled`.
+                    if (skTile != null)
+                        canvas.DrawBitmap(skTile, x * w, y * h);
                 }
             }
 
-            // 4. Convert the final SkiaSharp surface back to an Avalonia Bitmap.
+            // 4. Copy the final SkiaSharp surface into an Avalonia Bitmap.
             // This replaces all the HBitmap/Interop code.
-            using var image = surface.Snapshot();
-            using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-            using var stream = data.AsStream();
+            using SKPixmap pixmap = surface.PeekPixels();
 
-            return new Bitmap(stream);
+            return new Bitmap(PixelFormats.Bgra8888, AlphaFormat.Premul, pixmap.GetPixels(), new PixelSize(finalWidth, finalHeight), new Vector(96, 96), pixmap.RowBytes);
         }
 
         //public Bitmap CreateLayerSource(in Layer.LayerTilesData tilesData, in UndertaleBackground tilesBG, in int w, in int h)
