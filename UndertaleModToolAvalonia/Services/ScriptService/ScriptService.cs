@@ -10,7 +10,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Diagnostics;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Underanalyzer.Decompiler;
 using UndertaleModLib;
@@ -21,6 +23,7 @@ using UndertaleModLib.Scripting;
 using UndertaleModLib.Util;
 using UndertaleModToolAvalonia.Models;
 using UndertaleModToolAvalonia.Services.DialogService;
+using UndertaleModToolAvalonia.Services.LoadingDialogService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
 
@@ -30,10 +33,19 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
     {
         private readonly EditorViewModel editorViewModel;
         private readonly IDialogService dialogService;
+        private readonly ILoadingDialogService loadingDialogService;
 
         private ScriptOptions scriptOptions;
         private Task scriptSetupTask;
         private bool finishedMessageEnabled = true;
+
+        private int progressValue;
+        private double? progressMaximum;
+        private string savedStatusText = "";
+        private bool isScriptDialogInitialized;
+        private Task? updater;
+        private CancellationTokenSource? cts;
+        private CancellationToken cToken;
 
         public UndertaleData Data => AppConstants.Data!;
         public ProjectContext Project => null!;
@@ -49,10 +61,11 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
         public bool IsAppClosed => editorViewModel.LsAppClosed;
         public Action<Action> MainThreadAction => (f) => Dispatcher.UIThread.Invoke(f);
 
-        public ScriptService(EditorViewModel editorViewModel, IDialogService dialogService)
+        public ScriptService(EditorViewModel editorViewModel, IDialogService dialogService, ILoadingDialogService loadingDialogService)
         {
             this.editorViewModel = editorViewModel;
             this.dialogService = dialogService;
+            this.loadingDialogService = loadingDialogService;
 
             scriptSetupTask = Task.Run(() =>
             {
@@ -68,9 +81,12 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
             ScriptExecutionSuccess = true;
             ScriptErrorMessage = "";
             ScriptErrorType = "";
+            InitializeScriptDialog();
             editorViewModel.IsEnabled = false;
 
             await RunScriptNow(path);
+            HideProgressBar();
+            isScriptDialogInitialized = false;
             editorViewModel.ReloadTree();
             editorViewModel.IsEnabled = true;
         }
@@ -111,6 +127,8 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
             }
             catch (Exception exc)
             {
+                await StopProgressBarUpdater();
+
                 Console.WriteLine(exc.ToString());
                 SetUMTConsoleText(exc.Message);
                 WaitFor(() => Application.Current!.ShowError(ScriptingUtil.PrettifyException(in exc), "Script error"));
@@ -207,32 +225,186 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
             return result!;
         }
 
+        public void InitializeScriptDialog()
+        {
+            if (!isScriptDialogInitialized)
+            {
+                isScriptDialogInitialized = true;
+                progressMaximum = null;
+                savedStatusText = "";
+                _ = loadingDialogService.UpdateStatusAsync("Please wait...");
+            }
+        }
+
+        private void ShowProgressBar()
+        {
+            loadingDialogService.Show("Script in progress...", "Please wait...");
+            _ = loadingDialogService.SetIndeterminateAsync(progressMaximum is null);
+        }
+
+        private void ReportProgress(string status, double value)
+        {
+            _ = loadingDialogService.UpdateStatusAsync(value + "/" + progressMaximum + (!String.IsNullOrEmpty(status) ? ": " + status : ""));
+            if (progressMaximum is double maximum)
+                _ = loadingDialogService.UpdateProgressAsync(value, maximum);
+        }
+
+        public void UpdateProgressBar(string message, string status, double progressValue, double maxValue)
+        {
+            if (!isScriptDialogInitialized)
+                return;
+
+            if (maxValue != 0)
+                progressMaximum = maxValue;
+
+            ShowProgressBar();
+
+            if (message != null)
+                _ = loadingDialogService.UpdateMessageAsync(message);
+
+            ReportProgress(status, progressValue);
+        }
+
+        public void SetProgressBar(string message, string status, double progressValue, double maxValue)
+        {
+            if (isScriptDialogInitialized)
+            {
+                this.progressValue = (int)progressValue;
+                savedStatusText = status;
+
+                UpdateProgressBar(message, status, progressValue, maxValue);
+            }
+        }
+        public void SetProgressBar()
+        {
+            if (isScriptDialogInitialized)
+                ShowProgressBar();
+        }
+
+        public void UpdateProgressValue(double progressValue)
+        {
+            if (isScriptDialogInitialized)
+                ReportProgress(savedStatusText, progressValue);
+        }
+
+        public void UpdateProgressStatus(string status)
+        {
+            if (isScriptDialogInitialized)
+                _ = loadingDialogService.UpdateStatusAsync(status);
+        }
+
+        public void HideProgressBar()
+        {
+            if (isScriptDialogInitialized)
+                loadingDialogService.Hide();
+        }
+
+        public void AddProgress(int amount)
+        {
+            progressValue += amount;
+        }
+        public void IncrementProgress()
+        {
+            progressValue++;
+        }
+        public void AddProgressParallel(int amount)
+        {
+            Interlocked.Add(ref progressValue, amount);
+        }
+        public void IncrementProgressParallel()
+        {
+            Interlocked.Increment(ref progressValue);
+        }
+        public int GetProgress()
+        {
+            return progressValue;
+        }
+        public void SetProgress(int value)
+        {
+            progressValue = value;
+        }
+
+        private void ProgressUpdater()
+        {
+            Stopwatch sw = new();
+            Stopwatch? swTimeout = null;
+            int prevValue = 0;
+
+            while (true)
+            {
+                sw.Restart();
+
+                if (cToken.IsCancellationRequested)
+                {
+                    if (prevValue >= progressValue)
+                    {
+                        sw.Stop();
+                        swTimeout?.Stop();
+                        return;
+                    }
+                    else
+                    {
+                        if (swTimeout is null)
+                            swTimeout = Stopwatch.StartNew();
+                        else if (swTimeout.ElapsedMilliseconds >= 500)
+                        {
+                            sw.Stop();
+                            swTimeout.Stop();
+                            return;
+                        }
+                    }
+                }
+
+                UpdateProgressValue(progressValue);
+
+                prevValue = progressValue;
+
+                Thread.Sleep((int)Math.Max(0, 33 - sw.ElapsedMilliseconds));
+            }
+        }
+        public void StartProgressBarUpdater()
+        {
+            if (cts is not null)
+                ScriptWarning("Warning - there is another progress bar updater task running (hangs) in the background.\nRestart the application to prevent some unexpected behavior.");
+
+            cts = new CancellationTokenSource();
+            cToken = cts.Token;
+
+            updater = Task.Run(ProgressUpdater);
+        }
+        public async Task StopProgressBarUpdater()
+        {
+            if (cts is null || updater is null) return;
+
+            cts.Cancel();
+
+            if (await Task.Run(() => !updater.Wait(2000)))
+                ScriptError("Stopping the progress bar updater task is failed.\nIt's highly recommended to restart the application.",
+                            "Script error", false);
+            else
+            {
+                cts.Dispose();
+                cts = null;
+            }
+
+            if (!updater.IsCompleted)
+                ScriptError("Stopping the progress bar updater task is failed.\nIt's highly recommended to restart the application.",
+                            "Script error", false);
+            else
+                updater.Dispose();
+        }
+
         public bool MakeNewDataFile() => throw NotPorted();
         public void ScriptOpenURL(string url) => throw NotPorted();
         public bool RunUMTScript(string path) => throw NotPorted();
         public bool LintUMTScript(string path) => throw NotPorted();
-        public void InitializeScriptDialog() => throw NotPorted();
         public string GetDecompiledText(string codeName, GlobalDecompileContext context = null!, IDecompileSettings settings = null!) => throw NotPorted();
         public string GetDecompiledText(UndertaleCode code, GlobalDecompileContext context = null!, IDecompileSettings settings = null!) => throw NotPorted();
         public string GetDisassemblyText(string codeName) => throw NotPorted();
         public string GetDisassemblyText(UndertaleCode code) => throw NotPorted();
         public Task ClickableSearchOutput(string title, string query, int resultsCount, IOrderedEnumerable<KeyValuePair<string, List<(int lineNum, string codeLine)>>> resultsDict, bool showInDecompiledView, IOrderedEnumerable<string> failedList = null!) => throw NotPorted();
         public Task ClickableSearchOutput(string title, string query, int resultsCount, IDictionary<string, List<(int lineNum, string codeLine)>> resultsDict, bool showInDecompiledView, IEnumerable<string> failedList = null!) => throw NotPorted();
-        public void UpdateProgressBar(string message, string status, double progressValue, double maxValue) => throw NotPorted();
-        public void SetProgressBar(string message, string status, double progressValue, double maxValue) => throw NotPorted();
-        public void SetProgressBar() => throw NotPorted();
-        public void UpdateProgressValue(double progressValue) => throw NotPorted();
-        public void UpdateProgressStatus(string status) => throw NotPorted();
-        public void AddProgress(int amount) => throw NotPorted();
-        public void IncrementProgress() => throw NotPorted();
-        public void AddProgressParallel(int amount) => throw NotPorted();
-        public void IncrementProgressParallel() => throw NotPorted();
-        public int GetProgress() => throw NotPorted();
-        public void SetProgress(int value) => throw NotPorted();
-        public void HideProgressBar() => throw NotPorted();
         public void EnableUI() => throw NotPorted();
-        public void StartProgressBarUpdater() => throw NotPorted();
-        public Task StopProgressBarUpdater() => throw NotPorted();
         public void ChangeSelection(object newSelection, bool inNewTab = false) => throw NotPorted();
         public string PromptChooseDirectory() => throw NotPorted();
         public string PromptLoadFile(string defaultExt, string filter) => throw NotPorted();

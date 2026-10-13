@@ -96,6 +96,17 @@ public class LoadingDialogService : ILoadingDialogService
         });
     }
 
+    public async Task UpdateMessageAsync(string message)
+    {
+        if (_viewModel is not null)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                _viewModel.Message = message;
+            });
+        }
+    }
+
     public async Task UpdateStatusAsync(string status)
     {
         if (_viewModel is not null)
