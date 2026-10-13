@@ -27,6 +27,7 @@
 			</MenuItem>
 			<MenuItem Name="RootScriptItem" Header="_Scripts">
 				<MenuItem Header="(...loading...)" IsEnabled="False"/>
+				<MenuItem Header="Run _other script..." Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).RunOtherScriptCommand}" CommandParameter="{Binding $parent[UserControl]}"/>
 			</MenuItem>
 			<MenuItem Header="F_ind">
 				<MenuItem Header="Find unreferenced _assets" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).FindUnreferencedAssetsCommand}"/>

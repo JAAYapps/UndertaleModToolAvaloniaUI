@@ -152,5 +152,22 @@ namespace UndertaleModToolAvalonia.Services.FileService
                 SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Pictures)
             });
         }
+
+        public async Task<IReadOnlyList<IStorageFile>> LoadScriptFileAsync(IStorageProvider storageProvider, string path = "")
+        {
+            string directory = !string.IsNullOrEmpty(path) ? Path.GetDirectoryName(Path.GetFullPath(path)) ?? "" : "";
+            string name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : "";
+            return await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+            {
+                AllowMultiple = false,
+                Title = "Load Script File",
+                FileTypeFilter = [
+                    new FilePickerFileType("Scripts (.csx)") { Patterns = new List<string> { "*.csx" } },
+                    new FilePickerFileType("All files") { Patterns = new List<string> { "*" } }
+                ],
+                SuggestedFileName = !string.IsNullOrEmpty(name) ? name : "script.csx",
+                SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Documents)
+            });
+        }
     }
 }

@@ -28,7 +28,7 @@
 	<Grid>
 		<DockPanel>
 			<Grid DockPanel.Dock="Bottom">
-				<TextBox x:Name="CommandBox" AcceptsReturn="True" Margin="0,0,55,0"/>
+				<TextBox x:Name="CommandBox" AcceptsReturn="True" Margin="0,0,55,0" Text="{Binding CommandBoxText}"/>
 				<Label Content="None" HorizontalAlignment="Right" VerticalAlignment="Top" VerticalContentAlignment="Top" Name="ObjectLabel" Margin="0,0,15,0"/>
 			</Grid>
 			<Grid>

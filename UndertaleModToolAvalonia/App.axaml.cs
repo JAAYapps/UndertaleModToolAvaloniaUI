@@ -17,6 +17,7 @@ using UndertaleModToolAvalonia.Services.LoadingDialogService;
 using UndertaleModToolAvalonia.Services.PlayerService;
 using UndertaleModToolAvalonia.Services.ProfileService;
 using UndertaleModToolAvalonia.Services.ReferenceFinderService;
+using UndertaleModToolAvalonia.Services.ScriptService;
 using UndertaleModToolAvalonia.Services.TextureCacheService;
 using UndertaleModToolAvalonia.Services.UpdateService;
 using UndertaleModToolAvalonia.Utilities;
@@ -162,6 +163,7 @@ public partial class App : Application
         services.AddSingleton<IReferenceFinderService, ReferenceFinderService>();
         services.AddSingleton<ITextureCacheService, TextureCacheService>();
         services.AddSingleton<IClipboardService, ClipboardService>();
+        services.AddSingleton<IScriptService, ScriptService>();
 
         if (OperatingSystem.IsWindows() || OperatingSystem.IsMacOS() || OperatingSystem.IsLinux() || OperatingSystem.IsFreeBSD())
         {

@@ -27,6 +27,7 @@ using UndertaleModToolAvalonia.Services.FileService;
 using UndertaleModToolAvalonia.Services.LoadingDialogService;
 using UndertaleModToolAvalonia.Services.PlayerService;
 using UndertaleModToolAvalonia.Services.ProfileService;
+using UndertaleModToolAvalonia.Services.ScriptService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.FindReferencesTypesDialog;
@@ -42,6 +43,7 @@ namespace UndertaleModToolAvalonia.ViewModels
         private readonly IProfileService profileService;
         private readonly IFileService fileService;
         private readonly ILoadingDialogService loadingDialogService;
+        private readonly IScriptService scriptService;
 
         [ObservableProperty]
         private StreamGeometry? toggleIconData;
@@ -71,7 +73,7 @@ namespace UndertaleModToolAvalonia.ViewModels
             FindUnreferencedAssetsCommand.NotifyCanExecuteChanged();
         }
 
-        public MainWindowViewModel(IServiceProvider services, EditorViewModel editorViewModel, IProfileService profileService, IDialogService dialogService, IPlayer playerService, IFileService fileService, ILoadingDialogService loadingDialogService)
+        public MainWindowViewModel(IServiceProvider services, EditorViewModel editorViewModel, IProfileService profileService, IDialogService dialogService, IPlayer playerService, IFileService fileService, ILoadingDialogService loadingDialogService, IScriptService scriptService)
         {
             this.services = services;
             this.editorViewModel = editorViewModel;
@@ -80,6 +82,7 @@ namespace UndertaleModToolAvalonia.ViewModels
             this.PlayerService = playerService;
             this.fileService = fileService;
             this.loadingDialogService = loadingDialogService;
+            this.scriptService = scriptService;
             TitleMain = "UndertaleModTool by krzys_h, recreated by Joshua Vanderzee v:" + AppConstants.Version;
             Data = AppConstants.Data;
             WeakReferenceMessenger.Default.Register<TitleUpdateMessage>(this, (r, m) =>
@@ -688,6 +691,32 @@ result in loss of work.");
                 });
             });
             MenuEnabled = true;
+        }
+
+        [RelayCommand]
+        private async Task RunOtherScript(Visual visual)
+        {
+            if (TopLevel.GetTopLevel(visual)?.StorageProvider is null)
+            {
+                await App.Current!.ShowError("The dialog could not be opened.");
+                return;
+            }
+            if (!MenuEnabled)
+                return;
+            MenuEnabled = false;
+            try
+            {
+                var files = await fileService.LoadScriptFileAsync(TopLevel.GetTopLevel(visual)?.StorageProvider!, AppConstants.ScriptPath ?? "");
+                string? path = files.FirstOrDefault()?.TryGetLocalPath();
+
+                if (!string.IsNullOrEmpty(path))
+                    await scriptService.RunScript(path);
+            }
+            finally
+            {
+                MenuEnabled = true;
+                RefreshCanSave();
+            }
         }
 
         [RelayCommand]

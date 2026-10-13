@@ -2,7 +2,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using Microsoft.CodeAnalysis.Scripting;
 using Newtonsoft.Json;
 using System;
 using System.Collections;
@@ -75,13 +74,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
         [ObservableProperty] private bool wasWarnedAboutTempRun = false;
         
-        [ObservableProperty] private bool finishedMessageEnabled = true;
-        
-        [ObservableProperty] private bool scriptExecutionSuccess = true;
-        
-        [ObservableProperty] private string scriptErrorMessage = "";
-        
-        [ObservableProperty] private string scriptErrorType = "";
+        [ObservableProperty] private string commandBoxText = string.Empty;
         
         public enum SaveResult
         {
@@ -128,10 +121,6 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         public string ProfileHash = "Unknown";
         public bool CrashedWhileEditing = false;
 
-        // Scripting interface-related
-        private ScriptOptions scriptOptions;
-        private Task scriptSetupTask;
-        
         [ObservableProperty] private string objectLabel  = string.Empty;
 
         private List<ResourceNodeViewModel> unfilteredRootNodes = new();
@@ -185,20 +174,6 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
             Settings.Instance.CanSave = false;
             Settings.Instance.CanSafelySave = false;
-
-            scriptSetupTask = Task.Run(() =>
-            {
-                scriptOptions = ScriptOptions.Default
-                    .AddImports("UndertaleModLib", "UndertaleModLib.Models", "UndertaleModLib.Decompiler",
-                        "UndertaleModLib.Scripting", "UndertaleModLib.Compiler",
-                        "UndertaleModToolAvalonia", "System", "System.IO", "System.Collections.Generic",
-                        "System.Text.RegularExpressions")
-                    .AddReferences(typeof(UndertaleObject).GetTypeInfo().Assembly,
-                        GetType().GetTypeInfo().Assembly,
-                        typeof(JsonConvert).GetTypeInfo().Assembly,
-                        typeof(System.Text.RegularExpressions.Regex).GetTypeInfo().Assembly)
-                    .WithEmitDebugInformation(true); //when script throws an exception, add an exception location (line number)
-            });
         }
 
         partial void OnSearchTextChanged(string value)
