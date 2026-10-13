@@ -13,7 +13,12 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         [ObservableProperty]
         private string text = "";
 
+        [ObservableProperty]
+        private bool isMultiline;
+
         public string Title { get; private set; } = "";
+        public string PrimaryButtonText { get; private set; } = "OK";
+        public string CloseButtonText { get; private set; } = "Cancel";
         public string? Result { get; private set; }
         public void FinalizeResult(bool success)
         {
@@ -25,6 +30,9 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             Title = parameters.Title;
             Label = parameters.Label;
             Text = parameters.DefaultText;
+            IsMultiline = parameters.IsMultiline;
+            PrimaryButtonText = parameters.SubmitText;
+            CloseButtonText = parameters.CancelText;
             return Task.FromResult(true);
         }
     }

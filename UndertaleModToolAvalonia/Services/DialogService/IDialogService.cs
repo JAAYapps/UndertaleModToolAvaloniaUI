@@ -11,6 +11,8 @@ namespace UndertaleModToolAvalonia.Services.DialogService
     public interface IDialogViewModel<out TResult>
     {
         string Title { get; }
+        string PrimaryButtonText => "OK";
+        string CloseButtonText => "Cancel";
         TResult? Result { get; }
         void FinalizeResult(bool success);
     }

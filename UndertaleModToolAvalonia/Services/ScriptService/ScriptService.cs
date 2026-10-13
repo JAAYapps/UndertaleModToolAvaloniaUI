@@ -19,6 +19,8 @@ using UndertaleModLib.Models;
 using UndertaleModLib.Project;
 using UndertaleModLib.Scripting;
 using UndertaleModLib.Util;
+using UndertaleModToolAvalonia.Models;
+using UndertaleModToolAvalonia.Services.DialogService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
 
@@ -27,6 +29,7 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
     public class ScriptService : IScriptService
     {
         private readonly EditorViewModel editorViewModel;
+        private readonly IDialogService dialogService;
 
         private ScriptOptions scriptOptions;
         private Task scriptSetupTask;
@@ -46,9 +49,10 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
         public bool IsAppClosed => editorViewModel.LsAppClosed;
         public Action<Action> MainThreadAction => (f) => Dispatcher.UIThread.Invoke(f);
 
-        public ScriptService(EditorViewModel editorViewModel)
+        public ScriptService(EditorViewModel editorViewModel, IDialogService dialogService)
         {
             this.editorViewModel = editorViewModel;
+            this.dialogService = dialogService;
 
             scriptSetupTask = Task.Run(() =>
             {
@@ -173,6 +177,36 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
             });
         }
 
+        public string SimpleTextInput(string title, string label, string defaultValue, bool allowMultiline, bool showDialog = true)
+        {
+            if (showDialog)
+            {
+                return WaitFor(() => dialogService.ShowDialogAsync<TextInputViewModel, TextInputParameters, string>(new TextInputParameters(title, label, defaultValue, allowMultiline)))!;
+            }
+            else
+            {
+                _ = dialogService.ShowAsync<TextOutputViewModel, TextOutputParameters>(new TextOutputParameters(title, label, defaultValue, allowMultiline, false));
+                return null!;
+            }
+        }
+
+        public void SimpleTextOutput(string title, string label, string message, bool allowMultiline)
+        {
+            _ = dialogService.ShowAsync<TextOutputViewModel, TextOutputParameters>(new TextOutputParameters(title, label, message, allowMultiline, true));
+        }
+
+        public string ScriptInputDialog(string title, string label, string defaultInput, string cancelText, string submitText, bool isMultiline, bool preventClose)
+        {
+            string? result;
+            do
+            {
+                result = WaitFor(() => dialogService.ShowDialogAsync<TextInputViewModel, TextInputParameters, string>(new TextInputParameters(title, label, defaultInput, isMultiline, submitText, preventClose ? "" : cancelText)));
+            }
+            while (preventClose && result is null);
+
+            return result!;
+        }
+
         public bool MakeNewDataFile() => throw NotPorted();
         public void ScriptOpenURL(string url) => throw NotPorted();
         public bool RunUMTScript(string path) => throw NotPorted();
@@ -182,9 +216,6 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
         public string GetDecompiledText(UndertaleCode code, GlobalDecompileContext context = null!, IDecompileSettings settings = null!) => throw NotPorted();
         public string GetDisassemblyText(string codeName) => throw NotPorted();
         public string GetDisassemblyText(UndertaleCode code) => throw NotPorted();
-        public string ScriptInputDialog(string title, string label, string defaultInput, string cancelText, string submitText, bool isMultiline, bool preventClose) => throw NotPorted();
-        public string SimpleTextInput(string title, string label, string defaultValue, bool allowMultiline, bool showDialog = true) => throw NotPorted();
-        public void SimpleTextOutput(string title, string label, string message, bool allowMultiline) => throw NotPorted();
         public Task ClickableSearchOutput(string title, string query, int resultsCount, IOrderedEnumerable<KeyValuePair<string, List<(int lineNum, string codeLine)>>> resultsDict, bool showInDecompiledView, IOrderedEnumerable<string> failedList = null!) => throw NotPorted();
         public Task ClickableSearchOutput(string title, string query, int resultsCount, IDictionary<string, List<(int lineNum, string codeLine)>> resultsDict, bool showInDecompiledView, IEnumerable<string> failedList = null!) => throw NotPorted();
         public void UpdateProgressBar(string message, string status, double progressValue, double maxValue) => throw NotPorted();

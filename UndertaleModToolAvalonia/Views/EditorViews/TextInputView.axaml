@@ -6,13 +6,19 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="100"
              x:Class="UndertaleModToolAvalonia.Views.EditorViews.TextInputView"
              x:DataType="vm:TextInputViewModel">
+	<UserControl.Styles>
+		<Style Selector="TextBox.multiline">
+			<Setter Property="Height" Value="200"/>
+			<Setter Property="VerticalContentAlignment" Value="Top"/>
+		</Style>
+	</UserControl.Styles>
 	<Grid Margin="10" Width="400">
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 
-		<TextBlock Grid.Row="0" Margin="3" Text="{Binding Label}"/>
-		<TextBox Grid.Row="1" Margin="3" Name="InputBox" Text="{Binding Text}"/>
+		<TextBlock Grid.Row="0" Margin="3" Text="{Binding Label}" TextWrapping="Wrap"/>
+		<TextBox Grid.Row="1" Margin="3" Name="InputBox" Text="{Binding Text}" AcceptsReturn="{Binding IsMultiline}" Classes.multiline="{Binding IsMultiline}" NewLine="&#10;"/>
 	</Grid>
 </UserControl>

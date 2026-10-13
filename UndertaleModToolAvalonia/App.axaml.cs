@@ -150,6 +150,7 @@ public partial class App : Application
         services.AddTransient<GMLSettingsViewModel>();
         services.AddTransient<RuntimePickerViewModel>();
         services.AddTransient<TextInputViewModel>();
+        services.AddTransient<TextOutputViewModel>();
         services.AddTransient<FindReferencesTypesDialogViewModel>();
         services.AddTransient<FindReferencesResultsViewModel>();
         services.AddTransient<EditGlyphRectangleViewModel>();

@@ -26,8 +26,8 @@ namespace UndertaleModToolAvalonia.Services.DialogService
                 var dialog = new FAContentDialog
                 {
                     Title = viewModel.Title,
-                    PrimaryButtonText = "OK",
-                    CloseButtonText = "Cancel",
+                    PrimaryButtonText = viewModel.PrimaryButtonText,
+                    CloseButtonText = viewModel.CloseButtonText,
                     Content = userControlView,
                     DataContext = viewModel
                 };
@@ -59,8 +59,8 @@ namespace UndertaleModToolAvalonia.Services.DialogService
                 var dialog = new FAContentDialog
                 {
                     Title = viewModel.Title,
-                    PrimaryButtonText = "OK",
-                    CloseButtonText = "Cancel",
+                    PrimaryButtonText = viewModel.PrimaryButtonText,
+                    CloseButtonText = viewModel.CloseButtonText,
                     Content = userControlView,
                     DataContext = viewModel
                 };
