@@ -93,6 +93,7 @@ namespace UndertaleModToolAvalonia.ViewModels
             projectService.ProjectChanged += (sender, args) =>
             {
                 SaveProjectCommand.NotifyCanExecuteChanged();
+                ViewProjectAssetsCommand.NotifyCanExecuteChanged();
                 CloseProjectCommand.NotifyCanExecuteChanged();
             };
             TitleMain = "UndertaleModTool by krzys_h, recreated by Joshua Vanderzee v:" + AppConstants.Version;
@@ -972,6 +973,17 @@ result in loss of work.");
             if (errorMessage is not null)
                 await App.Current!.ShowError(errorMessage, errorTitle);
             editorViewModel.CommandBoxText = success ? "Saved project successfully." : "Project failed to save.";
+        }
+
+        [RelayCommand(CanExecute = nameof(HasProject))]
+        private async Task ViewProjectAssets()
+        {
+            if (AppConstants.Data is null || AppConstants.FilePath is null)
+                return;
+            if (projectService.Project is not ProjectContext project)
+                return;
+
+            await dialogService.ShowAsync<ProjectAssetsViewModel, ProjectAssetsParameters>(new ProjectAssetsParameters(project));
         }
 
         [RelayCommand(CanExecute = nameof(HasProject))]

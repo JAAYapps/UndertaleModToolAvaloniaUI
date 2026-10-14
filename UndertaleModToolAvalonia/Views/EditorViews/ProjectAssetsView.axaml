@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels"
+        x:DataType="vm:ProjectAssetsViewModel"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="UndertaleModToolAvalonia.Views.EditorViews.ProjectAssetsView"
+        Title="{Binding Title}" Height="450" Width="800">
+	<Grid Name="DropArea" Margin="10" DragDrop.AllowDrop="True" Background="Transparent">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+		<TextBlock Grid.Row="0" Margin="3" TextWrapping="Wrap"
+				   Text="Below is a list of all assets currently waiting to be exported to disk for the current project, once it is next saved."/>
+		<TextBlock Grid.Row="1" Margin="3" TextWrapping="Wrap"
+				   Text="To quickly add or remove assets from being part of the project, you can drag and drop assets here, or delete them."/>
+		<DataGrid Grid.Row="2" Name="AssetsGrid" Margin="0,8,0,0" MinHeight="300" FontFamily="Consolas"
+				  ItemsSource="{Binding Assets}" SelectedItem="{Binding SelectedAsset}"
+				  IsReadOnly="True" SelectionMode="Extended" AutoGenerateColumns="False" CanUserSortColumns="False">
+			<DataGrid.Columns>
+				<DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+				<DataGridTextColumn Header="Type" Binding="{Binding AssetType}" Width="Auto"/>
+			</DataGrid.Columns>
+			<DataGrid.ContextFlyout>
+				<MenuFlyout>
+					<MenuItem Header="Open" Click="OpenMenuItem_Click"/>
+					<MenuItem Header="Open in new tab" Click="OpenInNewTabMenuItem_Click"/>
+					<MenuItem Header="Unmark for export" Click="UnmarkMenuItem_Click"/>
+				</MenuFlyout>
+			</DataGrid.ContextFlyout>
+		</DataGrid>
+	</Grid>
+</Window>

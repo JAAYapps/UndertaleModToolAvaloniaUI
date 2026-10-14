@@ -35,6 +35,7 @@
 				<MenuItem Header="_New project" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).CreateProjectCommand}" CommandParameter="{Binding $parent[UserControl]}"/>
 				<MenuItem Header="_Open project" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).OpenProjectCommand}" CommandParameter="{Binding $parent[UserControl]}"/>
 				<MenuItem Header="_Save project" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).SaveProjectCommand}"/>
+				<MenuItem Header="_View unexported assets" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).ViewProjectAssetsCommand}"/>
 				<MenuItem Header="_Close project" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).CloseProjectCommand}"/>
 			</MenuItem>
 			<MenuItem Header="_Help">
