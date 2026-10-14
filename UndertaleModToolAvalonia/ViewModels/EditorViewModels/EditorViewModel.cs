@@ -1533,7 +1533,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                     UndertaleExtensionFile => new UndertaleExtensionFileEditorViewModel(name, (UndertaleExtensionFile)asset),
                     UndertaleExtensionFunction => new UndertaleExtensionFunctionEditorViewModel(name, (UndertaleExtensionFunction)asset),
                     UndertaleTexturePageItem => new UndertaleTexturePageItemEditorViewModel(name, (UndertaleTexturePageItem)asset, this, textureCacheService, fileService),
-                    UndertaleCode => new UndertaleCodeEditorViewModel(name, (UndertaleCode)asset, this, profileService, loadingDialogService, fileService),
+                    UndertaleCode => new UndertaleCodeEditorViewModel(name, (UndertaleCode)asset, this, profileService, loadingDialogService, fileService, projectService),
                     UndertaleVariable => new UndertaleVariableEditorViewModel(name, (UndertaleVariable)asset),
                     UndertaleFunction => new UndertaleFunctionEditorViewModel(name, (UndertaleFunction)asset),
                     UndertaleCodeLocals => new UndertaleCodeLocalsEditorViewModel(name, (UndertaleCodeLocals)asset),

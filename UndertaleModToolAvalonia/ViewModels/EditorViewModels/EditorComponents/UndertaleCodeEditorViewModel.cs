@@ -20,6 +20,8 @@ using UndertaleModToolAvalonia.Services.LoadingDialogService;
 using CommunityToolkit.Mvvm.Messaging;
 using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.Services.ProfileService;
+using UndertaleModToolAvalonia.Services.ProjectService;
+using UndertaleModLib.Project;
 using UndertaleModToolAvalonia.Utilities;
 
 namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
@@ -40,6 +42,8 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
         public readonly ILoadingDialogService loadingDialogSerivce;
 
         public readonly IFileService fileService;
+
+        public readonly IProjectService projectService;
 
         [ObservableProperty]
         private EditorViewModel editor;
@@ -139,8 +143,9 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
         [ObservableProperty]
         private bool isReadOnly = true;
 
-        public UndertaleCodeEditorViewModel(string title, UndertaleCode undertaleCode, EditorViewModel editor, IProfileService profileService, ILoadingDialogService loadingDialogSerivce, IFileService fileService) : base(title)
+        public UndertaleCodeEditorViewModel(string title, UndertaleCode undertaleCode, EditorViewModel editor, IProfileService profileService, ILoadingDialogService loadingDialogSerivce, IFileService fileService, IProjectService projectService) : base(title)
         {
+            this.projectService = projectService;
             this.editor = editor;
             this.undertaleCode = undertaleCode;
             this.profileService = profileService;
@@ -165,22 +170,25 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
             Exception e = null;
             try
             {
-                if (!Settings.Instance.ProfileModeEnabled || AppConstants.ProfileHash is not string currentMD5)
+                if (projectService?.Project is not ProjectContext project || !project.TryGetCodeSource(code, out decompiled))
                 {
-                    decompiled = new Underanalyzer.Decompiler.DecompileContext(context, code, dataa.ToolInfo.DecompilerSettings)
-                        .DecompileToString();
-                }
-                else
-                {
-                    string path = Path.Combine(Settings.ProfilesFolder, currentMD5, "Temp", code.Name.Content + ".gml");
-                    if (!File.Exists(path))
+                    if (!Settings.Instance.ProfileModeEnabled || AppConstants.ProfileHash is not string currentMD5)
                     {
                         decompiled = new Underanalyzer.Decompiler.DecompileContext(context, code, dataa.ToolInfo.DecompilerSettings)
                             .DecompileToString();
                     }
                     else
                     {
-                        decompiled = File.ReadAllText(path);
+                        string path = Path.Combine(Settings.ProfilesFolder, currentMD5, "Temp", code.Name.Content + ".gml");
+                        if (!File.Exists(path))
+                        {
+                            decompiled = new Underanalyzer.Decompiler.DecompileContext(context, code, dataa.ToolInfo.DecompilerSettings)
+                                .DecompileToString();
+                        }
+                        else
+                        {
+                            decompiled = File.ReadAllText(path);
+                        }
                     }
                 }
             }

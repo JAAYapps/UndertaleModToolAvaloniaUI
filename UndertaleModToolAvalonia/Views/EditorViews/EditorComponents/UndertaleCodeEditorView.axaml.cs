@@ -30,6 +30,7 @@ using UndertaleModLib;
 using UndertaleModLib.Compiler;
 using UndertaleModLib.Decompiler;
 using UndertaleModLib.Models;
+using UndertaleModLib.Project;
 using CommunityToolkit.Mvvm.Messaging;
 using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.Utilities;
@@ -474,6 +475,14 @@ public partial class UndertaleCodeEditorView : UserControl
 
         // Disassemble new code
         DisassembleCode(code, false);
+
+        if (vm.projectService?.Project is ProjectContext project && project.TryGetCodeSource(code, out _))
+        {
+            _ = App.Current!.ShowWarning("Editing disassembly while in an open project (even through scripts) can cause " +
+                                         "desyncs with source code in the project.\n\n" +
+                                         "The source code will not change unless you directly modify it, " +
+                                         "or if you remove the code asset from the project entirely.");
+        }
     }
 
     private void DisassembleCode(UndertaleCode code, bool first)
@@ -677,11 +686,18 @@ public partial class UndertaleCodeEditorView : UserControl
 
         UndertaleData data = AppConstants.Data;
 
+        string text = DecompiledEditor.Text;
+
+        if (vm.projectService?.Project is ProjectContext project && code is IProjectAsset { ProjectExportable: true } && data.IndexOf(code, false) >= 0)
+        {
+            project.UpdateCodeSource(code, text);
+            project.MarkAssetForExport(code);
+        }
+
         vm.loadingDialogSerivce.Show("Compiling", "Compiling, please wait...");
 
         CompileResult compileResult = new();
         string rootException = null;
-        string text = DecompiledEditor.Text;
         await Task.Run(() =>
         {
             try
