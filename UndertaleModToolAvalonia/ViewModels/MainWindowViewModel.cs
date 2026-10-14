@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using Avalonia.VisualTree;
 using FluentAvalonia.UI.Controls;
 using UndertaleModLib;
+using UndertaleModLib.Project;
 using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.Models;
 using UndertaleModToolAvalonia.Services.DialogService;
@@ -27,6 +28,7 @@ using UndertaleModToolAvalonia.Services.FileService;
 using UndertaleModToolAvalonia.Services.LoadingDialogService;
 using UndertaleModToolAvalonia.Services.PlayerService;
 using UndertaleModToolAvalonia.Services.ProfileService;
+using UndertaleModToolAvalonia.Services.ProjectService;
 using UndertaleModToolAvalonia.Services.ScriptService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
@@ -44,6 +46,10 @@ namespace UndertaleModToolAvalonia.ViewModels
         private readonly IFileService fileService;
         private readonly ILoadingDialogService loadingDialogService;
         private readonly IScriptService scriptService;
+        private readonly IProjectService projectService;
+
+        private const string DataFileFilter = "GameMaker data files (.win, .unx, .ios, .droid, audiogroup*.dat)|*.win;*.unx;*.ios;*.droid;audiogroup*.dat|All files|*";
+        private const string MainDataFileFilter = "GameMaker main data files (.win, .unx, .ios, .droid)|*.win;*.unx;*.ios;*.droid|All files|*";
 
         [ObservableProperty]
         private StreamGeometry? toggleIconData;
@@ -73,7 +79,7 @@ namespace UndertaleModToolAvalonia.ViewModels
             FindUnreferencedAssetsCommand.NotifyCanExecuteChanged();
         }
 
-        public MainWindowViewModel(IServiceProvider services, EditorViewModel editorViewModel, IProfileService profileService, IDialogService dialogService, IPlayer playerService, IFileService fileService, ILoadingDialogService loadingDialogService, IScriptService scriptService)
+        public MainWindowViewModel(IServiceProvider services, EditorViewModel editorViewModel, IProfileService profileService, IDialogService dialogService, IPlayer playerService, IFileService fileService, ILoadingDialogService loadingDialogService, IScriptService scriptService, IProjectService projectService)
         {
             this.services = services;
             this.editorViewModel = editorViewModel;
@@ -83,6 +89,8 @@ namespace UndertaleModToolAvalonia.ViewModels
             this.fileService = fileService;
             this.loadingDialogService = loadingDialogService;
             this.scriptService = scriptService;
+            this.projectService = projectService;
+            projectService.ProjectChanged += (sender, args) => CloseProjectCommand.NotifyCanExecuteChanged();
             TitleMain = "UndertaleModTool by krzys_h, recreated by Joshua Vanderzee v:" + AppConstants.Version;
             Data = AppConstants.Data;
             WeakReferenceMessenger.Default.Register<TitleUpdateMessage>(this, (r, m) =>
@@ -691,6 +699,236 @@ result in loss of work.");
                 });
             });
             MenuEnabled = true;
+        }
+
+        private bool HasProject => projectService.Project is not null;
+
+        private async Task<string?> ChooseProjectSaveFile(IStorageProvider storageProvider, string sourceFilePath)
+        {
+            var saveData = await fileService.SaveFilteredFileAsync(storageProvider, "win", MainDataFileFilter, sourceFilePath, "Choose destination data file");
+            string? saveFilePath = saveData?.TryGetLocalPath();
+            if (string.IsNullOrEmpty(saveFilePath))
+                return null;
+
+            if (Path.GetFullPath(Path.GetDirectoryName(saveFilePath)!).Equals(
+                    Path.GetFullPath(Path.GetDirectoryName(sourceFilePath)!), StringComparison.OrdinalIgnoreCase))
+            {
+                if (await App.Current!.ShowQuestionWithCancel("The destination data file is in the same directory as the source data file. This may permanently overwrite external data files. Proceed?", MsBox.Avalonia.Enums.Icon.Warning, "Destination file in same directory as source file") != MsBox.Avalonia.Enums.ButtonResult.Yes)
+                    return null;
+            }
+
+            try
+            {
+                if (!Directory.EnumerateFileSystemEntries(Path.GetDirectoryName(saveFilePath)!).Any())
+                {
+                    await App.Current!.ShowWarning("Currently, the destination data file's directory is empty. You will likely want to copy all other game files to the destination directory, so that external assets can be loaded correctly (both in-game and in this tool), and so the game can be started.");
+                }
+            }
+            catch (Exception)
+            {
+            }
+
+            return saveFilePath;
+        }
+
+        [RelayCommand]
+        private async Task CreateProject(Visual visual)
+        {
+            var storageProvider = TopLevel.GetTopLevel(visual)?.StorageProvider;
+            if (storageProvider is null)
+            {
+                await App.Current!.ShowError("The dialog could not be opened.");
+                return;
+            }
+            if (!MenuEnabled)
+                return;
+            MenuEnabled = false;
+            try
+            {
+                if (projectService.Project is not null && projectService.Project.HasUnexportedAssets)
+                {
+                    if (await App.Current!.ShowQuestionWithCancel("There are assets marked to be exported in the current project - create a new project and discard all unexported changes?", MsBox.Avalonia.Enums.Icon.Warning, "Project already open") != MsBox.Avalonia.Enums.ButtonResult.Yes)
+                        return;
+                }
+
+                if (AppConstants.Data is null || string.IsNullOrEmpty(AppConstants.FilePath))
+                {
+                    OnSelectedPageChanged(Pages[0]);
+                    if (CurrentPage is not GameSelectPageViewModel pvm)
+                        return;
+
+                    var sources = await fileService.LoadFilteredFileAsync(storageProvider, DataFileFilter, "", "Choose source data file");
+                    var source = sources.FirstOrDefault();
+                    if (source is null || !await editorViewModel.LoadFileAsync(source, true))
+                        return;
+                    pvm.ChangePage(1);
+
+                    if (AppConstants.Data is null || string.IsNullOrEmpty(AppConstants.FilePath))
+                        return;
+                }
+
+                string? projectName = await dialogService.ShowDialogAsync<TextInputViewModel, TextInputParameters, string>(new TextInputParameters("Choose project name", "Choose a name for the new project", $"{AppConstants.Data.GeneralInfo?.DisplayName?.Content ?? "New"} Mod"));
+                if (projectName is null)
+                {
+                    editorViewModel.CommandBoxText = "Cancelled new project creation.";
+                    return;
+                }
+                projectName = projectName.Trim();
+
+                var folders = await fileService.LoadFolderAsync(storageProvider, AppConstants.FilePath, "Choose project folder");
+                string? directory = folders.FirstOrDefault()?.TryGetLocalPath();
+                if (directory is null)
+                {
+                    editorViewModel.CommandBoxText = "Cancelled new project creation.";
+                    return;
+                }
+
+                string? saveFilePath = await ChooseProjectSaveFile(storageProvider, AppConstants.FilePath);
+                if (saveFilePath is null)
+                    return;
+
+                ProjectContext newProjectContext;
+                try
+                {
+                    newProjectContext = new(AppConstants.Data, AppConstants.FilePath, saveFilePath, Path.Join(directory, "project.json"), projectName, (f) => Dispatcher.UIThread.Invoke(f));
+                }
+                catch (ProjectException ex)
+                {
+                    await App.Current!.ShowError(ex.Message, "Failed to create new project");
+                    editorViewModel.CommandBoxText = "Project creation failed.";
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    await App.Current!.ShowError($"Error occurred when creating new project:\n{ex}");
+                    editorViewModel.CommandBoxText = "Project creation failed.";
+                    return;
+                }
+
+                projectService.AssignNewProject(newProjectContext);
+                editorViewModel.CommandBoxText = $"Project \"{projectName}\" created successfully!";
+            }
+            finally
+            {
+                MenuEnabled = true;
+                RefreshCanSave();
+            }
+        }
+
+        [RelayCommand]
+        private async Task OpenProject(Visual visual)
+        {
+            var storageProvider = TopLevel.GetTopLevel(visual)?.StorageProvider;
+            if (storageProvider is null)
+            {
+                await App.Current!.ShowError("The dialog could not be opened.");
+                return;
+            }
+            if (!MenuEnabled)
+                return;
+            MenuEnabled = false;
+            try
+            {
+                if (projectService.Project is not null && projectService.Project.HasUnexportedAssets)
+                {
+                    if (await App.Current!.ShowQuestionWithCancel("There are assets marked to be exported in the current project - open another new project and discard all unexported changes?", MsBox.Avalonia.Enums.Icon.Warning, "Project already open") != MsBox.Avalonia.Enums.ButtonResult.Yes)
+                        return;
+                }
+
+                var projectFiles = await fileService.LoadFilteredFileAsync(storageProvider, "UndertaleModTool project files (.json)|*.json|All files|*", AppConstants.FilePath ?? "", "Open project file");
+                string? projectFilePath = projectFiles.FirstOrDefault()?.TryGetLocalPath();
+                if (projectFilePath is null)
+                    return;
+
+                IStorageFile? dataFileToLoad = null;
+                if (AppConstants.Data is null || string.IsNullOrEmpty(AppConstants.FilePath))
+                {
+                    var sources = await fileService.LoadFilteredFileAsync(storageProvider, DataFileFilter, projectFilePath, "Choose source data file");
+                    dataFileToLoad = sources.FirstOrDefault();
+                    if (dataFileToLoad?.TryGetLocalPath() is null)
+                        return;
+                }
+
+                string? saveFilePath = await ChooseProjectSaveFile(storageProvider, dataFileToLoad?.TryGetLocalPath() ?? AppConstants.FilePath!);
+                if (saveFilePath is null)
+                    return;
+
+                if (dataFileToLoad is not null)
+                {
+                    OnSelectedPageChanged(Pages[0]);
+                    if (CurrentPage is not GameSelectPageViewModel pvm)
+                        return;
+                    if (!await editorViewModel.LoadFileAsync(dataFileToLoad, true))
+                        return;
+                    pvm.ChangePage(1);
+
+                    if (AppConstants.Data is null || string.IsNullOrEmpty(AppConstants.FilePath))
+                        return;
+                }
+
+                string loadFilePath = AppConstants.FilePath!;
+                AppConstants.FilePath = saveFilePath;
+                WeakReferenceMessenger.Default.Send(new TitleUpdateMessage());
+
+                ProjectContext? newProjectContext = null;
+                string? errorMessage = null;
+                string errorTitle = "Error";
+                editorViewModel.IsEnabled = false;
+                await Task.Run(() =>
+                {
+                    try
+                    {
+                        newProjectContext = ProjectContext.CreateWithDataFilePaths(loadFilePath, saveFilePath, projectFilePath);
+                        newProjectContext.Import(AppConstants.Data, null, (f) => Dispatcher.UIThread.Invoke(f));
+                    }
+                    catch (ProjectException ex)
+                    {
+                        newProjectContext = null;
+                        errorMessage = ex.Message;
+                        errorTitle = "Failed to load project";
+                    }
+                    catch (Exception ex)
+                    {
+                        newProjectContext = null;
+                        errorMessage = $"Error occurred when loading project:\n{ex}";
+                    }
+                });
+                editorViewModel.ReloadTree();
+                editorViewModel.IsEnabled = true;
+
+                if (newProjectContext is null)
+                {
+                    await App.Current!.ShowError(errorMessage ?? "", errorTitle);
+                    editorViewModel.CommandBoxText = "Project failed to open.";
+                    return;
+                }
+
+                projectService.AssignNewProject(newProjectContext);
+                editorViewModel.CommandBoxText = $"Opened project \"{newProjectContext.Name}\".";
+            }
+            finally
+            {
+                MenuEnabled = true;
+                RefreshCanSave();
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(HasProject))]
+        private async Task CloseProject()
+        {
+            if (AppConstants.Data is null || AppConstants.FilePath is null)
+                return;
+            if (projectService.Project is null)
+                return;
+
+            if (projectService.Project.HasUnexportedAssets)
+            {
+                if (await App.Current!.ShowQuestionWithCancel("There are assets marked to be exported in the current project. Really close?") != MsBox.Avalonia.Enums.ButtonResult.Yes)
+                    return;
+            }
+
+            projectService.UnloadProject();
+            editorViewModel.CommandBoxText = "Project closed.";
         }
 
         [RelayCommand]

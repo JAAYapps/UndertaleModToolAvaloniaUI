@@ -170,24 +170,24 @@ namespace UndertaleModToolAvalonia.Services.FileService
             });
         }
 
-        public async Task<IReadOnlyList<IStorageFile>> LoadFilteredFileAsync(IStorageProvider storageProvider, string filter, string path = "")
+        public async Task<IReadOnlyList<IStorageFile>> LoadFilteredFileAsync(IStorageProvider storageProvider, string filter, string path = "", string title = "Load File")
         {
             string directory = !string.IsNullOrEmpty(path) ? Path.GetDirectoryName(Path.GetFullPath(path)) ?? "" : "";
             return await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
             {
                 AllowMultiple = false,
-                Title = "Load File",
+                Title = title,
                 FileTypeFilter = ParseFilter(filter),
                 SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Documents)
             });
         }
 
-        public async Task<IStorageFile?> SaveFilteredFileAsync(IStorageProvider storageProvider, string defaultExtension, string filter, string path = "")
+        public async Task<IStorageFile?> SaveFilteredFileAsync(IStorageProvider storageProvider, string defaultExtension, string filter, string path = "", string title = "Save File")
         {
             string directory = !string.IsNullOrEmpty(path) ? Path.GetDirectoryName(Path.GetFullPath(path)) ?? "" : "";
             return await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
             {
-                Title = "Save File",
+                Title = title,
                 FileTypeChoices = ParseFilter(filter),
                 ShowOverwritePrompt = true,
                 DefaultExtension = defaultExtension.TrimStart('*', '.'),
@@ -195,13 +195,13 @@ namespace UndertaleModToolAvalonia.Services.FileService
             });
         }
 
-        public async Task<IReadOnlyList<IStorageFolder>> LoadFolderAsync(IStorageProvider storageProvider, string path = "")
+        public async Task<IReadOnlyList<IStorageFolder>> LoadFolderAsync(IStorageProvider storageProvider, string path = "", string title = "Choose Folder")
         {
             string directory = !string.IsNullOrEmpty(path) ? Path.GetDirectoryName(Path.GetFullPath(path)) ?? "" : "";
             return await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions()
             {
                 AllowMultiple = false,
-                Title = "Choose Folder",
+                Title = title,
                 SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Documents)
             });
         }

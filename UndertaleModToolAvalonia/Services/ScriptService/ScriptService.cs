@@ -31,6 +31,7 @@ using UndertaleModToolAvalonia.Models;
 using UndertaleModToolAvalonia.Services.DialogService;
 using UndertaleModToolAvalonia.Services.FileService;
 using UndertaleModToolAvalonia.Services.LoadingDialogService;
+using UndertaleModToolAvalonia.Services.ProjectService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents;
@@ -43,6 +44,7 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
         private readonly IDialogService dialogService;
         private readonly ILoadingDialogService loadingDialogService;
         private readonly IFileService fileService;
+        private readonly IProjectService projectService;
 
         private const string DataFileFilter = "GameMaker data files (.win, .unx, .ios, .droid, audiogroup*.dat)|*.win;*.unx;*.ios;*.droid;audiogroup*.dat|All files|*";
 
@@ -59,7 +61,7 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
         private CancellationToken cToken;
 
         public UndertaleData Data => AppConstants.Data!;
-        public ProjectContext Project => null!;
+        public ProjectContext Project => projectService.Project!;
         public string FilePath => AppConstants.FilePath!;
         public string ScriptPath => AppConstants.ScriptPath!;
         public object Highlighted => editorViewModel.SelectedNode?.Model ?? editorViewModel.Highlighted;
@@ -72,8 +74,9 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
         public bool IsAppClosed => editorViewModel.LsAppClosed;
         public Action<Action> MainThreadAction => (f) => Dispatcher.UIThread.Invoke(f);
 
-        public ScriptService(EditorViewModel editorViewModel, IDialogService dialogService, ILoadingDialogService loadingDialogService, IFileService fileService)
+        public ScriptService(EditorViewModel editorViewModel, IDialogService dialogService, ILoadingDialogService loadingDialogService, IFileService fileService, IProjectService projectService)
         {
+            this.projectService = projectService;
             this.fileService = fileService;
             this.editorViewModel = editorViewModel;
             this.dialogService = dialogService;
