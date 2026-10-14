@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -19,6 +20,7 @@ using UndertaleModLib;
 using UndertaleModLib.Decompiler;
 using UndertaleModLib.Models;
 using UndertaleModLib.ModelsDebug;
+using UndertaleModLib.Project;
 using UndertaleModToolAvalonia.Converters;
 using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.Models;
@@ -126,6 +128,14 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
         [ObservableProperty] private string objectLabel  = string.Empty;
 
+        [ObservableProperty] private bool isSelectedProjectExportable;
+
+        [ObservableProperty] private bool isMarkedForExport;
+
+        private bool updatingObjectLabel;
+
+        private object? SelectedAsset => (CurrentTab?.CurrentObject as EditorContentViewModel)?.Asset;
+
         private List<ResourceNodeViewModel> unfilteredRootNodes = new();
 
         public ObservableCollection<ResourceNodeViewModel> FilteredRootNodes { get; } = new();
@@ -147,6 +157,12 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         public EditorViewModel(ILoadingDialogService loadingDialogService, IProfileService profileService, IDialogService dialogService, IReferenceFinderService referenceFinderService, IPlayer playerService, IFileService fileService, ITextureCacheService textureCacheService, IClipboardService clipboardService, IProjectService projectService)
         {
             this.projectService = projectService;
+            projectService.ProjectChanged += (sender, args) =>
+            {
+                if (projectService.Project is ProjectContext project)
+                    project.UnexportedAssetsChanged += (s, a) => Dispatcher.UIThread.Post(() => UpdateObjectLabel(SelectedAsset));
+                UpdateObjectLabel(SelectedAsset);
+            };
             this.loadingDialogService = loadingDialogService;
             this.profileService = profileService;
             this.dialogService = dialogService;
@@ -908,6 +924,8 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                         {
                             scriptResource.Code = UndertaleCode.CreateEmptyEntry(AppConstants.Data, $"gml_Script_{newName}");
                         }
+
+                        projectService?.Project?.MarkAssetForExport(scriptResource.Code);
                     }
                     else if (obj is UndertaleCode codeResource)
                     {
@@ -959,6 +977,11 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             }
             list.Add(obj);
 
+            if (projectService?.Project is not null && obj is IProjectAsset projectAsset)
+            {
+                projectService.Project.MarkAssetForExport(projectAsset);
+            }
+
             categoryNode.ReloadChildren();
             OpenAssetInNewTab(obj);
         }
@@ -1000,6 +1023,11 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             }
 
             list.Remove(resource);
+
+            if (projectService?.Project is not null && resource is IProjectAsset projectAsset)
+            {
+                projectService.Project.UnmarkAssetForExport(projectAsset);
+            }
 
             RemoveAssetFromTabs(resource);
             RemoveNodeFromTree(resourceNode, list);
@@ -1206,6 +1234,73 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         {
             NotifyHistoryChanged();
             CloseOtherTabsCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnCurrentTabChanged(TabViewModel? oldValue, TabViewModel? newValue)
+        {
+            if (oldValue is not null)
+                oldValue.PropertyChanged -= CurrentTab_PropertyChanged;
+            if (newValue is not null)
+                newValue.PropertyChanged += CurrentTab_PropertyChanged;
+            UpdateObjectLabel(SelectedAsset);
+        }
+
+        private void CurrentTab_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(TabViewModel.CurrentObject))
+                UpdateObjectLabel(SelectedAsset);
+        }
+
+        public void UpdateObjectLabel(object? obj)
+        {
+            int foundIndex = obj is UndertaleResource res && AppConstants.Data is not null ? AppConstants.Data.IndexOf(res, false) : -1;
+
+            string idString;
+            if (foundIndex == -2)
+            {
+                idString = "None";
+            }
+            else if (foundIndex == -1)
+            {
+                idString = "N/A";
+            }
+            else
+            {
+                idString = foundIndex.ToString();
+            }
+
+            ObjectLabel = $"ID: {idString}";
+
+            updatingObjectLabel = true;
+            if (projectService?.Project is ProjectContext project && foundIndex >= 0 && obj is IProjectAsset { ProjectExportable: true } projectAsset)
+            {
+                IsSelectedProjectExportable = true;
+                IsMarkedForExport = project.IsAssetMarkedForExport(projectAsset);
+            }
+            else
+            {
+                IsSelectedProjectExportable = false;
+            }
+            updatingObjectLabel = false;
+        }
+
+        partial void OnIsMarkedForExportChanged(bool value)
+        {
+            if (updatingObjectLabel)
+                return;
+            if (projectService?.Project is not ProjectContext project)
+                return;
+            if (SelectedAsset is not IProjectAsset projectAsset)
+                return;
+
+            if (value)
+            {
+                project.MarkAssetForExport(projectAsset);
+            }
+            else
+            {
+                project.UnmarkAssetForExport(projectAsset);
+            }
         }
 
         [RelayCommand]

@@ -28,8 +28,23 @@
 	<Grid>
 		<DockPanel>
 			<Grid DockPanel.Dock="Bottom">
-				<TextBox x:Name="CommandBox" AcceptsReturn="True" Margin="0,0,55,0" Text="{Binding CommandBoxText}"/>
-				<Label Content="None" HorizontalAlignment="Right" VerticalAlignment="Top" VerticalContentAlignment="Top" Name="ObjectLabel" Margin="0,0,15,0"/>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="Auto"/>
+				</Grid.ColumnDefinitions>
+				<TextBox Grid.Column="0" x:Name="CommandBox" AcceptsReturn="True" Margin="0,0,15,0" Text="{Binding CommandBoxText}"/>
+				<Grid Grid.Column="1" Name="MarkedForExportGroup" IsVisible="{Binding IsSelectedProjectExportable}"
+					  ToolTip.Tip="Whether the currently open asset is marked to be exported to the currently open project, the next time it is saved.">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+					<Label Grid.Column="0" Content="Marked for export:" VerticalAlignment="Center"/>
+					<CheckBox Grid.Column="1" Name="MarkedForExportCheckBox" Margin="5,0,20,0" IsChecked="{Binding IsMarkedForExport}" VerticalAlignment="Center"/>
+				</Grid>
+				<Label Grid.Column="2" Content="{Binding ObjectLabel}" HorizontalAlignment="Right" VerticalAlignment="Center" Name="ObjectLabel" Margin="0,0,15,0"
+					   ToolTip.Tip="This is an ID (index) of the currently open asset, item, or object. It starts from 0."/>
 			</Grid>
 			<Grid>
 				<Grid.RowDefinitions>

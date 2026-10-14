@@ -7,13 +7,16 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using UndertaleModLib;
 using UndertaleModLib.Models;
+using UndertaleModLib.Project;
 using UndertaleModToolAvalonia.Messages;
+using UndertaleModToolAvalonia.Services.ProjectService;
 using UndertaleModToolAvalonia.Utilities;
 
 namespace UndertaleModToolAvalonia.Controls;
@@ -241,6 +244,8 @@ public partial class UndertaleObjectReference : UserControl
     {
         if (ObjectReference is null)
         {
+            int oldCodeCount = UndertaleData?.Code?.Count ?? -1;
+
             if (GameObject is not null)
             {
                 ObjectReference = GameObject.EventHandlerFor(ObjectEventType, ObjectEventSubtype, UndertaleData);
@@ -283,6 +288,12 @@ public partial class UndertaleObjectReference : UserControl
             else
             {
                 _ = App.Current!.ShowError("Adding not supported in this situation.");
+            }
+
+            if (App.Current!.Services.GetService<IProjectService>()?.Project is ProjectContext project && oldCodeCount != -1 &&
+                oldCodeCount == UndertaleData!.Code.Count - 1 && ObjectReference is UndertaleCode newCode)
+            {
+                project.MarkAssetForExport(newCode);
             }
         }
         else
