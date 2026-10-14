@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -136,6 +137,13 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
 
         private object? SelectedAsset => (CurrentTab?.CurrentObject as EditorContentViewModel)?.Asset;
 
+        private object? watchedAsset;
+        private readonly List<INotifyPropertyChanged> watchedObjects = new();
+        private readonly List<INotifyCollectionChanged> watchedCollections = new();
+        private readonly HashSet<object> watchedVisited = new(ReferenceEqualityComparer.Instance);
+        private static readonly Dictionary<Type, PropertyInfo[]> watchedProperties = new();
+        private static readonly HashSet<string> unwatchedPropertyNames = ["GridWidth", "GridHeight", "ParentRoom", "ParentLayer", "CalcScaleX", "CalcScaleY", "XOffset", "YOffset"];
+
         private List<ResourceNodeViewModel> unfilteredRootNodes = new();
 
         public ObservableCollection<ResourceNodeViewModel> FilteredRootNodes { get; } = new();
@@ -162,6 +170,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                 if (projectService.Project is ProjectContext project)
                     project.UnexportedAssetsChanged += (s, a) => Dispatcher.UIThread.Post(() => UpdateObjectLabel(SelectedAsset));
                 UpdateObjectLabel(SelectedAsset);
+                WatchSelectedAsset();
             };
             this.loadingDialogService = loadingDialogService;
             this.profileService = profileService;
@@ -1243,12 +1252,136 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             if (newValue is not null)
                 newValue.PropertyChanged += CurrentTab_PropertyChanged;
             UpdateObjectLabel(SelectedAsset);
+            WatchSelectedAsset();
         }
 
         private void CurrentTab_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(TabViewModel.CurrentObject))
+            {
                 UpdateObjectLabel(SelectedAsset);
+                WatchSelectedAsset();
+            }
+        }
+
+        private void WatchSelectedAsset()
+        {
+            UnwatchAsset();
+            if (projectService?.Project is null || SelectedAsset is not IProjectAsset { ProjectExportable: true })
+                return;
+
+            watchedAsset = SelectedAsset;
+            WatchValue(watchedAsset);
+        }
+
+        private void UnwatchAsset()
+        {
+            foreach (INotifyPropertyChanged obj in watchedObjects)
+                obj.PropertyChanged -= WatchedObject_PropertyChanged;
+            foreach (INotifyCollectionChanged collection in watchedCollections)
+                collection.CollectionChanged -= WatchedCollection_CollectionChanged;
+            watchedObjects.Clear();
+            watchedCollections.Clear();
+            watchedVisited.Clear();
+            watchedAsset = null;
+        }
+
+        private void WatchValue(object? value)
+        {
+            if (value is null || value is string || value is UndertaleString)
+                return;
+            if (value is UndertaleResource && !ReferenceEquals(value, watchedAsset))
+                return;
+            if (!watchedVisited.Add(value))
+                return;
+
+            if (value is INotifyPropertyChanged obj)
+            {
+                obj.PropertyChanged += WatchedObject_PropertyChanged;
+                watchedObjects.Add(obj);
+            }
+
+            if (value is INotifyCollectionChanged collection)
+            {
+                collection.CollectionChanged += WatchedCollection_CollectionChanged;
+                watchedCollections.Add(collection);
+            }
+
+            if (value is IEnumerable items)
+            {
+                Type? itemType = value.GetType().GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>))?.GetGenericArguments()[0];
+                if (itemType is null || !itemType.IsValueType)
+                {
+                    foreach (object? item in items)
+                        WatchValue(item);
+                }
+            }
+
+            if (value is not UndertaleObject)
+                return;
+
+            foreach (PropertyInfo property in GetWatchedProperties(value.GetType()))
+            {
+                object? propertyValue;
+                try
+                {
+                    propertyValue = property.GetValue(value);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+                WatchValue(propertyValue);
+            }
+        }
+
+        private static PropertyInfo[] GetWatchedProperties(Type type)
+        {
+            if (!watchedProperties.TryGetValue(type, out PropertyInfo[]? properties))
+            {
+                properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                                 .Where(x => x.CanRead && x.GetIndexParameters().Length == 0)
+                                 .Where(x => typeof(UndertaleObject).IsAssignableFrom(x.PropertyType)
+                                             || (typeof(IEnumerable).IsAssignableFrom(x.PropertyType) && x.PropertyType != typeof(string)))
+                                 .ToArray();
+                watchedProperties[type] = properties;
+            }
+            return properties;
+        }
+
+        private void WatchedObject_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is not null && unwatchedPropertyNames.Contains(e.PropertyName))
+                return;
+
+            object? asset = watchedAsset;
+            Dispatcher.UIThread.Post(() => MarkWatchedAssetForExport(asset));
+        }
+
+        private void WatchedCollection_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            object? asset = watchedAsset;
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (e.NewItems is not null && ReferenceEquals(asset, watchedAsset))
+                {
+                    foreach (object? item in e.NewItems)
+                        WatchValue(item);
+                }
+                MarkWatchedAssetForExport(asset);
+            });
+        }
+
+        private void MarkWatchedAssetForExport(object? asset)
+        {
+            if (projectService?.Project is not ProjectContext project || AppConstants.Data is null)
+                return;
+            if (asset is not IProjectAsset { ProjectExportable: true } projectAsset || asset is not UndertaleResource resource)
+                return;
+            if (AppConstants.Data.IndexOf(resource, false) < 0)
+                return;
+
+            project.MarkAssetForExport(projectAsset);
         }
 
         public void UpdateObjectLabel(object? obj)
