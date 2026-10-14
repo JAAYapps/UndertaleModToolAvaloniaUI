@@ -24,5 +24,11 @@ namespace UndertaleModToolAvalonia.Services.FileService
         Task<IReadOnlyList<IStorageFile>> LoadImageFileAsync(IStorageProvider storageProvider, string path = "");
 
         Task<IReadOnlyList<IStorageFile>> LoadScriptFileAsync(IStorageProvider storageProvider, string path = "");
+
+        Task<IReadOnlyList<IStorageFile>> LoadFilteredFileAsync(IStorageProvider storageProvider, string filter, string path = "");
+
+        Task<IStorageFile?> SaveFilteredFileAsync(IStorageProvider storageProvider, string defaultExtension, string filter, string path = "");
+
+        Task<IReadOnlyList<IStorageFolder>> LoadFolderAsync(IStorageProvider storageProvider, string path = "");
     }
 }

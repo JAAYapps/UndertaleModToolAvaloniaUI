@@ -1,4 +1,7 @@
 ﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
@@ -23,6 +26,7 @@ using UndertaleModLib.Scripting;
 using UndertaleModLib.Util;
 using UndertaleModToolAvalonia.Models;
 using UndertaleModToolAvalonia.Services.DialogService;
+using UndertaleModToolAvalonia.Services.FileService;
 using UndertaleModToolAvalonia.Services.LoadingDialogService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
@@ -34,6 +38,9 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
         private readonly EditorViewModel editorViewModel;
         private readonly IDialogService dialogService;
         private readonly ILoadingDialogService loadingDialogService;
+        private readonly IFileService fileService;
+
+        private const string DataFileFilter = "GameMaker data files (.win, .unx, .ios, .droid, audiogroup*.dat)|*.win;*.unx;*.ios;*.droid;audiogroup*.dat|All files|*";
 
         private ScriptOptions scriptOptions;
         private Task scriptSetupTask;
@@ -61,8 +68,9 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
         public bool IsAppClosed => editorViewModel.LsAppClosed;
         public Action<Action> MainThreadAction => (f) => Dispatcher.UIThread.Invoke(f);
 
-        public ScriptService(EditorViewModel editorViewModel, IDialogService dialogService, ILoadingDialogService loadingDialogService)
+        public ScriptService(EditorViewModel editorViewModel, IDialogService dialogService, ILoadingDialogService loadingDialogService, IFileService fileService)
         {
+            this.fileService = fileService;
             this.editorViewModel = editorViewModel;
             this.dialogService = dialogService;
             this.loadingDialogService = loadingDialogService;
@@ -394,6 +402,45 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
                 updater.Dispose();
         }
 
+        private static IStorageProvider GetStorageProvider()
+        {
+            TopLevel? topLevel = null;
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                topLevel = desktop.MainWindow;
+            else if (Application.Current?.ApplicationLifetime is ISingleViewApplicationLifetime singleView)
+                topLevel = TopLevel.GetTopLevel(singleView.MainView);
+
+            return topLevel?.StorageProvider ?? throw new ScriptException("The dialog could not be opened.");
+        }
+
+        public string PromptLoadFile(string defaultExt, string filter)
+        {
+            return WaitFor(async () =>
+            {
+                var files = await fileService.LoadFilteredFileAsync(GetStorageProvider(), filter ?? DataFileFilter, AppConstants.FilePath ?? "");
+                return files.FirstOrDefault()?.TryGetLocalPath();
+            })!;
+        }
+
+        public string PromptSaveFile(string defaultExt, string filter)
+        {
+            return WaitFor(async () =>
+            {
+                var file = await fileService.SaveFilteredFileAsync(GetStorageProvider(), defaultExt ?? "win", filter ?? DataFileFilter, AppConstants.FilePath ?? "");
+                return file?.TryGetLocalPath();
+            })!;
+        }
+
+        public string PromptChooseDirectory()
+        {
+            return WaitFor(async () =>
+            {
+                var folders = await fileService.LoadFolderAsync(GetStorageProvider(), AppConstants.FilePath ?? "");
+                string? path = folders.FirstOrDefault()?.TryGetLocalPath();
+                return path is not null ? path + "/" : null;
+            })!;
+        }
+
         public bool MakeNewDataFile() => throw NotPorted();
         public void ScriptOpenURL(string url) => throw NotPorted();
         public bool RunUMTScript(string path) => throw NotPorted();
@@ -406,8 +453,5 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
         public Task ClickableSearchOutput(string title, string query, int resultsCount, IDictionary<string, List<(int lineNum, string codeLine)>> resultsDict, bool showInDecompiledView, IEnumerable<string> failedList = null!) => throw NotPorted();
         public void EnableUI() => throw NotPorted();
         public void ChangeSelection(object newSelection, bool inNewTab = false) => throw NotPorted();
-        public string PromptChooseDirectory() => throw NotPorted();
-        public string PromptLoadFile(string defaultExt, string filter) => throw NotPorted();
-        public string PromptSaveFile(string defaultExt, string filter) => throw NotPorted();
     }
 }

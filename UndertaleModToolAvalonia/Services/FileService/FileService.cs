@@ -169,5 +169,62 @@ namespace UndertaleModToolAvalonia.Services.FileService
                 SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Documents)
             });
         }
+
+        public async Task<IReadOnlyList<IStorageFile>> LoadFilteredFileAsync(IStorageProvider storageProvider, string filter, string path = "")
+        {
+            string directory = !string.IsNullOrEmpty(path) ? Path.GetDirectoryName(Path.GetFullPath(path)) ?? "" : "";
+            return await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+            {
+                AllowMultiple = false,
+                Title = "Load File",
+                FileTypeFilter = ParseFilter(filter),
+                SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Documents)
+            });
+        }
+
+        public async Task<IStorageFile?> SaveFilteredFileAsync(IStorageProvider storageProvider, string defaultExtension, string filter, string path = "")
+        {
+            string directory = !string.IsNullOrEmpty(path) ? Path.GetDirectoryName(Path.GetFullPath(path)) ?? "" : "";
+            return await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
+            {
+                Title = "Save File",
+                FileTypeChoices = ParseFilter(filter),
+                ShowOverwritePrompt = true,
+                DefaultExtension = defaultExtension.TrimStart('*', '.'),
+                SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Documents)
+            });
+        }
+
+        public async Task<IReadOnlyList<IStorageFolder>> LoadFolderAsync(IStorageProvider storageProvider, string path = "")
+        {
+            string directory = !string.IsNullOrEmpty(path) ? Path.GetDirectoryName(Path.GetFullPath(path)) ?? "" : "";
+            return await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions()
+            {
+                AllowMultiple = false,
+                Title = "Choose Folder",
+                SuggestedStartLocation = !string.IsNullOrEmpty(directory) ? await storageProvider.TryGetFolderFromPathAsync(directory) : await storageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Documents)
+            });
+        }
+
+        private static List<FilePickerFileType> ParseFilter(string filter)
+        {
+            List<FilePickerFileType> fileTypes = new();
+            string[] parts = filter.Split('|');
+            for (int i = 0; i + 1 < parts.Length; i += 2)
+            {
+                List<string> patterns = new();
+                foreach (string pattern in parts[i + 1].Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    string[] variants = pattern == "*.*" ? ["*"] : [pattern, pattern.ToLowerInvariant(), pattern.ToUpperInvariant()];
+                    foreach (string variant in variants)
+                    {
+                        if (!patterns.Contains(variant))
+                            patterns.Add(variant);
+                    }
+                }
+                fileTypes.Add(new FilePickerFileType(parts[i]) { Patterns = patterns });
+            }
+            return fileTypes;
+        }
     }
 }
