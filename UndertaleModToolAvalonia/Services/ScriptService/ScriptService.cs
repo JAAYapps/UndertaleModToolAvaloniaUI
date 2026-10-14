@@ -3,6 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using MsBox.Avalonia.Enums;
@@ -24,12 +26,14 @@ using UndertaleModLib.Models;
 using UndertaleModLib.Project;
 using UndertaleModLib.Scripting;
 using UndertaleModLib.Util;
+using UndertaleModToolAvalonia.Messages;
 using UndertaleModToolAvalonia.Models;
 using UndertaleModToolAvalonia.Services.DialogService;
 using UndertaleModToolAvalonia.Services.FileService;
 using UndertaleModToolAvalonia.Services.LoadingDialogService;
 using UndertaleModToolAvalonia.Utilities;
 using UndertaleModToolAvalonia.ViewModels.EditorViewModels;
+using UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents;
 
 namespace UndertaleModToolAvalonia.Services.ScriptService
 {
@@ -58,8 +62,8 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
         public ProjectContext Project => null!;
         public string FilePath => AppConstants.FilePath!;
         public string ScriptPath => AppConstants.ScriptPath!;
-        public object Highlighted => throw NotPorted();
-        public object Selected => throw NotPorted();
+        public object Highlighted => editorViewModel.SelectedNode?.Model ?? editorViewModel.Highlighted;
+        public object Selected => (editorViewModel.CurrentTab?.CurrentObject as EditorContentViewModel)?.Asset!;
         public bool CanSave => Settings.Instance.CanSave;
         public bool ScriptExecutionSuccess { get; private set; } = true;
         public string ScriptErrorMessage { get; private set; } = "";
@@ -441,17 +445,129 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
             })!;
         }
 
-        public bool MakeNewDataFile() => throw NotPorted();
-        public void ScriptOpenURL(string url) => throw NotPorted();
-        public bool RunUMTScript(string path) => throw NotPorted();
-        public bool LintUMTScript(string path) => throw NotPorted();
-        public string GetDecompiledText(string codeName, GlobalDecompileContext context = null!, IDecompileSettings settings = null!) => throw NotPorted();
-        public string GetDecompiledText(UndertaleCode code, GlobalDecompileContext context = null!, IDecompileSettings settings = null!) => throw NotPorted();
-        public string GetDisassemblyText(string codeName) => throw NotPorted();
-        public string GetDisassemblyText(UndertaleCode code) => throw NotPorted();
+        public bool MakeNewDataFile()
+        {
+            if (Data != null)
+            {
+                if (WaitFor(() => Application.Current!.ShowQuestion("Warning: you currently have a project open.\nAre you sure you want to make a new project?")) != ButtonResult.Yes)
+                    return false;
+            }
+            SetUMTConsoleText("");
+
+            Dispatcher.UIThread.Invoke(() =>
+            {
+                editorViewModel.NewFile();
+            });
+            return true;
+        }
+
+        public void ScriptOpenURL(string url)
+        {
+            _ = UndertaleHelper.OpenBrowser(url);
+        }
+
+        public bool RunUMTScript(string path)
+        {
+            if (!File.Exists(path))
+            {
+                ScriptError(path + " does not exist!");
+                return false;
+            }
+            WaitFor(async () =>
+            {
+                await RunScript(path);
+                return true;
+            });
+            if (!ScriptExecutionSuccess)
+                ScriptError("An error of type \"" + ScriptErrorType + "\" occurred. The error is:\n\n" + ScriptErrorMessage, ScriptErrorType);
+            return ScriptExecutionSuccess;
+        }
+
+        public bool LintUMTScript(string path)
+        {
+            if (!File.Exists(path))
+            {
+                ScriptError(path + " does not exist!");
+                return false;
+            }
+            scriptSetupTask.Wait();
+            string[] errors = CSharpScript.Create(File.ReadAllText(path), scriptOptions, typeof(IScriptInterface)).Compile()
+                                          .Where(x => x.Severity == DiagnosticSeverity.Error)
+                                          .Select(x => x.ToString())
+                                          .ToArray();
+            if (errors.Length > 0)
+            {
+                string message = String.Join(Environment.NewLine, errors);
+                ScriptError(message, "Script compile error");
+                ScriptExecutionSuccess = false;
+                ScriptErrorMessage = message;
+                ScriptErrorType = "CompilationErrorException";
+                return false;
+            }
+            ScriptExecutionSuccess = true;
+            ScriptErrorMessage = "";
+            ScriptErrorType = "";
+            return true;
+        }
+
+        public string GetDecompiledText(string codeName, GlobalDecompileContext context = null!, IDecompileSettings settings = null!)
+        {
+            return GetDecompiledText(Data.Code.ByName(codeName), context, settings);
+        }
+        public string GetDecompiledText(UndertaleCode code, GlobalDecompileContext context = null!, IDecompileSettings settings = null!)
+        {
+            if (code.ParentEntry is not null)
+                return $"// This code entry is a reference to an anonymous function within \"{code.ParentEntry.Name.Content}\", decompile that instead.";
+
+            GlobalDecompileContext globalDecompileContext = context is null ? new(Data) : context;
+            try
+            {
+                return code != null
+                    ? new Underanalyzer.Decompiler.DecompileContext(globalDecompileContext, code, settings ?? Data.ToolInfo.DecompilerSettings).DecompileToString()
+                    : "";
+            }
+            catch (Exception e)
+            {
+                return "/*\nDECOMPILER FAILED!\n\n" + e.ToString() + "\n*/";
+            }
+        }
+
+        public string GetDisassemblyText(UndertaleCode code)
+        {
+            if (code.ParentEntry is not null)
+                return $"; This code entry is a reference to an anonymous function within \"{code.ParentEntry.Name.Content}\", disassemble that instead.";
+
+            try
+            {
+                return code != null ? code.Disassemble(Data.Variables, Data.CodeLocals?.For(code)) : "";
+            }
+            catch (Exception e)
+            {
+                return "/*\nDISASSEMBLY FAILED!\n\n" + e.ToString() + "\n*/";
+            }
+        }
+        public string GetDisassemblyText(string codeName)
+        {
+            return GetDisassemblyText(Data.Code.ByName(codeName));
+        }
+
+        public void ChangeSelection(object newSelection, bool inNewTab = false)
+        {
+            Dispatcher.UIThread.Invoke(() =>
+            {
+                WeakReferenceMessenger.Default.Send(new OpenAssetMessage(newSelection, inNewTab));
+            });
+        }
+
+        public void EnableUI()
+        {
+            Dispatcher.UIThread.Invoke(() =>
+            {
+                if (!editorViewModel.IsEnabled)
+                    editorViewModel.IsEnabled = true;
+            });
+        }
         public Task ClickableSearchOutput(string title, string query, int resultsCount, IOrderedEnumerable<KeyValuePair<string, List<(int lineNum, string codeLine)>>> resultsDict, bool showInDecompiledView, IOrderedEnumerable<string> failedList = null!) => throw NotPorted();
         public Task ClickableSearchOutput(string title, string query, int resultsCount, IDictionary<string, List<(int lineNum, string codeLine)>> resultsDict, bool showInDecompiledView, IEnumerable<string> failedList = null!) => throw NotPorted();
-        public void EnableUI() => throw NotPorted();
-        public void ChangeSelection(object newSelection, bool inNewTab = false) => throw NotPorted();
     }
 }
