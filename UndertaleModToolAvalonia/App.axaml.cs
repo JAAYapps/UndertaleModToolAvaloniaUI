@@ -143,7 +143,7 @@ public partial class App : Application
         services.AddSingleton<IFileService, FileService>();
         services.AddTransient<LoaderDialogViewModel>();
         services.AddSingleton<MainWindowViewModel>();
-        services.AddTransient<ProjectsPageViewModel>();
+        services.AddTransient<GameSelectPageViewModel>();
         services.AddTransient<DataFileViewModel>();
         services.AddSingleton<EditorViewModel>();
         services.AddTransient<SettingsPageViewModel>();

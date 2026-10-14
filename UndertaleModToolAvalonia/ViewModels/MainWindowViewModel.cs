@@ -93,7 +93,7 @@ namespace UndertaleModToolAvalonia.ViewModels
             });
             Pages = new ObservableCollection<PageTemplate>()
             {
-                new PageTemplate(typeof(ProjectsPageViewModel), "Projects"),
+                new PageTemplate(typeof(GameSelectPageViewModel), "Projects"),
                 new PageTemplate(typeof(SettingsPageViewModel), "Settings"),
             };
             OnSelectedPageChanged(Pages[0]);
@@ -255,7 +255,7 @@ namespace UndertaleModToolAvalonia.ViewModels
                     });
                 }
 
-                if (loaded && !isLaunch && !isSpecialLaunch && CurrentPage is ProjectsPageViewModel projectsPage)
+                if (loaded && !isLaunch && !isSpecialLaunch && CurrentPage is GameSelectPageViewModel projectsPage)
                     projectsPage.ChangePage(1);
 
                 if (isSpecialLaunch)
@@ -314,7 +314,7 @@ namespace UndertaleModToolAvalonia.ViewModels
         private async Task NewProject()
         {
             OnSelectedPageChanged(Pages[0]);
-            if (CurrentPage is not ProjectsPageViewModel pvm)
+            if (CurrentPage is not GameSelectPageViewModel pvm)
                 return;
 
             if (AppConstants.Data != null &&
@@ -329,7 +329,7 @@ namespace UndertaleModToolAvalonia.ViewModels
         private async Task OpenFileAsync(Visual visual)
         {
             OnSelectedPageChanged(Pages[0]);
-            if (CurrentPage is not ProjectsPageViewModel pvm)
+            if (CurrentPage is not GameSelectPageViewModel pvm)
                 return;
             
             if (TopLevel.GetTopLevel(visual)?.StorageProvider is null)
