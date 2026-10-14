@@ -694,6 +694,28 @@ result in loss of work.");
         }
 
         [RelayCommand]
+        private async Task RunBuiltinScript(string path)
+        {
+            if (!MenuEnabled)
+                return;
+            if (!File.Exists(path))
+            {
+                await App.Current!.ShowError("The script file doesn't exist.");
+                return;
+            }
+            MenuEnabled = false;
+            try
+            {
+                await scriptService.RunScript(path);
+            }
+            finally
+            {
+                MenuEnabled = true;
+                RefreshCanSave();
+            }
+        }
+
+        [RelayCommand]
         private async Task RunOtherScript(Visual visual)
         {
             if (TopLevel.GetTopLevel(visual)?.StorageProvider is null)

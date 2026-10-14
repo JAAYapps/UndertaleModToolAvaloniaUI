@@ -25,9 +25,8 @@
 				<Separator/>
 				<MenuItem Header="_Close" HotKey="Ctrl+Q" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).ExitCommand}" CommandParameter="{Binding $parent[UserControl]}"/>
 			</MenuItem>
-			<MenuItem Name="RootScriptItem" Header="_Scripts">
+			<MenuItem Name="RootScriptItem" Header="_Scripts" SubmenuOpened="RootMenuItem_SubmenuOpened">
 				<MenuItem Header="(...loading...)" IsEnabled="False"/>
-				<MenuItem Header="Run _other script..." Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).RunOtherScriptCommand}" CommandParameter="{Binding $parent[UserControl]}"/>
 			</MenuItem>
 			<MenuItem Header="F_ind">
 				<MenuItem Header="Find unreferenced _assets" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).FindUnreferencedAssetsCommand}"/>

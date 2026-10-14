@@ -60,4 +60,9 @@
   <ItemGroup>
     <ProjectReference Include="..\UndertaleModToolAvalonia\UndertaleModToolAvalonia.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\UndertaleModTool\Scripts\**" Link="Scripts\%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>
