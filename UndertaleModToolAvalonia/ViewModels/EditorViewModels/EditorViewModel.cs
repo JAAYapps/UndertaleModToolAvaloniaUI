@@ -30,6 +30,7 @@ using UndertaleModToolAvalonia.Services.FileService;
 using UndertaleModToolAvalonia.Services.LoadingDialogService;
 using UndertaleModToolAvalonia.Services.PlayerService;
 using UndertaleModToolAvalonia.Services.ProfileService;
+using UndertaleModToolAvalonia.Services.ProjectService;
 using UndertaleModToolAvalonia.Services.ReferenceFinderService;
 using UndertaleModToolAvalonia.Services.TextureCacheService;
 using UndertaleModToolAvalonia.Utilities;
@@ -63,6 +64,8 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         private ITextureCacheService textureCacheService;
 
         private IClipboardService clipboardService;
+
+        private IProjectService projectService;
 
         [ObservableProperty]
         private ObservableCollection<TabViewModel> tabs = new();
@@ -141,8 +144,9 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             OpenInTab(asset, false, asset.MainText);
         }
 
-        public EditorViewModel(ILoadingDialogService loadingDialogService, IProfileService profileService, IDialogService dialogService, IReferenceFinderService referenceFinderService, IPlayer playerService, IFileService fileService, ITextureCacheService textureCacheService, IClipboardService clipboardService)
+        public EditorViewModel(ILoadingDialogService loadingDialogService, IProfileService profileService, IDialogService dialogService, IReferenceFinderService referenceFinderService, IPlayer playerService, IFileService fileService, ITextureCacheService textureCacheService, IClipboardService clipboardService, IProjectService projectService)
         {
+            this.projectService = projectService;
             this.loadingDialogService = loadingDialogService;
             this.profileService = profileService;
             this.dialogService = dialogService;
@@ -403,6 +407,9 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             if (dataFile is not { }) return false;
             
             string filePath = dataFile.TryGetLocalPath() ?? dataFile.Name;
+
+            if (AppConstants.Data is not null)
+                projectService?.UnloadProject();
 
             IsEnabled = false;
             loadingDialogService.Show("Loading File", "Reading " + dataFile.Name + ", please wait...");
@@ -735,6 +742,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
         public void NewFile()
         {
             UndertaleHelper.CloseChildFiles();
+            projectService?.UnloadProject();
 
             AppConstants.Data = UndertaleData.CreateNew();
             AppConstants.Data.ToolInfo.DecompilerSettings = Settings.Instance.DecompilerSettings;

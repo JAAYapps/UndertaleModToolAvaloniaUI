@@ -90,7 +90,11 @@ namespace UndertaleModToolAvalonia.ViewModels
             this.loadingDialogService = loadingDialogService;
             this.scriptService = scriptService;
             this.projectService = projectService;
-            projectService.ProjectChanged += (sender, args) => CloseProjectCommand.NotifyCanExecuteChanged();
+            projectService.ProjectChanged += (sender, args) =>
+            {
+                SaveProjectCommand.NotifyCanExecuteChanged();
+                CloseProjectCommand.NotifyCanExecuteChanged();
+            };
             TitleMain = "UndertaleModTool by krzys_h, recreated by Joshua Vanderzee v:" + AppConstants.Version;
             Data = AppConstants.Data;
             WeakReferenceMessenger.Default.Register<TitleUpdateMessage>(this, (r, m) =>
@@ -347,6 +351,11 @@ namespace UndertaleModToolAvalonia.ViewModels
             }
             if (!MenuEnabled)
                 return;
+            if (projectService.Project is not null)
+            {
+                if (await App.Current!.ShowQuestionWithCancel("A project is currently open - open another data file and discard all unsaved changes?", MsBox.Avalonia.Enums.Icon.Warning, "Project currently open") != MsBox.Avalonia.Enums.ButtonResult.Yes)
+                    return;
+            }
             MenuEnabled = false;
             try
             {
@@ -391,6 +400,13 @@ namespace UndertaleModToolAvalonia.ViewModels
                 if (!await CommitCodeChangesAsync())
                     return false;
 
+                if (projectService.Project is not null)
+                {
+                    if (await App.Current!.ShowQuestionWithCancel("Save to the project's designated data file for saving?") == MsBox.Avalonia.Enums.ButtonResult.Yes)
+                        return await editorViewModel.SaveFileAsync(projectService.Project.SaveDataPath, suppressDebug);
+                    return false;
+                }
+
                 var storage = await fileService.SaveFileAsync(storageProvider, AppConstants.FilePath ?? "");
 
                 if (storage == null || string.IsNullOrEmpty(storage.Name))
@@ -423,7 +439,13 @@ namespace UndertaleModToolAvalonia.ViewModels
 
         public async Task<bool> ConfirmCloseAsync(Visual visual)
         {
-            if (AppConstants.Data == null || !Settings.Instance.WarnOnClose)
+            if (AppConstants.Data == null)
+                return true;
+
+            if (projectService.Project is not null && projectService.Project.HasUnexportedAssets)
+                return await App.Current!.ShowQuestionWithCancel("There are assets marked to be exported in the current project.\nReally quit?", MsBox.Avalonia.Enums.Icon.Warning, "Warning") == MsBox.Avalonia.Enums.ButtonResult.Yes;
+
+            if (!Settings.Instance.WarnOnClose)
                 return true;
 
             var result = await App.Current!.ShowQuestionWithCancel("Save changes before quitting?");
@@ -911,6 +933,45 @@ result in loss of work.");
                 MenuEnabled = true;
                 RefreshCanSave();
             }
+        }
+
+        [RelayCommand(CanExecute = nameof(HasProject))]
+        private async Task SaveProject()
+        {
+            if (AppConstants.Data is null || AppConstants.FilePath is null)
+                return;
+            if (projectService.Project is not ProjectContext project)
+                return;
+            if (!MenuEnabled)
+                return;
+            MenuEnabled = false;
+
+            string? errorMessage = null;
+            string errorTitle = "Error";
+            editorViewModel.IsEnabled = false;
+            bool success = false;
+            await Task.Run(() =>
+            {
+                try
+                {
+                    project.Export(true);
+                    success = true;
+                }
+                catch (ProjectException ex)
+                {
+                    errorMessage = ex.Message;
+                    errorTitle = "Failed to save project";
+                }
+                catch (Exception ex)
+                {
+                    errorMessage = $"Error occurred when saving project:\n{ex}";
+                }
+            });
+            editorViewModel.IsEnabled = true;
+            MenuEnabled = true;
+            if (errorMessage is not null)
+                await App.Current!.ShowError(errorMessage, errorTitle);
+            editorViewModel.CommandBoxText = success ? "Saved project successfully." : "Project failed to save.";
         }
 
         [RelayCommand(CanExecute = nameof(HasProject))]
