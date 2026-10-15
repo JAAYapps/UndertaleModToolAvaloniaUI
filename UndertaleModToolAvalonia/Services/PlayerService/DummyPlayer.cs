@@ -5,9 +5,17 @@ namespace UndertaleModToolAvalonia.Services.PlayerService;
 
 public class DummyPlayer : IPlayer
 {
+    public string? LoadError { get; }
+
     public DummyPlayer()
     {
         Console.WriteLine("[DummyPlayer] Audio disabled for FreeBSD compatibility.");
+    }
+
+    public DummyPlayer(string loadError)
+    {
+        LoadError = loadError;
+        Console.WriteLine("[DummyPlayer] Audio disabled because the audio library failed to load: " + loadError);
     }
     
     public void Stop()

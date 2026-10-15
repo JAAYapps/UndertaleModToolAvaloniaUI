@@ -64,6 +64,14 @@ public partial class App : Application
             {
                 desktop.MainWindow = Services.GetRequiredService<MainWindow>();
 
+                if (Services.GetRequiredService<IPlayer>() is DummyPlayer { LoadError: string loadError })
+                {
+                    desktop.MainWindow.Opened += async (sender, args) =>
+                    {
+                        await Current!.ShowWarning("Sound is turned off because the audio library could not be loaded. Everything else works, but sounds will not play.\n\n" + loadError, "Sound unavailable");
+                    };
+                }
+
                 desktop.ShutdownRequested += (sender, args) =>
                 {
                     var player = Services.GetRequiredService<IPlayer>();
@@ -133,7 +141,17 @@ public partial class App : Application
         }
         if (OperatingSystem.IsWindows() || OperatingSystem.IsMacOS() || OperatingSystem.IsLinux())
         {
-            services.AddSingleton<IPlayer, MiniAudioPlayer>();
+            services.AddSingleton<IPlayer>(provider =>
+            {
+                try
+                {
+                    return new MiniAudioPlayer();
+                }
+                catch (Exception e)
+                {
+                    return new DummyPlayer(e.Message.Split('\n')[0]);
+                }
+            });
             Console.WriteLine("Miniaudio Player");
         }
         if (OperatingSystem.IsFreeBSD())
