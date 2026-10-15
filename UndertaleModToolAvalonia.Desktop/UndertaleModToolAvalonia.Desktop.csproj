@@ -57,7 +57,7 @@
           Condition="'$(PublishAot)' != 'true' And Exists('$(NativeLibPath)/libAudioLib.dylib')" />
   </Target>
   <ItemGroup>
-    <NativeLibrary Include="$(NativeLibPath)/miniaudio.o" Condition="'$(PublishAot)' == 'true'">
+    <NativeLibrary Include="libs/miniaudio.o" Condition="'$(PublishAot)' == 'true'">
       <LinkerArg>-Wl,--whole-archive</LinkerArg>
     </NativeLibrary>
     <DirectPInvoke Include="AudioLib" Condition="'$(PublishAot)' == 'true'" />
