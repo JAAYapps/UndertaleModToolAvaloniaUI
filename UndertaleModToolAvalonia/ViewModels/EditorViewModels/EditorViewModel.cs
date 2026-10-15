@@ -599,6 +599,34 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                 await App.Current!.ShowWarning("You are saving the game in GameMaker Studio debug mode. Unless the debugger is running, the normal runtime will simply hang after loading. You can turn this off in General Info by checking the \"Disable Debugger\" box and saving.", "GMS Debugger");
             Task<bool> t = Task.Run(async () =>
             {
+                if (Settings.Instance.RecompileAllCodeSourcesOnProjectSave && projectService?.Project is ProjectContext project)
+                {
+                    try
+                    {
+                        await loadingDialogService.UpdateStatusAsync("Recompiling GML code, please wait...");
+                        project.RecompileAllCodeSources();
+                        await loadingDialogService.UpdateStatusAsync("Saving data file, please wait...");
+                    }
+                    catch (ProjectException e)
+                    {
+                        await Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            loadingDialogService.Hide();
+                            await App.Current!.ShowError(e.Message, "Recompile error");
+                        });
+                        return false;
+                    }
+                    catch (Exception e)
+                    {
+                        await Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            loadingDialogService.Hide();
+                            await App.Current!.ShowError("An error occurred while trying to recompile code sources:\n" + e.Message, "Recompile error");
+                        });
+                        return false;
+                    }
+                }
+
                 bool SaveSucceeded = true;
 
                 try

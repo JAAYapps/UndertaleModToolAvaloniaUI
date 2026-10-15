@@ -75,6 +75,8 @@ namespace UndertaleModToolAvalonia
 
         public bool ShowNullEntriesInResourceTree { get; set; } = false;
 
+        public bool RecompileAllCodeSourcesOnProjectSave { get; set; } = false;
+
         public bool RememberWindowPlacements { get; set; } = false;
 
         public bool CanSave { get; set; } = false;

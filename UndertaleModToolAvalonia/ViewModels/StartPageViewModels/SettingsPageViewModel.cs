@@ -164,6 +164,17 @@ namespace UndertaleModToolAvalonia.ViewModels.StartPageViewModels
             }
         }
 
+        public bool RecompileAllCodeSourcesOnProjectSave
+        {
+            get => Settings.Instance.RecompileAllCodeSourcesOnProjectSave;
+            set
+            {
+                Settings.Instance.RecompileAllCodeSourcesOnProjectSave = value;
+                Settings.Save();
+                OnPropertyChanged();
+            }
+        }
+
         public bool WarnOnClose
         {
             get => Settings.Instance.WarnOnClose;
