@@ -45,6 +45,17 @@
           DestinationFolder="$(OutputPath)"
           Condition="'$(PublishAot)' != 'true' And Exists('$(NativeLibPath)/libAudioLib.so')" />
   </Target>
+  <Target Name="CompileNativeMacOS" BeforeTargets="BeforeBuild;Build;Publish" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">
+    <Message Text="[AudioLib] Compiling for macOS (Clang)..." Importance="high" />
+    <MakeDir Directories="$(NativeLibPath)" />
+    <Exec Command="clang -g -c &quot;$(NativeSrc)&quot; -o &quot;$(NativeLibPath)/miniaudio.o&quot; -O3 -fPIC -arch arm64 -arch x86_64 -mmacosx-version-min=12.0"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+    <Exec Command="clang -dynamiclib -o &quot;$(NativeLibPath)/libAudioLib.dylib&quot; &quot;$(NativeLibPath)/miniaudio.o&quot; -arch arm64 -arch x86_64 -mmacosx-version-min=12.0 -lpthread -lm"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+    <Copy SourceFiles="$(NativeLibPath)/libAudioLib.dylib"
+          DestinationFolder="$(OutputPath)"
+          Condition="'$(PublishAot)' != 'true' And Exists('$(NativeLibPath)/libAudioLib.dylib')" />
+  </Target>
   <ItemGroup>
     <NativeLibrary Include="$(NativeLibPath)/miniaudio.o" Condition="'$(PublishAot)' == 'true'">
       <LinkerArg>-Wl,--whole-archive</LinkerArg>
