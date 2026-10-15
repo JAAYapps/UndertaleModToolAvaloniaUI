@@ -69,8 +69,6 @@ public partial class GameSelectPageViewModel : ViewModelBase
             CurrentPage = instance.CurrentPage;
             selectedPage = instance.selectedPage;
             editorViewModel = instance.editorViewModel;
-            Console.WriteLine("Already is initialized.");
-            ScriptMessages.PlayInformationSound();
             instance = this;
             OnSelectedPageChanged(SelectedPage); // Must be called to properly update UI.
         }
