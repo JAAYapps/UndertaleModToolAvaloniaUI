@@ -160,7 +160,7 @@
 					</Grid.ColumnDefinitions>
 
 					<Button Grid.Column="0" Command="{Binding OpenAppDataCommand}" Padding="8,2,8,2" HorizontalAlignment="Left">Open application data folder</Button>
-					<Button Grid.Column="1" Command="{Binding UpdateAppCommand}" Padding="8,2,8,2" HorizontalAlignment="Right" x:Name="UpdateAppButton" IsVisible="{Binding IsUpdaterButtonVisible}">Update app to latest commit</Button>
+					<Button Grid.Column="1" Command="{Binding UpdateAppCommand}" Padding="8,2,8,2" HorizontalAlignment="Right" x:Name="UpdateAppButton" IsVisible="{Binding IsUpdaterButtonVisible}">Check for updates</Button>
 				</Grid>
 			</StackPanel>
 		</Grid>
