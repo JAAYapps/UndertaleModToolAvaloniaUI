@@ -87,7 +87,7 @@ namespace UndertaleModToolAvalonia.Services.PlayerService
         {
             // Simplified: If we started playing, assume we are playing.
             // For a real check, you'd need a helper in C: bool IsSoundPlaying()
-            return _isPlaying ? SoundStatus.Playing : SoundStatus.Stopped;
+            return _isPlaying ? SoundStatus.Playing : _isPaused ? SoundStatus.Paused : SoundStatus.Stopped;
         }
 
         // Simple record for floats (No buffer format needed, Miniaudio handles channel count)
@@ -194,12 +194,14 @@ namespace UndertaleModToolAvalonia.Services.PlayerService
         {
             PauseAudioNative();
             _isPaused = true;
+            _isPlaying = false;
         }
 
         public void Resume()
         {
             ResumeAudioNative();
             _isPaused = false;
+            _isPlaying = true;
         }
 
         public void PlayPause()
@@ -234,6 +236,7 @@ namespace UndertaleModToolAvalonia.Services.PlayerService
             
             _currentAudioData = null;
             _isPlaying = false;
+            _isPaused = false;
         }
 
         public void Dispose()
