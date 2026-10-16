@@ -38,6 +38,9 @@ namespace UndertaleModToolAvalonia.Services.PlayerService
 
         [LibraryImport(LibName, EntryPoint = "StopAudio")]
         private static partial void StopAudioNative();
+
+        [LibraryImport(LibName, EntryPoint = "IsAudioPlaying")]
+        private static partial int IsAudioPlayingNative();
         
         // ==========================================
         // State Management
@@ -49,7 +52,6 @@ namespace UndertaleModToolAvalonia.Services.PlayerService
         
         private float _volume = 100f;
         private float _pitch = 1f;
-        private bool _isPlaying = false;
 
         public MiniAudioPlayer()
         {
@@ -81,13 +83,15 @@ namespace UndertaleModToolAvalonia.Services.PlayerService
             }
         }
 
-        public bool IsPlaying => _isPlaying;
+        public bool IsPlaying => GetPlayStatus() == SoundStatus.Playing;
 
         public SoundStatus GetPlayStatus()
         {
-            // Simplified: If we started playing, assume we are playing.
-            // For a real check, you'd need a helper in C: bool IsSoundPlaying()
-            return _isPlaying ? SoundStatus.Playing : _isPaused ? SoundStatus.Paused : SoundStatus.Stopped;
+            if (_currentAudioData == null)
+                return SoundStatus.Stopped;
+            if (IsAudioPlayingNative() != 0)
+                return SoundStatus.Playing;
+            return _isPaused ? SoundStatus.Paused : SoundStatus.Stopped;
         }
 
         // Simple record for floats (No buffer format needed, Miniaudio handles channel count)
@@ -136,8 +140,6 @@ namespace UndertaleModToolAvalonia.Services.PlayerService
                 // Apply current settings
                 SetMasterVolume(Volume / 100f);
                 SetPitch(Pitch);
-
-                _isPlaying = true;
             }
             catch (Exception ex)
             {
@@ -194,14 +196,12 @@ namespace UndertaleModToolAvalonia.Services.PlayerService
         {
             PauseAudioNative();
             _isPaused = true;
-            _isPlaying = false;
         }
 
         public void Resume()
         {
             ResumeAudioNative();
             _isPaused = false;
-            _isPlaying = true;
         }
 
         public void PlayPause()
@@ -235,7 +235,6 @@ namespace UndertaleModToolAvalonia.Services.PlayerService
                 _pinnedHandle.Free();
             
             _currentAudioData = null;
-            _isPlaying = false;
             _isPaused = false;
         }
 

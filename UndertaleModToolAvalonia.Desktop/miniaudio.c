@@ -12,6 +12,7 @@
 ma_engine engine;
 ma_sound sound;     // We will reuse this sound container
 ma_audio_buffer audioBuffer; // This wraps the raw data
+static int soundLoaded = 0;
 
 // Initialize the engine once at startup
 AUDIO_API int InitAudio() {
@@ -29,6 +30,7 @@ AUDIO_API int PlayRawAudio(float* data, ma_uint64 frameCount, ma_uint32 channels
     ma_result result;
 
     // 1. Uninitialize previous sound if it exists
+    soundLoaded = 0;
     ma_sound_uninit(&sound);
     ma_audio_buffer_uninit(&audioBuffer);
 
@@ -47,6 +49,7 @@ AUDIO_API int PlayRawAudio(float* data, ma_uint64 frameCount, ma_uint32 channels
     // 3. Create a sound from this buffer
     result = ma_sound_init_from_data_source(&engine, &audioBuffer, 0, NULL, &sound);
     if (result != MA_SUCCESS) return result;
+    soundLoaded = 1;
 
     // 4. Play it!
     ma_sound_start(&sound);
@@ -73,6 +76,11 @@ AUDIO_API void StopAudio() {
         ma_sound_stop(&sound);
     }
     ma_sound_seek_to_pcm_frame(&sound, 0);
+}
+
+AUDIO_API int IsAudioPlaying() {
+    if (!soundLoaded) return 0;
+    return ma_sound_is_playing(&sound) && !ma_sound_at_end(&sound);
 }
 
 AUDIO_API void SetMasterVolume(float volume) {
