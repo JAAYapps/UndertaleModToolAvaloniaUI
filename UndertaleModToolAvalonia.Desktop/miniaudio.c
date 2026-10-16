@@ -88,7 +88,7 @@ AUDIO_API void SetMasterVolume(float volume) {
 }
 
 AUDIO_API void SetPitch(float pitch) {
-    if (ma_sound_is_playing(&sound)) {
+    if (soundLoaded) {
         ma_sound_set_pitch(&sound, pitch);
     }
 }

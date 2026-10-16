@@ -48,7 +48,11 @@
 			<TextBox Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding Sound.Volume}"/>
 
 			<TextBlock Grid.Row="6" Grid.Column="0" Margin="3">Pitch</TextBlock>
-			<TextBox Grid.Row="6" Grid.Column="1" Margin="3" Text="{Binding Sound.Pitch}"/>
+			<StackPanel Grid.Row="6" Grid.Column="1">
+				<TextBox Margin="3" Text="{Binding Sound.Pitch}"/>
+				<Slider Margin="3,0" Minimum="-1" Maximum="1" Value="{Binding Sound.Pitch, Mode=TwoWay}"
+						IsSnapToTickEnabled="True" TickFrequency="0.01" SmallChange="0.01" LargeChange="0.1"/>
+			</StackPanel>
 
 			<TextBlock Grid.Row="7" Grid.Column="0" Margin="3">Audio group</TextBlock>
 			<controls:UndertaleObjectReference Grid.Row="7" Grid.Column="1" Margin="3" ObjectReference="{Binding Sound.AudioGroup}" ObjectType="{x:Type undertale:UndertaleAudioGroup}"/>
