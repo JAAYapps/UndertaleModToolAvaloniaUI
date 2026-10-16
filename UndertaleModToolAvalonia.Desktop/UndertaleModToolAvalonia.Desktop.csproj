@@ -57,9 +57,8 @@
           Condition="'$(PublishAot)' != 'true' And Exists('$(NativeLibPath)/libAudioLib.dylib')" />
   </Target>
   <ItemGroup>
-    <NativeLibrary Include="libs/miniaudio.o" Condition="'$(PublishAot)' == 'true'">
-      <LinkerArg>-Wl,--whole-archive</LinkerArg>
-    </NativeLibrary>
+    <NativeLibrary Include="libs/miniaudio.obj" Condition="'$(PublishAot)' == 'true' And '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'" />
+    <NativeLibrary Include="libs/miniaudio.o" Condition="'$(PublishAot)' == 'true' And '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' != 'true'" />
     <DirectPInvoke Include="AudioLib" Condition="'$(PublishAot)' == 'true'" />
   </ItemGroup>
 
