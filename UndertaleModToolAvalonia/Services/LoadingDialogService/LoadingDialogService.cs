@@ -15,13 +15,11 @@ namespace UndertaleModToolAvalonia.Services.LoadingDialogService;
 public class LoadingDialogService : ILoadingDialogService
 {
     private FAContentDialog? _dialog;
-    private readonly LoaderDialogView? _dialogView;
     private readonly LoaderDialogViewModel? _viewModel;
     private bool _isShowing = false;
 
     public LoadingDialogService(IServiceProvider services)
     {
-        _dialogView = new LoaderDialogView();
         _viewModel = services.GetRequiredService<LoaderDialogViewModel>();
     }
 
@@ -37,11 +35,12 @@ public class LoadingDialogService : ILoadingDialogService
         
         Dispatcher.UIThread.InvokeAsync(async () =>
         {
+            var dialogView = new LoaderDialogView { DataContext = _viewModel };
             _dialog = new FAContentDialog
             {
                 PrimaryButtonText = "OK",
                 CloseButtonText = "Cancel",
-                Content = _dialogView,
+                Content = dialogView,
                 DataContext = _viewModel,
                 IsPrimaryButtonEnabled = false,
                 IsSecondaryButtonEnabled = false
@@ -66,7 +65,6 @@ public class LoadingDialogService : ILoadingDialogService
                     }
                 }
             };
-            _dialogView?.DataContext = _viewModel;
                 
             if (_viewModel != null)
             {
