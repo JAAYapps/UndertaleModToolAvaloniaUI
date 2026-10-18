@@ -87,7 +87,7 @@ namespace UndertaleModLib.Util
                 uint resizeHeight = texPageItem.TargetHeight;
                 if (image.Width != resizeWidth || image.Height != resizeHeight)
                 {
-                    image.InterpolativeResize(resizeWidth, resizeHeight, PixelInterpolateMethod.Bilinear);
+                    image.InterpolativeResize(new MagickGeometry(resizeWidth, resizeHeight) { IgnoreAspectRatio = true }, PixelInterpolateMethod.Bilinear);
                 }
             }
 
@@ -147,7 +147,7 @@ namespace UndertaleModLib.Util
             }
 
             // Resize using bilinear interpolation
-            newImage.InterpolativeResize((uint)width, (uint)height, interpolateMethod);
+            newImage.InterpolativeResize(new MagickGeometry((uint)width, (uint)height) { IgnoreAspectRatio = true }, interpolateMethod);
             return newImage;
         }
 
