@@ -15,47 +15,6 @@ namespace UndertaleModToolAvalonia.Services.TextureCacheService
     /// </summary>
     public class TextureCacheService : ITextureCacheService
     {
-        //private readonly Dictionary<GMImage, WeakReference<Bitmap>> _bitmapCache = new();
-        //private readonly object _cacheLock = new();
-
-        ///// <summary>
-        ///// Gets a cached or new Avalonia Bitmap for a given GMImage.
-        ///// </summary>
-        //public Bitmap GetBitmapForImage(GMImage image)
-        //{
-        //    lock (_cacheLock)
-        //    {
-        //        if (_bitmapCache.TryGetValue(image, out var weakRef) && weakRef.TryGetTarget(out var cachedBitmap))
-        //        {
-        //            return cachedBitmap;
-        //        }
-
-        //        byte[] pixelData = image.ConvertToRawBgra().ToSpan().ToArray();
-
-        //        using var ms = new MemoryStream(pixelData);
-        //        var writeableBitmap = new WriteableBitmap(
-        //            new Avalonia.PixelSize(image.Width, image.Height),
-        //            new Avalonia.Vector(96, 96), // DPI
-        //            PixelFormat.Bgra8888,
-        //            AlphaFormat.Premul);
-
-        //        using (var lockedBuffer = writeableBitmap.Lock())
-        //        {
-        //            System.Runtime.InteropServices.Marshal.Copy(pixelData, 0, lockedBuffer.Address, pixelData.Length);
-        //        }
-
-        //        Bitmap finalBitmap;
-        //        using (var saveStream = new MemoryStream())
-        //        {
-        //            writeableBitmap.Save(saveStream);
-        //            saveStream.Position = 0;
-        //            finalBitmap = new Bitmap(saveStream);
-        //        }
-
-        //        _bitmapCache[image] = new WeakReference<Bitmap>(finalBitmap);
-        //        return finalBitmap;
-        //    }
-        //}
 
         /// <summary>
         /// Returns an Avalonia Bitmap instance for the given GMImage.
@@ -100,9 +59,7 @@ namespace UndertaleModToolAvalonia.Services.TextureCacheService
                     {
                         System.Runtime.InteropServices.Marshal.Copy(pixelData, 0, lockedBuffer.Address, pixelData.Length);
                     }
-                    Console.WriteLine();
                     _bitmapSourceLookup.Add((image, new WeakReference<Bitmap>(avaloniaBitmap)));
-                    Console.WriteLine("Added image " + _bitmapSourceLookup.Count);
                     return avaloniaBitmap;
                 }
             }

@@ -104,7 +104,6 @@ public partial class UndertaleTexturePageItemDisplay : UserControl
                 this.TextureCacheService,
                 this.FileService
             );
-            Console.WriteLine("UndertaleTexturePageItemDisplay.");
         }
     }
 }

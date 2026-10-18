@@ -144,6 +144,8 @@ public partial class UndertaleCodeEditorView : UserControl
 
         // Disassembly editor styling and functionality
         DisassemblySearchPanel = SearchPanel.Install(DisassemblyEditor);
+        DecompiledEditor.ContextFlyout = CreateEditMenu(DecompiledEditor);
+        DisassemblyEditor.ContextFlyout = CreateEditMenu(DisassemblyEditor);
         DisassemblySearchPanel.LostFocus += SearchPanel_LostFocus;
         DisassemblySearchPanel.SetSearchResultsBrush(new SolidColorBrush(Color.FromRgb(90, 90, 90)));
 
@@ -764,6 +766,28 @@ public partial class UndertaleCodeEditorView : UserControl
 
         // Decompile new code
         await DecompileCode(code, false);
+    }
+
+    private static MenuFlyout CreateEditMenu(TextEditor editor)
+    {
+        var cut = new MenuItem { Header = "Cut", InputGesture = new KeyGesture(Key.X, KeyModifiers.Control) };
+        var copy = new MenuItem { Header = "Copy", InputGesture = new KeyGesture(Key.C, KeyModifiers.Control) };
+        var paste = new MenuItem { Header = "Paste", InputGesture = new KeyGesture(Key.V, KeyModifiers.Control) };
+        cut.Click += (s, e) => editor.Cut();
+        copy.Click += (s, e) => editor.Copy();
+        paste.Click += (s, e) => editor.Paste();
+
+        var menu = new MenuFlyout();
+        menu.Items.Add(cut);
+        menu.Items.Add(copy);
+        menu.Items.Add(paste);
+        menu.Opening += (s, e) =>
+        {
+            cut.IsEnabled = editor.CanCut;
+            copy.IsEnabled = editor.CanCopy;
+            paste.IsEnabled = editor.CanPaste;
+        };
+        return menu;
     }
 
     private void GoToLine(GoToCodeLineMessage message)
