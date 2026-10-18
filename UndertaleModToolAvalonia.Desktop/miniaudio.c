@@ -43,6 +43,8 @@ AUDIO_API int PlayRawAudio(float* data, ma_uint64 frameCount, ma_uint32 channels
         NULL // We manage memory allocation in C#, so no free callback needed
     );
 
+    bufferConfig.sampleRate = sampleRate;
+
     result = ma_audio_buffer_init(&bufferConfig, &audioBuffer);
     if (result != MA_SUCCESS) return result;
 
