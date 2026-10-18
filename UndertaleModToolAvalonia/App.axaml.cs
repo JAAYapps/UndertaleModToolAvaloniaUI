@@ -173,6 +173,7 @@ public partial class App : Application
         services.AddTransient<ProjectAssetsViewModel>();
         services.AddTransient<FindReferencesTypesDialogViewModel>();
         services.AddTransient<FindReferencesResultsViewModel>();
+        services.AddTransient<SearchInCodeViewModel>();
         services.AddTransient<EditGlyphRectangleViewModel>();
         services.AddTransient<UndertaleTileEditorViewModel>();
 

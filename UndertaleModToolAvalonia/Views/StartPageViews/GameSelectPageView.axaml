@@ -29,6 +29,7 @@
 				<MenuItem Header="(...loading...)" IsEnabled="False"/>
 			</MenuItem>
 			<MenuItem Header="F_ind">
+				<MenuItem Header="_Search in code" HotKey="Ctrl+Shift+F" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).SearchInCodeCommand}"/>
 				<MenuItem Header="Find unreferenced _assets" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).FindUnreferencedAssetsCommand}"/>
 			</MenuItem>
 			<MenuItem Header="_Project">

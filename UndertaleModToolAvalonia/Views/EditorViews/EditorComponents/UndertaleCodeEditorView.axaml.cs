@@ -201,6 +201,8 @@ public partial class UndertaleCodeEditorView : UserControl
     private void UndertaleCodeEditor_Unloaded(object? sender, RoutedEventArgs e)
     {
         WeakReferenceMessenger.Default.Unregister<SaveCodeChangesMessage>(this);
+        WeakReferenceMessenger.Default.Unregister<GoToCodeLineMessage>(this);
+        WeakReferenceMessenger.Default.Unregister<SelectedCodeTextMessage>(this);
 
         if (DataContext is not UndertaleCodeEditorViewModel vm)
             return;
@@ -213,6 +215,10 @@ public partial class UndertaleCodeEditorView : UserControl
     {
         WeakReferenceMessenger.Default.Unregister<SaveCodeChangesMessage>(this);
         WeakReferenceMessenger.Default.Register<SaveCodeChangesMessage>(this, (recipient, message) => message.Reply(CommitChangesAsync()));
+        WeakReferenceMessenger.Default.Unregister<GoToCodeLineMessage>(this);
+        WeakReferenceMessenger.Default.Register<GoToCodeLineMessage>(this, (recipient, message) => GoToLine(message));
+        WeakReferenceMessenger.Default.Unregister<SelectedCodeTextMessage>(this);
+        WeakReferenceMessenger.Default.Register<SelectedCodeTextMessage>(this, (recipient, message) => ReplySelectedText(message));
 
         if (DataContext is UndertaleCodeEditorViewModel)
             await FillInCodeViewer();
@@ -758,6 +764,50 @@ public partial class UndertaleCodeEditorView : UserControl
 
         // Decompile new code
         await DecompileCode(code, false);
+    }
+
+    private void GoToLine(GoToCodeLineMessage message)
+    {
+        if (DataContext is not UndertaleCodeEditorViewModel vm || !ReferenceEquals(vm, message.Editor) || message.Tab == CodeEditorTab.Unknown)
+            return;
+
+        bool disassembly = message.Tab == CodeEditorTab.Disassembly;
+        TextEditor editor = disassembly ? DisassemblyEditor : DecompiledEditor;
+        bool shown = disassembly ? vm.CurrentDisassembled == vm.UndertaleCode : vm.CurrentDecompiled == vm.UndertaleCode;
+        if (!shown)
+        {
+            if (disassembly)
+            {
+                vm.OverriddenDisasmPos = (message.Line, -1, -1);
+                vm.DisassembledYet = false;
+            }
+            else
+            {
+                vm.OverriddenDecompPos = (message.Line, -1, -1);
+                vm.DecompiledYet = false;
+            }
+        }
+
+        TabItem tab = disassembly ? DisassemblyTab : DecompiledTab;
+        if (CodeModeTabs.SelectedItem != tab)
+            CodeModeTabs.SelectedItem = tab;
+
+        if (shown)
+            Dispatcher.UIThread.Post(() => RestoreCaretPosition(editor, message.Line, -1, -1), DispatcherPriority.Loaded);
+    }
+
+    private void ReplySelectedText(SelectedCodeTextMessage message)
+    {
+        if (message.HasReceivedResponse || !IsEffectivelyVisible)
+            return;
+
+        if (DisassemblyTab.IsSelected)
+        {
+            string text = DisassemblyEditor.SelectedText;
+            message.Reply(string.IsNullOrEmpty(text) ? (null, false) : (text, true));
+        }
+        else
+            message.Reply((DecompiledEditor.SelectedText, false));
     }
 
     public void ChangeLineNumber(int lineNum, CodeEditorTab editorTab)

@@ -1,0 +1,53 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:vm="using:UndertaleModToolAvalonia.ViewModels.EditorViewModels"
+        x:DataType="vm:SearchInCodeViewModel"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+        x:Class="UndertaleModToolAvalonia.Views.EditorViews.SearchInCodeView"
+        Title="{Binding Title}" Height="500" Width="800" WindowStartupLocation="CenterScreen">
+	<DockPanel>
+		<Grid DockPanel.Dock="Bottom" Margin="10,0,10,8" ColumnDefinitions="*,200">
+			<TextBlock Grid.Column="0" Text="{Binding StatusText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+			<ProgressBar Grid.Column="1" IsVisible="{Binding IsSearching}" Minimum="0" Maximum="{Binding ProgressMaximum}" Value="{Binding Progress}"/>
+		</Grid>
+		<Grid Margin="10" RowDefinitions="Auto,Auto,Auto,*">
+			<TextBox Grid.Row="0" Name="SearchTextBox" Text="{Binding SearchText}" TextWrapping="Wrap" AcceptsReturn="True"
+					 Height="40" FontFamily="Consolas" PlaceholderText="Text to find (Shift+Enter for a new line)"/>
+			<Grid Grid.Row="1" Margin="0,5,0,0" ColumnDefinitions="*,Auto">
+				<StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+					<CheckBox Content="Case sensitive" IsChecked="{Binding IsCaseSensitive}"/>
+					<CheckBox Content="Regex search" IsChecked="{Binding IsRegexSearch}"/>
+					<CheckBox Content="Multiline regex" IsChecked="{Binding IsMultilineRegex}" IsVisible="{Binding IsRegexSearch}"/>
+					<CheckBox Content="In assembly" IsChecked="{Binding IsInAssembly}"/>
+				</StackPanel>
+				<Button Grid.Column="1" Content="Search" Width="80" HorizontalContentAlignment="Center" Command="{Binding SearchCommand}"/>
+			</Grid>
+			<Expander Grid.Row="2" Margin="0,5,0,6" Header="Filter by code name" IsExpanded="{Binding FilterByName}" HorizontalAlignment="Stretch">
+				<StackPanel Orientation="Horizontal" Spacing="10">
+					<TextBox Text="{Binding NameFilter}" Width="280" AcceptsReturn="False"/>
+					<CheckBox Content="Case sensitive" IsChecked="{Binding NameIsCaseSensitive}"/>
+					<CheckBox Content="Regex search" IsChecked="{Binding NameIsRegex}"/>
+				</StackPanel>
+			</Expander>
+			<DataGrid Grid.Row="3" Name="ResultsGrid" FontFamily="Consolas"
+					  ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedResult}"
+					  IsReadOnly="True" SelectionMode="Extended" AutoGenerateColumns="False" CanUserSortColumns="False">
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="Code" Binding="{Binding Code}" Width="Auto"/>
+					<DataGridTextColumn Header="Line" Binding="{Binding LineNumber}" Width="Auto"/>
+					<DataGridTextColumn Header="Text" Binding="{Binding LineText}" Width="*"/>
+				</DataGrid.Columns>
+				<DataGrid.ContextFlyout>
+					<MenuFlyout>
+						<MenuItem Header="Open" Command="{Binding OpenCommand}" CommandParameter="{Binding #ResultsGrid.SelectedItems}"/>
+						<MenuItem Header="Open in new tab" Command="{Binding OpenInNewTabCommand}" CommandParameter="{Binding #ResultsGrid.SelectedItems}"/>
+						<MenuItem Header="Copy" Command="{Binding CopyCommand}" CommandParameter="{Binding #ResultsGrid.SelectedItems}"/>
+						<MenuItem Header="Copy all" Command="{Binding CopyAllCommand}"/>
+					</MenuFlyout>
+				</DataGrid.ContextFlyout>
+			</DataGrid>
+		</Grid>
+	</DockPanel>
+</Window>

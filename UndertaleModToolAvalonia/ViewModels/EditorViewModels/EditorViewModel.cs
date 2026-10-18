@@ -194,6 +194,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
                 if (message.SelectedObject is not null && CurrentTab?.CurrentObject is UndertaleRoomEditorViewModel roomEditor)
                     roomEditor.SelectedObject = message.SelectedObject;
             });
+            WeakReferenceMessenger.Default.Register<OpenCodeLineMessage>(this, (recipient, message) => OpenCodeLine(message));
             WeakReferenceMessenger.Default.Register<FindReferencesMessage>(this, (recipient, message) =>
             {
                 FindAllReferencesCommand.Execute(message.Asset);
@@ -1149,6 +1150,25 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels
             if (!ReferenceEquals(assetObject, asset))
                 assetObject.Asset = asset;
             OpenInTab(assetObject, false, assetObject.MainText);
+        }
+
+        private void OpenCodeLine(OpenCodeLineMessage message)
+        {
+            if (!message.InNewTab && CurrentTab?.CurrentObject is UndertaleCodeEditorViewModel open && ReferenceEquals(open.Asset, message.Code))
+            {
+                WeakReferenceMessenger.Default.Send(new GoToCodeLineMessage(open, message.Line, message.Tab));
+                return;
+            }
+
+            if (GetViewModelFromObject(message.Code) is not UndertaleCodeEditorViewModel editor)
+                return;
+            editor.Asset = message.Code;
+            editor.EditorTab = message.Tab;
+            if (message.Tab == UndertaleCodeEditorViewModel.CodeEditorTab.Disassembly)
+                editor.OverriddenDisasmPos = (message.Line, -1, -1);
+            else
+                editor.OverriddenDecompPos = (message.Line, -1, -1);
+            OpenInTab(editor, message.InNewTab, editor.MainText);
         }
 
         [RelayCommand]

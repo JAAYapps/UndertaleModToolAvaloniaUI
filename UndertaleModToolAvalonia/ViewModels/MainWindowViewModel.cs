@@ -77,6 +77,7 @@ namespace UndertaleModToolAvalonia.ViewModels
             RunSpecialCommand.NotifyCanExecuteChanged();
             RunDebugCommand.NotifyCanExecuteChanged();
             FindUnreferencedAssetsCommand.NotifyCanExecuteChanged();
+            SearchInCodeCommand.NotifyCanExecuteChanged();
         }
 
         public MainWindowViewModel(IServiceProvider services, EditorViewModel editorViewModel, IProfileService profileService, IDialogService dialogService, IPlayer playerService, IFileService fileService, ILoadingDialogService loadingDialogService, IScriptService scriptService, IProjectService projectService)
@@ -659,6 +660,14 @@ result in loss of work.");
                 await App.Current!.ShowError("An error occurred in the object references related window.\n" +
                                      $"Please report this on GitHub.\n\n{ex}");
             }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanFindUnreferencedAssets))]
+        private async Task SearchInCode()
+        {
+            SelectedCodeTextMessage request = WeakReferenceMessenger.Default.Send(new SelectedCodeTextMessage());
+            (string? text, bool inAssembly) = request.HasReceivedResponse ? request.Response : (null, false);
+            await dialogService.ShowAsync<SearchInCodeViewModel, SearchInCodeParameters>(new SearchInCodeParameters(text, inAssembly));
         }
 
         [RelayCommand]
