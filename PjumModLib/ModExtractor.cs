@@ -379,6 +379,7 @@ public static class ModExtractor
                 if (!UsableName(name, "Sprite"))
                     continue;
                 UndertaleSprite? before = original.Sprites.ByName(OriginalName("sprites", name));
+                bool resized = before is null || before.Width != sprite.Width || before.Height != sprite.Height;
 
                 for (int i = 0; i < sprite.Textures.Count; i++)
                 {
@@ -386,26 +387,61 @@ public static class ModExtractor
                     if (item is null)
                         continue;
                     UndertaleTexturePageItem? beforeItem = before is not null && i < before.Textures.Count ? before.Textures[i]?.Texture : null;
-                    if (beforeItem is not null && SamePixels(Pixels(originalTextures, beforeItem), Pixels(moddedTextures, item)))
+                    if (!resized && beforeItem is not null && SamePixels(Pixels(originalTextures, beforeItem), Pixels(moddedTextures, item)))
                         continue;
                     if (ExportFullFrame(moddedTextures, item, FilePath("sprites", Path.Combine(name, i + ".png")), $"Sprite '{name}' frame {i}"))
                         Count("sprite frames");
                 }
 
-                if (before is null)
+                if (resized || before is null || !SameMasks(original, before, modded, sprite))
                 {
-                    DeclareNew("sprites", name, new JsonObject { ["frames"] = sprite.Textures.Count });
-                    if (sprite.OriginX != 0 || sprite.OriginY != 0)
-                        _notConverted.Add($"New sprite '{name}' has origin ({sprite.OriginX}, {sprite.OriginY}); PJUM creates new sprites with origin (0, 0).");
-                    continue;
+                    (int maskWidth, int maskHeight) = sprite.CalculateMaskDimensions(modded);
+                    for (int i = 0; maskWidth > 0 && maskHeight > 0 && i < sprite.CollisionMasks.Count; i++)
+                    {
+                        TextureWorker.ExportCollisionMaskPNG(sprite.CollisionMasks[i], FilePath("sprites", Path.Combine(name, i + ".mask.png")), maskWidth, maskHeight);
+                        Count("sprite masks");
+                    }
                 }
-                if (sprite.Textures.Count < before.Textures.Count)
-                    _notConverted.Add($"Sprite '{name}' has fewer frames ({sprite.Textures.Count} instead of {before.Textures.Count}); PJUM mods can't remove frames.");
-                if (sprite.OriginX != before.OriginX || sprite.OriginY != before.OriginY || sprite.Width != before.Width || sprite.Height != before.Height
-                    || sprite.MarginLeft != before.MarginLeft || sprite.MarginRight != before.MarginRight || sprite.MarginTop != before.MarginTop || sprite.MarginBottom != before.MarginBottom)
-                    _notConverted.Add($"Sprite '{name}' has changed size, origin or collision box; PJUM mods only carry the frame images.");
+
+                SpriteJson? properties = SpriteChanges(before, sprite);
+                if (properties is not null)
+                {
+                    File.WriteAllText(FilePath("sprites", Path.Combine(name, "sprite.json")), JsonSerializer.Serialize(properties, JsonOptions));
+                    Count("sprite properties");
+                }
+
+                if (before is null)
+                    DeclareNew("sprites", name, new JsonObject { ["frames"] = sprite.Textures.Count });
             }
             Removed(original.Sprites, n => modded.Sprites.ByName(n) is not null || RenamedAway("sprites", n), "Sprite", _notConverted);
+        }
+
+        private static bool SameMasks(UndertaleData beforeData, UndertaleSprite before, UndertaleData nowData, UndertaleSprite now) =>
+            before.CalculateMaskDimensions(beforeData) == now.CalculateMaskDimensions(nowData)
+            && before.CollisionMasks.Count == now.CollisionMasks.Count
+            && before.CollisionMasks.Zip(now.CollisionMasks).All(m => m.First.Data.AsSpan().SequenceEqual(m.Second.Data));
+
+        private static SpriteJson? SpriteChanges(UndertaleSprite? before, UndertaleSprite now)
+        {
+            bool all = before is null;
+            var json = new SpriteJson();
+            bool any = false;
+            if (all || before!.Width != now.Width || before.Height != now.Height) { json.Width = now.Width; json.Height = now.Height; any = true; }
+            if (all || before!.OriginX != now.OriginX) { json.OriginX = now.OriginX; any = true; }
+            if (all || before!.OriginY != now.OriginY) { json.OriginY = now.OriginY; any = true; }
+            if (all || before!.MarginLeft != now.MarginLeft || before.MarginTop != now.MarginTop || before.MarginRight != now.MarginRight || before.MarginBottom != now.MarginBottom)
+            {
+                json.Margins = new SpriteMarginsJson { Left = now.MarginLeft, Top = now.MarginTop, Right = now.MarginRight, Bottom = now.MarginBottom };
+                any = true;
+            }
+            if (all || before!.BBoxMode != now.BBoxMode) { json.BBoxMode = now.BBoxMode; any = true; }
+            if (all || before!.SepMasks != now.SepMasks) { json.CollisionKind = now.SepMasks.ToString(); any = true; }
+            if (all || before!.Transparent != now.Transparent) { json.Transparent = now.Transparent; any = true; }
+            if (all || before!.Smooth != now.Smooth) { json.Smooth = now.Smooth; any = true; }
+            if (all || before!.Preload != now.Preload) { json.Preload = now.Preload; any = true; }
+            if (before is not null && now.Textures.Count < before.Textures.Count) { json.Frames = now.Textures.Count; any = true; }
+            if (all || before!.CollisionMasks.Count != now.CollisionMasks.Count) { json.Masks = now.CollisionMasks.Count; any = true; }
+            return any ? json : null;
         }
 
         private void Backgrounds(TextureWorker originalTextures, TextureWorker moddedTextures)

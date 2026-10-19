@@ -39,6 +39,8 @@ public enum AssetCategory
     Paths,
     Rooms,
     Game,
+    SpriteMasks,
+    SpriteInfo,
     Files   // raw copy-as-is (shared/ music, lang json, etc.)
 }
 
@@ -156,6 +158,16 @@ public static class ModAddressParser
                 $"Sprite path '{original}' must be sprites/<spriteName>/<frame>.png (one name segment, one frame file).");
 
         string spriteName = assetSegments[0];
+        if (assetSegments[1].Equals("sprite.json", StringComparison.OrdinalIgnoreCase))
+            return new ModAddress(game, route, AssetCategory.SpriteInfo, spriteName, null, original);
+        if (assetSegments[1].EndsWith(".mask.png", StringComparison.OrdinalIgnoreCase))
+        {
+            string maskStem = assetSegments[1][..^".mask.png".Length];
+            if (!int.TryParse(maskStem, out int mask) || mask < 0)
+                throw new ModAddressFormatException(
+                    $"Sprite mask must be <number>.mask.png (got '{assetSegments[1]}') in '{original}'.");
+            return new ModAddress(game, route, AssetCategory.SpriteMasks, spriteName, mask, original);
+        }
         string frameStem = Path.GetFileNameWithoutExtension(assetSegments[1]);
         if (!int.TryParse(frameStem, out int frame) || frame < 0)
             throw new ModAddressFormatException(
@@ -204,5 +216,5 @@ public static class ModAddressParser
     }
 
     private static string KnownCategoryList() =>
-        string.Join(", ", Enum.GetNames(typeof(AssetCategory)).Where(s => s != nameof(AssetCategory.Game)).Select(s => s.ToLowerInvariant()));
+        string.Join(", ", Enum.GetNames(typeof(AssetCategory)).Where(s => s is not (nameof(AssetCategory.Game) or nameof(AssetCategory.SpriteMasks) or nameof(AssetCategory.SpriteInfo))).Select(s => s.ToLowerInvariant()));
 }
