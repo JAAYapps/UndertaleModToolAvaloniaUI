@@ -43,10 +43,19 @@ public static class ModExtractor
         private readonly Dictionary<string, int> _written = new();
         private readonly List<string> _notConverted = [];
         private readonly Dictionary<string, Dictionary<string, JsonObject>> _newAssets = new();
+        private readonly Dictionary<string, Dictionary<string, string>> _renamedFrom = new();
+        private readonly Dictionary<(string Object, int Type, uint Subtype), (UndertaleCode Code, string Name)> _eventCode = new();
 
         public ExtractResult Run()
         {
             Directory.CreateDirectory(modDirectory);
+            FindRenames("sprites", original.Sprites, modded.Sprites);
+            FindRenames("backgrounds", original.Backgrounds, modded.Backgrounds);
+            FindRenames("fonts", original.Fonts, modded.Fonts);
+            FindRenames("objects", original.GameObjects, modded.GameObjects);
+            FindRenames("sounds", original.Sounds, modded.Sounds);
+            FindRenames("paths", original.Paths, modded.Paths);
+            FindRenames("rooms", original.Rooms, modded.Rooms);
             using (var originalTextures = new TextureWorker())
             using (var moddedTextures = new TextureWorker())
             {
@@ -74,6 +83,41 @@ public static class ModExtractor
                 : $"{kind} '{name}' has a name that can't be a file name, so it wasn't converted.");
             return false;
         }
+
+        private void FindRenames<T>(string category, IList<T> before, IList<T> after) where T : UndertaleNamedResource
+        {
+            var afterNames = after.Where(a => a?.Name?.Content is not null).Select(a => a.Name.Content).ToHashSet();
+            var beforeNames = before.Where(b => b?.Name?.Content is not null).Select(b => b.Name.Content).ToHashSet();
+            for (int i = 0; i < Math.Min(before.Count, after.Count); i++)
+            {
+                if (before[i]?.Name?.Content is not string was || after[i]?.Name?.Content is not string now || was == now)
+                    continue;
+                if (afterNames.Contains(was) || beforeNames.Contains(now) || now.Length == 0)
+                    continue;
+                if (!_renamedFrom.TryGetValue(category, out var map))
+                    _renamedFrom[category] = map = new Dictionary<string, string>();
+                map[now] = was;
+            }
+        }
+
+        private string OriginalName(string category, string name) =>
+            _renamedFrom.TryGetValue(category, out var map) && map.TryGetValue(name, out string? was) ? was : name;
+
+        private bool RenamedAway(string category, string oldName) =>
+            _renamedFrom.TryGetValue(category, out var map) && map.ContainsValue(oldName);
+
+        private string OriginalCodeName(string codeName)
+        {
+            if (_renamedFrom.TryGetValue("objects", out var objects))
+                foreach ((string now, string was) in objects)
+                    if (codeName.StartsWith($"gml_Object_{now}_", StringComparison.Ordinal))
+                        return $"gml_Object_{was}_" + codeName[$"gml_Object_{now}_".Length..];
+            return codeName;
+        }
+
+        private bool CodeRenamedAway(string codeName) =>
+            _renamedFrom.TryGetValue("objects", out var objects)
+            && objects.Values.Any(was => codeName.StartsWith($"gml_Object_{was}_", StringComparison.Ordinal));
 
         private void Count(string category) => _written[category] = _written.GetValueOrDefault(category) + 1;
 
@@ -108,6 +152,19 @@ public static class ModExtractor
                     movedObjects[i] = objectName;
             HashSet<UndertaleCode> addedInstanceCode = AddedInstances().SelectMany(a => new[] { a.Instance.CreationCode, a.Instance.PreCreateCode })
                                                                         .OfType<UndertaleCode>().ToHashSet();
+            var sharedNames = modded.Code.Where(c => c?.ParentEntry is null && c.Name?.Content is not null)
+                                         .GroupBy(c => c.Name.Content).Where(g => g.Count() > 1).Select(g => g.Key).ToHashSet();
+            foreach (UndertaleGameObject obj in modded.GameObjects)
+            {
+                if (obj?.Name?.Content is not string objectName)
+                    continue;
+                for (int type = 0; type < obj.Events.Count; type++)
+                    foreach (UndertaleGameObject.Event ev in obj.Events[type])
+                        if (ev.Actions.FirstOrDefault()?.CodeId is UndertaleCode eventCode && sharedNames.Contains(eventCode.Name.Content))
+                            _eventCode[(objectName, type, ev.EventSubtype)] = (eventCode, ObjectEvents.DefaultCodeName(modded, objectName, (EventType)type, ev.EventSubtype));
+            }
+            var eventOnly = _eventCode.Values.Select(v => v.Code).ToHashSet();
+
             var scriptCodeNames = new Dictionary<UndertaleCode, (string Script, string CodeName)>();
             if (!modded.IsVersionAtLeast(2, 3))
                 foreach (UndertaleScript script in modded.Scripts)
@@ -119,11 +176,13 @@ public static class ModExtractor
                     continue;
                 if (!UsableName(name, "Code"))
                     continue;
+                if (eventOnly.Contains(code))
+                    continue;
                 string codeName = name;
                 if (scriptCodeNames.TryGetValue(code, out var renamed))
                     codeName = renamed.CodeName;
 
-                UndertaleCode? before = original.Code.ByName(codeName);
+                UndertaleCode? before = original.Code.ByName(OriginalCodeName(codeName));
                 string moddedText = Disassemble(modded, code);
                 if (before is not null && Disassemble(original, before) == moddedText)
                     continue;
@@ -154,7 +213,26 @@ public static class ModExtractor
                 if (codeName != name)
                     _notConverted.Add($"Note: script '{renamed.Script}' runs code named '{name}'. The mod names it '{codeName}', so calls to {renamed.Script}() find it.");
             }
-            Removed(original.Code.Where(c => c?.ParentEntry is null), n => modded.Code.ByName(n) is not null, "Code", _notConverted);
+            foreach (((string objectName, int type, uint subtype), (UndertaleCode code, string codeName)) in _eventCode)
+            {
+                string gml;
+                try
+                {
+                    gml = new Underanalyzer.Decompiler.DecompileContext(decompileContext, code, modded.ToolInfo.DecompilerSettings).DecompileToString();
+                }
+                catch (Exception ex)
+                {
+                    _notConverted.Add($"Code '{code.Name.Content}' for {objectName} {(EventType)type} {subtype} could not be decompiled: {ex.Message}");
+                    continue;
+                }
+                File.WriteAllText(FilePath("code", codeName + ".gml"), NameObjectNumbers(codeName, gml, movedObjects));
+                Count("code");
+                if (original.Code.ByName(OriginalCodeName(codeName)) is null)
+                    DeclareNew("code", codeName);
+            }
+            if (_eventCode.Count > 0)
+                _notConverted.Add($"Note: {_eventCode.Count} object events run code entries that share a name with other code ({string.Join(", ", _eventCode.Values.Select(v => $"'{v.Code.Name.Content}'").Distinct())}). Each event's code is written under its own event name, so none overwrite each other.");
+            Removed(original.Code.Where(c => c?.ParentEntry is null), n => modded.Code.ByName(n) is not null || CodeRenamedAway(n) || _eventCode.Values.Any(v => v.Name == n), "Code", _notConverted);
         }
 
         private string NameObjectNumbers(string codeName, string gml, Dictionary<int, string> movedObjects)
@@ -300,7 +378,7 @@ public static class ModExtractor
                     continue;
                 if (!UsableName(name, "Sprite"))
                     continue;
-                UndertaleSprite? before = original.Sprites.ByName(name);
+                UndertaleSprite? before = original.Sprites.ByName(OriginalName("sprites", name));
 
                 for (int i = 0; i < sprite.Textures.Count; i++)
                 {
@@ -327,7 +405,7 @@ public static class ModExtractor
                     || sprite.MarginLeft != before.MarginLeft || sprite.MarginRight != before.MarginRight || sprite.MarginTop != before.MarginTop || sprite.MarginBottom != before.MarginBottom)
                     _notConverted.Add($"Sprite '{name}' has changed size, origin or collision box; PJUM mods only carry the frame images.");
             }
-            Removed(original.Sprites, n => modded.Sprites.ByName(n) is not null, "Sprite", _notConverted);
+            Removed(original.Sprites, n => modded.Sprites.ByName(n) is not null || RenamedAway("sprites", n), "Sprite", _notConverted);
         }
 
         private void Backgrounds(TextureWorker originalTextures, TextureWorker moddedTextures)
@@ -338,7 +416,7 @@ public static class ModExtractor
                     continue;
                 if (!UsableName(name, "Background"))
                     continue;
-                UndertaleBackground? before = original.Backgrounds.ByName(name);
+                UndertaleBackground? before = original.Backgrounds.ByName(OriginalName("backgrounds", name));
                 if (before is null)
                 {
                     _notConverted.Add($"Background '{name}' is new; PJUM can't create backgrounds yet.");
@@ -359,7 +437,7 @@ public static class ModExtractor
                     continue;
                 if (!UsableName(name, "Font"))
                     continue;
-                UndertaleFont? before = original.Fonts.ByName(name);
+                UndertaleFont? before = original.Fonts.ByName(OriginalName("fonts", name));
                 if (before is null)
                 {
                     _notConverted.Add($"Font '{name}' is new; PJUM can't create fonts yet.");
@@ -381,7 +459,8 @@ public static class ModExtractor
 
         private static string? NameOf(UndertaleNamedResource? resource) => resource?.Name?.Content;
 
-        private static ObjectJson Describe(UndertaleData data, UndertaleGameObject obj, out List<string> eventKeys)
+        private static ObjectJson Describe(UndertaleData data, UndertaleGameObject obj, out List<string> eventKeys,
+            Dictionary<(string Object, int Type, uint Subtype), (UndertaleCode Code, string Name)>? eventCode = null)
         {
             var json = new ObjectJson
             {
@@ -415,7 +494,9 @@ public static class ModExtractor
                     JsonElement subtype = (EventType)type == EventType.Collision && ev.EventSubtype < data.GameObjects.Count && data.GameObjects[(int)ev.EventSubtype]?.Name?.Content is string other
                         ? JsonSerializer.SerializeToElement(other)
                         : JsonSerializer.SerializeToElement(ev.EventSubtype);
-                    string? code = ev.Actions.FirstOrDefault()?.CodeId?.Name?.Content;
+                    string? code = eventCode is not null && obj.Name?.Content is string objectName && eventCode.TryGetValue((objectName, type, ev.EventSubtype), out var own)
+                        ? own.Name
+                        : ev.Actions.FirstOrDefault()?.CodeId?.Name?.Content;
                     json.Events.Add(new ObjectEventJson { Type = ((EventType)type).ToString(), Subtype = subtype, Code = code });
                     eventKeys.Add($"{(EventType)type}:{subtype.GetRawText()}");
                 }
@@ -431,8 +512,8 @@ public static class ModExtractor
                     continue;
                 if (!UsableName(name, "Object"))
                     continue;
-                UndertaleGameObject? before = original.GameObjects.ByName(name);
-                string text = JsonSerializer.Serialize(Describe(modded, obj, out List<string> moddedEvents), JsonOptions);
+                UndertaleGameObject? before = original.GameObjects.ByName(OriginalName("objects", name));
+                string text = JsonSerializer.Serialize(Describe(modded, obj, out List<string> moddedEvents, _eventCode), JsonOptions);
 
                 if (before is not null)
                 {
@@ -452,7 +533,7 @@ public static class ModExtractor
                 File.WriteAllText(FilePath("objects", name + ".json"), text);
                 Count("objects");
             }
-            Removed(original.GameObjects, n => modded.GameObjects.ByName(n) is not null, "Object", _notConverted);
+            Removed(original.GameObjects, n => modded.GameObjects.ByName(n) is not null || RenamedAway("objects", n), "Object", _notConverted);
         }
 
         private void Paths()
@@ -471,7 +552,7 @@ public static class ModExtractor
                     Points = path.Points.Select(p => new PathPointJson { X = p.X, Y = p.Y, Speed = p.Speed }).ToList()
                 };
                 string text = JsonSerializer.Serialize(json, JsonOptions);
-                UndertalePath? before = original.Paths.ByName(name);
+                UndertalePath? before = original.Paths.ByName(OriginalName("paths", name));
                 if (before is not null)
                 {
                     var beforeJson = new PathJson
@@ -502,7 +583,7 @@ public static class ModExtractor
                     continue;
                 if (!UsableName(name, "Sound"))
                     continue;
-                UndertaleSound? before = original.Sounds.ByName(name);
+                UndertaleSound? before = original.Sounds.ByName(OriginalName("sounds", name));
                 if (IsStreamed(sound))
                 {
                     StreamedSound(sound, before, name);
@@ -667,7 +748,7 @@ public static class ModExtractor
         {
             foreach (UndertaleRoom room in modded.Rooms)
             {
-                if (room?.Name?.Content is not string name || original.Rooms.ByName(name) is not UndertaleRoom before)
+                if (room?.Name?.Content is not string name || original.Rooms.ByName(OriginalName("rooms", name)) is not UndertaleRoom before)
                     continue;
                 var ids = before.GameObjects.Select(g => g.InstanceID).ToHashSet();
                 foreach (UndertaleRoom.GameObject instance in room.GameObjects)
@@ -684,7 +765,7 @@ public static class ModExtractor
                     continue;
                 if (!UsableName(name, "Room"))
                     continue;
-                UndertaleRoom? before = original.Rooms.ByName(name);
+                UndertaleRoom? before = original.Rooms.ByName(OriginalName("rooms", name));
                 if (before is null)
                 {
                     _notConverted.Add($"Room '{name}' is new; PJUM can't create rooms yet.");
@@ -699,7 +780,7 @@ public static class ModExtractor
                 File.WriteAllText(FilePath("rooms", name + ".json"), JsonSerializer.Serialize(patch, RoomJson.JsonOptions));
                 Count("rooms");
             }
-            Removed(original.Rooms, n => modded.Rooms.ByName(n) is not null, "Room", _notConverted);
+            Removed(original.Rooms, n => modded.Rooms.ByName(n) is not null || RenamedAway("rooms", n), "Room", _notConverted);
         }
 
         private RoomJson RoomPatch(UndertaleRoom before, UndertaleRoom room, string name)
@@ -722,7 +803,7 @@ public static class ModExtractor
 
                     var change = new RoomInstanceJson { Id = now.InstanceID };
                     bool changed = false;
-                    if (NameOf(was.ObjectDefinition) != NameOf(now.ObjectDefinition) && now.ObjectDefinition is not null) { change.Object = now.ObjectDefinition.Name.Content; changed = true; }
+                    if (NameOf(was.ObjectDefinition) != OriginalName("objects", NameOf(now.ObjectDefinition)) && now.ObjectDefinition is not null) { change.Object = now.ObjectDefinition.Name.Content; changed = true; }
                     if (was.X != now.X) { change.X = now.X; changed = true; }
                     if (was.Y != now.Y) { change.Y = now.Y; changed = true; }
                     if (was.ScaleX != now.ScaleX) { change.ScaleX = now.ScaleX; changed = true; }
@@ -828,6 +909,18 @@ public static class ModExtractor
                     newAssets[category] = entries;
                 }
                 manifest["newAssets"] = newAssets;
+            }
+            if (_renamedFrom.Count > 0)
+            {
+                var renames = new JsonObject();
+                foreach ((string category, var map) in _renamedFrom.OrderBy(p => p.Key, StringComparer.Ordinal))
+                {
+                    var entries = new JsonObject();
+                    foreach ((string now, string was) in map.OrderBy(p => p.Value, StringComparer.Ordinal))
+                        entries[was] = now;
+                    renames[category] = entries;
+                }
+                manifest["renames"] = renames;
             }
             File.WriteAllText(Path.Combine(modDirectory, "mod.json"), manifest.ToJsonString(JsonOptions));
         }
