@@ -22,6 +22,7 @@ using FluentAvalonia.UI.Controls;
 using UndertaleModLib;
 using UndertaleModLib.Project;
 using UndertaleModToolAvalonia.Messages;
+using PjumModLib;
 using UndertaleModToolAvalonia.Models;
 using UndertaleModToolAvalonia.Services.DialogService;
 using UndertaleModToolAvalonia.Services.FileService;
@@ -78,6 +79,7 @@ namespace UndertaleModToolAvalonia.ViewModels
             RunDebugCommand.NotifyCanExecuteChanged();
             FindUnreferencedAssetsCommand.NotifyCanExecuteChanged();
             SearchInCodeCommand.NotifyCanExecuteChanged();
+            ExportPjumModCommand.NotifyCanExecuteChanged();
         }
 
         public MainWindowViewModel(IServiceProvider services, EditorViewModel editorViewModel, IProfileService profileService, IDialogService dialogService, IPlayer playerService, IFileService fileService, ILoadingDialogService loadingDialogService, IScriptService scriptService, IProjectService projectService)
@@ -668,6 +670,114 @@ result in loss of work.");
             SelectedCodeTextMessage request = WeakReferenceMessenger.Default.Send(new SelectedCodeTextMessage());
             (string? text, bool inAssembly) = request.HasReceivedResponse ? request.Response : (null, false);
             await dialogService.ShowAsync<SearchInCodeViewModel, SearchInCodeParameters>(new SearchInCodeParameters(text, inAssembly));
+        }
+
+        public bool CanExportPjumMod => !OperatingSystem.IsBrowser();
+
+        [RelayCommand(CanExecute = nameof(CanFindUnreferencedAssets))]
+        private async Task ExportPjumMod(Visual visual)
+        {
+            var storageProvider = TopLevel.GetTopLevel(visual)?.StorageProvider;
+            if (storageProvider is null)
+            {
+                await App.Current!.ShowError("The dialog could not be opened.");
+                return;
+            }
+            if (!MenuEnabled || AppConstants.Data is not UndertaleData modded)
+                return;
+            if (string.IsNullOrEmpty(AppConstants.FilePath))
+            {
+                await App.Current!.ShowError("Save the data file first. The mod's music is read from the folder the data file is in.");
+                return;
+            }
+
+            MenuEnabled = false;
+            try
+            {
+                var compiled = await WeakReferenceMessenger.Default.Send(new SaveCodeChangesMessage()).GetResponsesAsync();
+                if (!compiled.All(ok => ok))
+                {
+                    await App.Current!.ShowError("The code in the code editor did not compile, so nothing was exported.\nFix the error or undo the change, then export again.", "Export error");
+                    return;
+                }
+
+                var originals = await fileService.LoadFilteredFileAsync(storageProvider, MainDataFileFilter, "", "Choose the original, unmodded data file");
+                string? originalPath = originals.FirstOrDefault()?.TryGetLocalPath();
+                if (originalPath is null)
+                {
+                    editorViewModel.CommandBoxText = "Cancelled PJUM mod export.";
+                    return;
+                }
+                if (Path.GetFullPath(originalPath) == Path.GetFullPath(AppConstants.FilePath))
+                {
+                    await App.Current!.ShowError("That is the data file you have open. Choose the game's original, unmodded data file.");
+                    return;
+                }
+
+                string? modName = await dialogService.ShowDialogAsync<TextInputViewModel, TextInputParameters, string>(
+                    new TextInputParameters("PJUM mod name", "Choose a name for the mod", $"{modded.GeneralInfo?.DisplayName?.Content ?? "New"} Mod"));
+                if (string.IsNullOrWhiteSpace(modName))
+                {
+                    editorViewModel.CommandBoxText = "Cancelled PJUM mod export.";
+                    return;
+                }
+                modName = modName.Trim();
+
+                var folders = await fileService.LoadFolderAsync(storageProvider, AppConstants.FilePath, "Choose where to put the mod folder");
+                string? parent = folders.FirstOrDefault()?.TryGetLocalPath();
+                if (parent is null)
+                {
+                    editorViewModel.CommandBoxText = "Cancelled PJUM mod export.";
+                    return;
+                }
+                string modDirectory = Path.Combine(parent, string.Concat(modName.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c)));
+                if (Directory.Exists(modDirectory) && Directory.EnumerateFileSystemEntries(modDirectory).Any())
+                {
+                    await App.Current!.ShowError($"The folder \"{modDirectory}\" already exists and isn't empty. Choose another name or place.");
+                    return;
+                }
+
+                ExtractResult result;
+                loadingDialogService.Show("Exporting", "Exporting the PJUM mod, please wait...");
+                try
+                {
+                    string moddedFolder = Path.GetDirectoryName(Path.GetFullPath(AppConstants.FilePath))!;
+                    result = await Task.Run(() =>
+                    {
+                        UndertaleData original;
+                        using (var stream = File.OpenRead(originalPath))
+                            original = UndertaleIO.Read(stream);
+                        return ModExtractor.Extract(original, modded, Path.GetDirectoryName(Path.GetFullPath(originalPath))!, moddedFolder, modDirectory, modName);
+                    });
+                }
+                catch (InvalidDataException ex)
+                {
+                    loadingDialogService.Hide();
+                    await App.Current!.ShowError(ex.Message, "Export error");
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    loadingDialogService.Hide();
+                    await App.Current!.ShowError($"Exporting the PJUM mod failed:\n{ex}", "Export error");
+                    return;
+                }
+                loadingDialogService.Hide();
+
+                string written = result.WrittenByCategory.Count == 0
+                    ? "No changes PJUM can carry were found."
+                    : "Wrote " + string.Join(", ", result.WrittenByCategory.Select(p => $"{p.Value} {p.Key}")) + ".";
+                string notes = result.NotConverted.Count == 0
+                    ? "Everything that changed was converted."
+                    : $"{result.NotConverted.Count} change(s) could not be converted:\n- " + string.Join("\n- ", result.NotConverted);
+                editorViewModel.CommandBoxText = $"Exported PJUM mod to {modDirectory}.";
+                await dialogService.ShowAsync<TextOutputViewModel, TextOutputParameters>(
+                    new TextOutputParameters("PJUM mod exported", $"Saved to {modDirectory}", $"{written}\n\n{notes}", true, true));
+            }
+            finally
+            {
+                MenuEnabled = true;
+            }
         }
 
         [RelayCommand]

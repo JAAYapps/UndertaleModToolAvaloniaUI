@@ -22,6 +22,7 @@
 				<MenuItem Header="Run game with other runner" HotKey="Alt+F5" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).RunSpecialCommand}" CommandParameter="{Binding $parent[UserControl]}"/>
 				<Separator/>
 				<MenuItem Header="Generate o_ffset map" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).OffsetMapCommand}" CommandParameter="{Binding $parent[UserControl]}"/>
+				<MenuItem Header="_Export as PJUM mod" IsVisible="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).CanExportPjumMod}" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).ExportPjumModCommand}" CommandParameter="{Binding $parent[UserControl]}"/>
 				<Separator/>
 				<MenuItem Header="_Close" HotKey="Ctrl+Q" Command="{Binding $parent[Window].DataContext.(viewModels:MainWindowViewModel).ExitCommand}" CommandParameter="{Binding $parent[UserControl]}"/>
 			</MenuItem>
