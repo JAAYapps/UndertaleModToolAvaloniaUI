@@ -103,6 +103,9 @@ public static class ModExtractor
         private string OriginalName(string category, string name) =>
             _renamedFrom.TryGetValue(category, out var map) && map.TryGetValue(name, out string? was) ? was : name;
 
+        private string? OriginalName(string category, UndertaleNamedResource? asset) =>
+            asset?.Name?.Content is string name ? OriginalName(category, name) : null;
+
         private bool RenamedAway(string category, string oldName) =>
             _renamedFrom.TryGetValue(category, out var map) && map.ContainsValue(oldName);
 
@@ -455,7 +458,13 @@ public static class ModExtractor
                 UndertaleBackground? before = original.Backgrounds.ByName(OriginalName("backgrounds", name));
                 if (before is null)
                 {
-                    _notConverted.Add($"Background '{name}' is new; PJUM can't create backgrounds yet.");
+                    if (ExportFullFrame(moddedTextures, background.Texture, FilePath("backgrounds", name + ".png"), $"Background '{name}'"))
+                    {
+                        Count("backgrounds");
+                        DeclareNew("backgrounds", name);
+                        if (background.Transparent || background.Smooth || background.Preload)
+                            _notConverted.Add($"New background '{name}' is transparent, smooth or preloaded; PJUM creates new backgrounds with those off.");
+                    }
                     continue;
                 }
                 if (SamePixels(Pixels(originalTextures, before.Texture), Pixels(moddedTextures, background.Texture)))
@@ -748,16 +757,10 @@ public static class ModExtractor
         {
             var parts = new List<string>
             {
-                $"{room.Width}x{room.Height} speed {room.Speed} persistent {room.Persistent} color {room.BackgroundColor} {room.DrawBackgroundColor} flags {room.Flags}",
+                $"flags {room.Flags}",
                 $"world {room.World} {room.Top},{room.Left},{room.Right},{room.Bottom} gravity {room.GravityX},{room.GravityY} {room.MetersPerPixel}",
-                $"caption {room.Caption?.Content} code {NameOf(room.CreationCodeId)}"
+                $"code {NameOf(room.CreationCodeId)}"
             };
-            foreach (var bg in room.Backgrounds)
-                parts.Add($"bg {bg.Enabled} {bg.Foreground} {NameOf(bg.BackgroundDefinition)} {bg.X},{bg.Y} {bg.TiledHorizontally},{bg.TiledVertically} {bg.SpeedX},{bg.SpeedY} {bg.Stretch}");
-            foreach (var view in room.Views)
-                parts.Add($"view {view.Enabled} {view.ViewX},{view.ViewY},{view.ViewWidth},{view.ViewHeight} {view.PortX},{view.PortY},{view.PortWidth},{view.PortHeight} {view.BorderX},{view.BorderY} {view.SpeedX},{view.SpeedY} {NameOf(view.ObjectId)}");
-            foreach (var tile in room.Tiles)
-                parts.Add($"tile {tile.InstanceID} {NameOf(tile.ObjectDefinition)} {tile.X},{tile.Y} {tile.SourceX},{tile.SourceY} {tile.Width}x{tile.Height} {tile.TileDepth} {tile.ScaleX},{tile.ScaleY} {tile.Color}");
             foreach (var layer in room.Layers ?? [])
             {
                 parts.Add($"layer {layer.LayerName?.Content} {layer.LayerId} {layer.LayerType} {layer.LayerDepth} {layer.XOffset},{layer.YOffset} {layer.HSpeed},{layer.VSpeed} {layer.IsVisible}");
@@ -808,10 +811,11 @@ public static class ModExtractor
                     continue;
                 }
                 if (RoomFingerprint(before) != RoomFingerprint(room))
-                    _notConverted.Add($"Room '{name}' has changes besides its object instances (settings, tiles, backgrounds, views or layers); only the instances were converted.");
+                    _notConverted.Add($"Room '{name}' has changes PJUM can't carry yet (room creation code, physics settings or layers); those weren't converted.");
 
                 RoomJson patch = RoomPatch(before, room, name);
-                if (patch.Add.Count == 0 && patch.Change.Count == 0 && patch.Remove.Count == 0)
+                if (patch.Add.Count == 0 && patch.Change.Count == 0 && patch.Remove.Count == 0
+                    && patch.Settings is null && patch.Backgrounds is null && patch.Views is null && patch.Tiles is null)
                     continue;
                 File.WriteAllText(FilePath("rooms", name + ".json"), JsonSerializer.Serialize(patch, RoomJson.JsonOptions));
                 Count("rooms");
@@ -839,7 +843,7 @@ public static class ModExtractor
 
                     var change = new RoomInstanceJson { Id = now.InstanceID };
                     bool changed = false;
-                    if (NameOf(was.ObjectDefinition) != OriginalName("objects", NameOf(now.ObjectDefinition)) && now.ObjectDefinition is not null) { change.Object = now.ObjectDefinition.Name.Content; changed = true; }
+                    if (NameOf(was.ObjectDefinition) != OriginalName("objects", now.ObjectDefinition) && now.ObjectDefinition is not null) { change.Object = now.ObjectDefinition.Name.Content; changed = true; }
                     if (was.X != now.X) { change.X = now.X; changed = true; }
                     if (was.Y != now.Y) { change.Y = now.Y; changed = true; }
                     if (was.ScaleX != now.ScaleX) { change.ScaleX = now.ScaleX; changed = true; }
@@ -881,6 +885,99 @@ public static class ModExtractor
             foreach (uint id in beforeById.Keys)
                 if (!afterIds.Contains(id))
                     patch.Remove.Add(id);
+
+            var settings = new RoomSettingsJson();
+            bool anySetting = false;
+            if (before.Width != room.Width) { settings.Width = room.Width; anySetting = true; }
+            if (before.Height != room.Height) { settings.Height = room.Height; anySetting = true; }
+            if (before.Speed != room.Speed) { settings.Speed = room.Speed; anySetting = true; }
+            if (before.Persistent != room.Persistent) { settings.Persistent = room.Persistent; anySetting = true; }
+            if (before.BackgroundColor != room.BackgroundColor) { settings.BackgroundColor = room.BackgroundColor; anySetting = true; }
+            if (before.DrawBackgroundColor != room.DrawBackgroundColor) { settings.DrawBackgroundColor = room.DrawBackgroundColor; anySetting = true; }
+            if (before.Caption?.Content != room.Caption?.Content) { settings.Caption = room.Caption?.Content ?? ""; anySetting = true; }
+            if (anySetting)
+                patch.Settings = settings;
+
+            string Bg(UndertaleBackground? b, bool modded) => b?.Name?.Content is string n ? (modded ? OriginalName("backgrounds", n) : n) : "-";
+            for (int i = 0; i < Math.Min(before.Backgrounds.Count, room.Backgrounds.Count); i++)
+            {
+                UndertaleRoom.Background was = before.Backgrounds[i], now = room.Backgrounds[i];
+                if ((was.Enabled, Bg(was.BackgroundDefinition, false), was.X, was.Y, was.TiledHorizontally, was.TiledVertically, was.SpeedX, was.SpeedY, was.Foreground, was.Stretch)
+                    == (now.Enabled, Bg(now.BackgroundDefinition, true), now.X, now.Y, now.TiledHorizontally, now.TiledVertically, now.SpeedX, now.SpeedY, now.Foreground, now.Stretch))
+                    continue;
+                (patch.Backgrounds ??= new()).Add(new RoomBackgroundJson
+                {
+                    Slot = i, Enabled = now.Enabled, Background = now.BackgroundDefinition?.Name?.Content, X = now.X, Y = now.Y,
+                    TileX = now.TiledHorizontally, TileY = now.TiledVertically, SpeedX = now.SpeedX, SpeedY = now.SpeedY,
+                    Foreground = now.Foreground, Stretch = now.Stretch
+                });
+            }
+
+            for (int i = 0; i < Math.Min(before.Views.Count, room.Views.Count); i++)
+            {
+                UndertaleRoom.View was = before.Views[i], now = room.Views[i];
+                if ((was.Enabled, was.ViewX, was.ViewY, was.ViewWidth, was.ViewHeight, was.PortX, was.PortY, was.PortWidth, was.PortHeight, was.BorderX, was.BorderY, was.SpeedX, was.SpeedY, NameOf(was.ObjectId))
+                    == (now.Enabled, now.ViewX, now.ViewY, now.ViewWidth, now.ViewHeight, now.PortX, now.PortY, now.PortWidth, now.PortHeight, now.BorderX, now.BorderY, now.SpeedX, now.SpeedY, OriginalName("objects", now.ObjectId)))
+                    continue;
+                (patch.Views ??= new()).Add(new RoomViewJson
+                {
+                    Slot = i, Enabled = now.Enabled, ViewX = now.ViewX, ViewY = now.ViewY, ViewWidth = now.ViewWidth, ViewHeight = now.ViewHeight,
+                    PortX = now.PortX, PortY = now.PortY, PortWidth = now.PortWidth, PortHeight = now.PortHeight,
+                    BorderX = now.BorderX, BorderY = now.BorderY, SpeedX = now.SpeedX, SpeedY = now.SpeedY, Follow = now.ObjectId?.Name?.Content
+                });
+            }
+
+            if (!layered && room.Tiles.Any(t => t.spriteMode))
+                _notConverted.Add($"Room '{name}' has tiles made from sprites; PJUM only carries tiles made from backgrounds, so its tiles weren't converted.");
+            else if (!layered)
+            {
+                var tiles = new RoomTilesJson();
+                var beforeTiles = new Dictionary<uint, UndertaleRoom.Tile>();
+                foreach (UndertaleRoom.Tile tile in before.Tiles)
+                    beforeTiles.TryAdd(tile.InstanceID, tile);
+                var afterTileIds = room.Tiles.Select(t => t.InstanceID).ToHashSet();
+                foreach (UndertaleRoom.Tile now in room.Tiles)
+                {
+                    if (beforeTiles.TryGetValue(now.InstanceID, out UndertaleRoom.Tile? was))
+                    {
+                        var change = new RoomTileJson { Id = now.InstanceID };
+                        bool changed = false;
+                        if (Bg(was.BackgroundDefinition, false) != Bg(now.BackgroundDefinition, true)) { change.Background = now.BackgroundDefinition?.Name?.Content; changed = true; }
+                        if (was.X != now.X) { change.X = now.X; changed = true; }
+                        if (was.Y != now.Y) { change.Y = now.Y; changed = true; }
+                        if (was.SourceX != now.SourceX) { change.SourceX = now.SourceX; changed = true; }
+                        if (was.SourceY != now.SourceY) { change.SourceY = now.SourceY; changed = true; }
+                        if (was.Width != now.Width) { change.Width = now.Width; changed = true; }
+                        if (was.Height != now.Height) { change.Height = now.Height; changed = true; }
+                        if (was.TileDepth != now.TileDepth) { change.Depth = now.TileDepth; changed = true; }
+                        if (was.ScaleX != now.ScaleX) { change.ScaleX = now.ScaleX; changed = true; }
+                        if (was.ScaleY != now.ScaleY) { change.ScaleY = now.ScaleY; changed = true; }
+                        if (was.Color != now.Color) { change.Color = now.Color; changed = true; }
+                        if (changed)
+                            tiles.Change.Add(change);
+                        continue;
+                    }
+                    if (now.BackgroundDefinition?.Name?.Content is not string tileBackground)
+                    {
+                        _notConverted.Add($"Added tile {now.InstanceID} in room '{name}' has no background, so it wasn't converted.");
+                        continue;
+                    }
+                    tiles.Add.Add(new RoomTileJson
+                    {
+                        Background = tileBackground, X = now.X, Y = now.Y, SourceX = now.SourceX, SourceY = now.SourceY,
+                        Width = now.Width, Height = now.Height, Depth = now.TileDepth,
+                        ScaleX = now.ScaleX != 1 ? now.ScaleX : null, ScaleY = now.ScaleY != 1 ? now.ScaleY : null,
+                        Color = now.Color != 0xFFFFFFFF ? now.Color : null
+                    });
+                }
+                foreach (uint id in beforeTiles.Keys)
+                    if (!afterTileIds.Contains(id))
+                        tiles.Remove.Add(id);
+                if (tiles.Add.Count > 0 || tiles.Change.Count > 0 || tiles.Remove.Count > 0)
+                    patch.Tiles = tiles;
+                if (!before.Tiles.Select(t => t.InstanceID).Where(afterTileIds.Contains).SequenceEqual(room.Tiles.Select(t => t.InstanceID).Where(beforeTiles.ContainsKey)))
+                    _notConverted.Add($"Room '{name}' also reorders its existing tiles; the order isn't carried, so tiles at the same depth may overlap differently.");
+            }
             return patch;
         }
 
