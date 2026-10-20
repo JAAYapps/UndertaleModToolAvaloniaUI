@@ -89,16 +89,25 @@ public static class ModExtractor
         {
             var afterNames = after.Where(a => a?.Name?.Content is not null).Select(a => a.Name.Content).ToHashSet();
             var beforeNames = before.Where(b => b?.Name?.Content is not null).Select(b => b.Name.Content).ToHashSet();
+            var moved = new List<string>();
             for (int i = 0; i < Math.Min(before.Count, after.Count); i++)
             {
                 if (before[i]?.Name?.Content is not string was || after[i]?.Name?.Content is not string now || was == now)
                     continue;
+                if (afterNames.Contains(was) && beforeNames.Contains(now))
+                {
+                    moved.Add($"'{now}' ({before.IndexOf(before.First(b => b?.Name?.Content == now))} -> {i})");
+                    continue;
+                }
                 if (afterNames.Contains(was) || beforeNames.Contains(now) || now.Length == 0)
                     continue;
                 if (!_renamedFrom.TryGetValue(category, out var map))
                     _renamedFrom[category] = map = new Dictionary<string, string>();
                 map[now] = was;
             }
+            if (moved.Count > 0)
+                _notConverted.Add($"Note: {moved.Count} {category} changed number in the modded file without being renamed, most likely swapped by accident: {string.Join(", ", moved.Take(10))}{(moved.Count > 10 ? ", ..." : "")}. " +
+                                  "The mod keeps the original numbers, so code that points at them by number gets the original assets.");
         }
 
         private string OriginalName(string category, string name) =>
