@@ -178,8 +178,9 @@ public static class ModExtractor
             }
             foreach (UndertaleRoom room in modded.Rooms)
             {
-                if (room?.Name?.Content is not string roomName || original.Rooms.ByName(OriginalName("rooms", roomName)) is not UndertaleRoom beforeRoom)
+                if (room?.Name?.Content is not string roomName)
                     continue;
+                UndertaleRoom beforeRoom = original.Rooms.ByName(OriginalName("rooms", roomName)) ?? EmptyRoom();
                 foreach (UndertaleRoom.GameObject instance in room.GameObjects)
                 {
                     UndertaleRoom.GameObject? was = beforeRoom.GameObjects.FirstOrDefault(g => g.InstanceID == instance.InstanceID);
@@ -794,6 +795,8 @@ public static class ModExtractor
             return copy;
         }
 
+        private static UndertaleRoom EmptyRoom() => new() { Caption = new UndertaleString("") };
+
         private static string RoomFingerprint(UndertaleRoom room)
         {
             var parts = new List<string>
@@ -833,16 +836,24 @@ public static class ModExtractor
                 if (!UsableName(name, "Room"))
                     continue;
                 UndertaleRoom? before = original.Rooms.ByName(OriginalName("rooms", name));
-                if (before is null)
+                bool isNew = before is null;
+                if (isNew)
                 {
-                    _notConverted.Add($"Room '{name}' is new; PJUM can't create rooms yet.");
-                    continue;
+                    if (room.Layers is { Count: > 0 })
+                    {
+                        _notConverted.Add($"Room '{name}' is new and uses layers; PJUM can only create rooms in GameMaker 1 games so far.");
+                        continue;
+                    }
+                    before = EmptyRoom();
+                    DeclareNew("rooms", name);
+                    if (!modded.GeneralInfo.RoomOrder.Any(r => r.Resource == room))
+                        _notConverted.Add($"New room '{name}' isn't in the modded game's room order; PJUM adds new rooms to the end of the room order.");
                 }
                 if (RoomFingerprint(before) != RoomFingerprint(room))
                     _notConverted.Add($"Room '{name}' has changes PJUM can't carry yet (room creation code, physics settings or layers); those weren't converted.");
 
                 RoomJson patch = RoomPatch(before, room, name);
-                if (patch.Add.Count == 0 && patch.Change.Count == 0 && patch.Remove.Count == 0
+                if (!isNew && patch.Add.Count == 0 && patch.Change.Count == 0 && patch.Remove.Count == 0
                     && patch.Settings is null && patch.Backgrounds is null && patch.Views is null && patch.Tiles is null)
                     continue;
                 File.WriteAllText(FilePath("rooms", name + ".json"), JsonSerializer.Serialize(patch, RoomJson.JsonOptions));
