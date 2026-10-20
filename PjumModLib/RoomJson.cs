@@ -88,6 +88,7 @@ public sealed class RoomTileJson
     [JsonPropertyName("scaleX")] public float? ScaleX { get; set; }
     [JsonPropertyName("scaleY")] public float? ScaleY { get; set; }
     [JsonPropertyName("color")] public uint? Color { get; set; }
+    [JsonPropertyName("after")] public uint? After { get; set; }
 }
 
 public sealed class RoomInstanceJson
@@ -105,6 +106,7 @@ public sealed class RoomInstanceJson
     [JsonPropertyName("layer")] public string? Layer { get; set; }
     [JsonPropertyName("creationCode")] public string? CreationCode { get; set; }
     [JsonPropertyName("preCreateCode")] public string? PreCreateCode { get; set; }
+    [JsonPropertyName("after")] public uint? After { get; set; }
 }
 
 public static class RoomLayers

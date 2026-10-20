@@ -856,6 +856,41 @@ public static class ModExtractor
                 ? renamed.Name
                 : NameOf(pre ? instance.PreCreateCode : instance.CreationCode);
 
+        private static uint?[] AfterAnchors(IReadOnlyList<uint> ids, Func<uint, bool> kept)
+        {
+            var result = new uint?[ids.Count];
+            int lastKept = -1;
+            for (int i = 0; i < ids.Count; i++)
+                if (kept(ids[i]))
+                    lastKept = i;
+            uint anchor = 0;
+            for (int i = 0; i < ids.Count; i++)
+            {
+                if (kept(ids[i]))
+                    anchor = ids[i];
+                else
+                    result[i] = i > lastKept ? null : anchor;
+            }
+            return result;
+        }
+
+        private static int ReorderedOverlappingTiles(UndertaleRoom before, UndertaleRoom room, Dictionary<uint, UndertaleRoom.Tile> beforeTiles, HashSet<uint> afterTileIds)
+        {
+            var oldPosition = new Dictionary<uint, int>();
+            foreach (UndertaleRoom.Tile tile in before.Tiles)
+                if (afterTileIds.Contains(tile.InstanceID))
+                    oldPosition.TryAdd(tile.InstanceID, oldPosition.Count);
+            var kept = room.Tiles.Where(t => beforeTiles.ContainsKey(t.InstanceID)).ToList();
+            static bool Overlap(UndertaleRoom.Tile a, UndertaleRoom.Tile b) =>
+                a.X < b.X + b.Width * b.ScaleX && b.X < a.X + a.Width * a.ScaleX && a.Y < b.Y + b.Height * b.ScaleY && b.Y < a.Y + a.Height * a.ScaleY;
+            int pairs = 0;
+            for (int i = 0; i < kept.Count; i++)
+                for (int j = i + 1; j < kept.Count; j++)
+                    if (oldPosition[kept[i].InstanceID] > oldPosition[kept[j].InstanceID] && kept[i].TileDepth == kept[j].TileDepth && Overlap(kept[i], kept[j]))
+                        pairs++;
+            return pairs;
+        }
+
         private RoomJson RoomPatch(UndertaleRoom before, UndertaleRoom room, string name)
         {
             var patch = new RoomJson();
@@ -865,8 +900,11 @@ public static class ModExtractor
             var afterIds = room.GameObjects.Select(g => g.InstanceID).ToHashSet();
             bool layered = room.Layers is { Count: > 0 };
 
+            uint?[] instanceAfter = AfterAnchors(room.GameObjects.Select(g => g.InstanceID).ToList(), beforeById.ContainsKey);
+            int instancePosition = -1;
             foreach (UndertaleRoom.GameObject now in room.GameObjects)
             {
+                instancePosition++;
                 if (beforeById.TryGetValue(now.InstanceID, out UndertaleRoom.GameObject? was))
                 {
                     if (layered && RoomLayers.LayerOf(before, was)?.LayerName?.Content != RoomLayers.LayerOf(room, now)?.LayerName?.Content)
@@ -908,7 +946,8 @@ public static class ModExtractor
                     ImageSpeed = now.ImageSpeed != 0 ? now.ImageSpeed : null,
                     Layer = layered ? RoomLayers.LayerOf(room, now)?.LayerName?.Content : null,
                     CreationCode = InstanceCodeName(name, now, false),
-                    PreCreateCode = InstanceCodeName(name, now, true)
+                    PreCreateCode = InstanceCodeName(name, now, true),
+                    After = instanceAfter[instancePosition]
                 });
             }
 
@@ -966,8 +1005,11 @@ public static class ModExtractor
                 foreach (UndertaleRoom.Tile tile in before.Tiles)
                     beforeTiles.TryAdd(tile.InstanceID, tile);
                 var afterTileIds = room.Tiles.Select(t => t.InstanceID).ToHashSet();
+                uint?[] tileAfter = AfterAnchors(room.Tiles.Select(t => t.InstanceID).ToList(), beforeTiles.ContainsKey);
+                int tilePosition = -1;
                 foreach (UndertaleRoom.Tile now in room.Tiles)
                 {
+                    tilePosition++;
                     if (beforeTiles.TryGetValue(now.InstanceID, out UndertaleRoom.Tile? was))
                     {
                         var change = new RoomTileJson { Id = now.InstanceID };
@@ -997,7 +1039,8 @@ public static class ModExtractor
                         Background = tileBackground, X = now.X, Y = now.Y, SourceX = now.SourceX, SourceY = now.SourceY,
                         Width = now.Width, Height = now.Height, Depth = now.TileDepth,
                         ScaleX = now.ScaleX != 1 ? now.ScaleX : null, ScaleY = now.ScaleY != 1 ? now.ScaleY : null,
-                        Color = now.Color != 0xFFFFFFFF ? now.Color : null
+                        Color = now.Color != 0xFFFFFFFF ? now.Color : null,
+                        After = tileAfter[tilePosition]
                     });
                 }
                 foreach (uint id in beforeTiles.Keys)
@@ -1005,8 +1048,8 @@ public static class ModExtractor
                         tiles.Remove.Add(id);
                 if (tiles.Add.Count > 0 || tiles.Change.Count > 0 || tiles.Remove.Count > 0)
                     patch.Tiles = tiles;
-                if (!before.Tiles.Select(t => t.InstanceID).Where(afterTileIds.Contains).SequenceEqual(room.Tiles.Select(t => t.InstanceID).Where(beforeTiles.ContainsKey)))
-                    _notConverted.Add($"Room '{name}' also reorders its existing tiles; the order isn't carried, so tiles at the same depth may overlap differently.");
+                if (ReorderedOverlappingTiles(before, room, beforeTiles, afterTileIds) is int pairs && pairs > 0)
+                    _notConverted.Add($"Room '{name}' also reorders {pairs} pair(s) of existing tiles that overlap at the same depth; that order isn't carried, so they may overlap the other way round.");
             }
             return patch;
         }
