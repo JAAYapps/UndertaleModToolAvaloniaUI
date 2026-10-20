@@ -103,6 +103,8 @@ public sealed class RoomInstanceJson
     [JsonPropertyName("imageIndex")] public int? ImageIndex { get; set; }
     [JsonPropertyName("imageSpeed")] public float? ImageSpeed { get; set; }
     [JsonPropertyName("layer")] public string? Layer { get; set; }
+    [JsonPropertyName("creationCode")] public string? CreationCode { get; set; }
+    [JsonPropertyName("preCreateCode")] public string? PreCreateCode { get; set; }
 }
 
 public static class RoomLayers

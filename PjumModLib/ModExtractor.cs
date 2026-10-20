@@ -45,6 +45,7 @@ public static class ModExtractor
         private readonly Dictionary<string, Dictionary<string, JsonObject>> _newAssets = new();
         private readonly Dictionary<string, Dictionary<string, string>> _renamedFrom = new();
         private readonly Dictionary<(string Object, int Type, uint Subtype), (UndertaleCode Code, string Name)> _eventCode = new();
+        private readonly Dictionary<(string Room, uint Id, bool PreCreate), (UndertaleCode Code, string Name)> _instanceCode = new();
 
         public ExtractResult Run()
         {
@@ -153,8 +154,6 @@ public static class ModExtractor
             for (int i = 0; i < modded.GameObjects.Count; i++)
                 if (modded.GameObjects[i]?.Name?.Content is string objectName && original.GameObjects.ElementAtOrDefault(i)?.Name?.Content != objectName)
                     movedObjects[i] = objectName;
-            HashSet<UndertaleCode> addedInstanceCode = AddedInstances().SelectMany(a => new[] { a.Instance.CreationCode, a.Instance.PreCreateCode })
-                                                                        .OfType<UndertaleCode>().ToHashSet();
             var sharedNames = modded.Code.Where(c => c?.ParentEntry is null && c.Name?.Content is not null)
                                          .GroupBy(c => c.Name.Content).Where(g => g.Count() > 1).Select(g => g.Key).ToHashSet();
             foreach (UndertaleGameObject obj in modded.GameObjects)
@@ -163,10 +162,27 @@ public static class ModExtractor
                     continue;
                 for (int type = 0; type < obj.Events.Count; type++)
                     foreach (UndertaleGameObject.Event ev in obj.Events[type])
-                        if (ev.Actions.FirstOrDefault()?.CodeId is UndertaleCode eventCode && sharedNames.Contains(eventCode.Name.Content))
-                            _eventCode[(objectName, type, ev.EventSubtype)] = (eventCode, ObjectEvents.DefaultCodeName(modded, objectName, (EventType)type, ev.EventSubtype));
+                        if (ev.Actions.FirstOrDefault()?.CodeId is UndertaleCode eventCode
+                            && ObjectEvents.DefaultCodeName(modded, objectName, (EventType)type, ev.EventSubtype) is string standard
+                            && (sharedNames.Contains(eventCode.Name.Content) || eventCode.Name.Content != standard))
+                            _eventCode[(objectName, type, ev.EventSubtype)] = (eventCode, standard);
             }
-            var eventOnly = _eventCode.Values.Select(v => v.Code).ToHashSet();
+            foreach (UndertaleRoom room in modded.Rooms)
+            {
+                if (room?.Name?.Content is not string roomName || original.Rooms.ByName(OriginalName("rooms", roomName)) is not UndertaleRoom beforeRoom)
+                    continue;
+                foreach (UndertaleRoom.GameObject instance in room.GameObjects)
+                {
+                    UndertaleRoom.GameObject? was = beforeRoom.GameObjects.FirstOrDefault(g => g.InstanceID == instance.InstanceID);
+                    foreach ((UndertaleCode? code, UndertaleCode? wasCode, bool pre) in new[] { (instance.CreationCode, was?.CreationCode, false), (instance.PreCreateCode, was?.PreCreateCode, true) })
+                    {
+                        string standard = $"gml_RoomCC_{roomName}_{instance.InstanceID}_{(pre ? "PreCreate" : "Create")}";
+                        if (code?.Name?.Content is string codeName && codeName != standard && (was is null || NameOf(wasCode) != codeName))
+                            _instanceCode[(roomName, instance.InstanceID, pre)] = (code, standard);
+                    }
+                }
+            }
+            var eventOnly = _eventCode.Values.Select(v => v.Code).Concat(_instanceCode.Values.Select(v => v.Code)).ToHashSet();
 
             var scriptCodeNames = new Dictionary<UndertaleCode, (string Script, string CodeName)>();
             if (!modded.IsVersionAtLeast(2, 3))
@@ -188,8 +204,6 @@ public static class ModExtractor
                 UndertaleCode? before = original.Code.ByName(OriginalCodeName(codeName));
                 string moddedText = Disassemble(modded, code);
                 if (before is not null && Disassemble(original, before) == moddedText)
-                    continue;
-                if (before is null && addedInstanceCode.Contains(code))
                     continue;
                 if (!used.Contains(code))
                 {
@@ -216,6 +230,24 @@ public static class ModExtractor
                 if (codeName != name)
                     _notConverted.Add($"Note: script '{renamed.Script}' runs code named '{name}'. The mod names it '{codeName}', so calls to {renamed.Script}() find it.");
             }
+            foreach (((string roomName, uint id, bool pre), (UndertaleCode code, string codeName)) in _instanceCode)
+            {
+                string gml;
+                try
+                {
+                    gml = new Underanalyzer.Decompiler.DecompileContext(decompileContext, code, modded.ToolInfo.DecompilerSettings).DecompileToString();
+                }
+                catch (Exception ex)
+                {
+                    _notConverted.Add($"Code '{code.Name.Content}' for instance {id} in room '{roomName}' could not be decompiled: {ex.Message}");
+                    continue;
+                }
+                File.WriteAllText(FilePath("code", codeName + ".gml"), NameObjectNumbers(codeName, gml, movedObjects));
+                Count("code");
+                DeclareNew("code", codeName);
+            }
+            if (_instanceCode.Count > 0)
+                _notConverted.Add($"Note: {_instanceCode.Count} room instances run creation code that isn't named gml_RoomCC_<room>_<id> ({string.Join(", ", _instanceCode.Values.Select(v => $"'{v.Code.Name.Content}'").Distinct())}). It's written under that standard name instead.");
             foreach (((string objectName, int type, uint subtype), (UndertaleCode code, string codeName)) in _eventCode)
             {
                 string gml;
@@ -234,7 +266,7 @@ public static class ModExtractor
                     DeclareNew("code", codeName);
             }
             if (_eventCode.Count > 0)
-                _notConverted.Add($"Note: {_eventCode.Count} object events run code entries that share a name with other code ({string.Join(", ", _eventCode.Values.Select(v => $"'{v.Code.Name.Content}'").Distinct())}). Each event's code is written under its own event name, so none overwrite each other.");
+                _notConverted.Add($"Note: {_eventCode.Count} object events run code that isn't named after the event, or shares a name with other code ({string.Join(", ", _eventCode.Values.Select(v => $"'{v.Code.Name.Content}'").Distinct().Take(8))}{(_eventCode.Values.Select(v => v.Code.Name.Content).Distinct().Count() > 8 ? ", ..." : "")}). Each event's code is written under its own event name.");
             Removed(original.Code.Where(c => c?.ParentEntry is null), n => modded.Code.ByName(n) is not null || CodeRenamedAway(n) || _eventCode.Values.Any(v => v.Name == n), "Code", _notConverted);
         }
 
@@ -783,19 +815,6 @@ public static class ModExtractor
             return string.Join("|", parts);
         }
 
-        private IEnumerable<(UndertaleRoom Room, UndertaleRoom.GameObject Instance)> AddedInstances()
-        {
-            foreach (UndertaleRoom room in modded.Rooms)
-            {
-                if (room?.Name?.Content is not string name || original.Rooms.ByName(OriginalName("rooms", name)) is not UndertaleRoom before)
-                    continue;
-                var ids = before.GameObjects.Select(g => g.InstanceID).ToHashSet();
-                foreach (UndertaleRoom.GameObject instance in room.GameObjects)
-                    if (!ids.Contains(instance.InstanceID))
-                        yield return (room, instance);
-            }
-        }
-
         private void Rooms()
         {
             foreach (UndertaleRoom room in modded.Rooms)
@@ -823,6 +842,11 @@ public static class ModExtractor
             Removed(original.Rooms, n => modded.Rooms.ByName(n) is not null || RenamedAway("rooms", n), "Room", _notConverted);
         }
 
+        private string? InstanceCodeName(string room, UndertaleRoom.GameObject instance, bool pre) =>
+            _instanceCode.TryGetValue((room, instance.InstanceID, pre), out var renamed)
+                ? renamed.Name
+                : NameOf(pre ? instance.PreCreateCode : instance.CreationCode);
+
         private RoomJson RoomPatch(UndertaleRoom before, UndertaleRoom room, string name)
         {
             var patch = new RoomJson();
@@ -836,8 +860,6 @@ public static class ModExtractor
             {
                 if (beforeById.TryGetValue(now.InstanceID, out UndertaleRoom.GameObject? was))
                 {
-                    if (NameOf(was.CreationCode) != NameOf(now.CreationCode) || NameOf(was.PreCreateCode) != NameOf(now.PreCreateCode))
-                        _notConverted.Add($"Instance {now.InstanceID} in room '{name}' points at different creation code; that wasn't converted.");
                     if (layered && RoomLayers.LayerOf(before, was)?.LayerName?.Content != RoomLayers.LayerOf(room, now)?.LayerName?.Content)
                         _notConverted.Add($"Instance {now.InstanceID} in room '{name}' moved to another layer; that wasn't converted.");
 
@@ -852,6 +874,8 @@ public static class ModExtractor
                     if (was.Color != now.Color) { change.Color = now.Color; changed = true; }
                     if (was.ImageIndex != now.ImageIndex) { change.ImageIndex = now.ImageIndex; changed = true; }
                     if (was.ImageSpeed != now.ImageSpeed) { change.ImageSpeed = now.ImageSpeed; changed = true; }
+                    if (NameOf(was.CreationCode) != NameOf(now.CreationCode)) { change.CreationCode = InstanceCodeName(name, now, false) ?? ""; changed = true; }
+                    if (NameOf(was.PreCreateCode) != NameOf(now.PreCreateCode)) { change.PreCreateCode = InstanceCodeName(name, now, true) ?? ""; changed = true; }
                     if (changed)
                         patch.Change.Add(change);
                     continue;
@@ -860,11 +884,6 @@ public static class ModExtractor
                 if (now.ObjectDefinition?.Name?.Content is not string objectName)
                 {
                     _notConverted.Add($"Added instance {now.InstanceID} in room '{name}' has no object, so it wasn't converted.");
-                    continue;
-                }
-                if (now.CreationCode is not null || now.PreCreateCode is not null)
-                {
-                    _notConverted.Add($"Added instance {now.InstanceID} ({objectName}) in room '{name}' has its own creation code; PJUM can't add that yet, so the instance wasn't converted.");
                     continue;
                 }
                 patch.Add.Add(new RoomInstanceJson
@@ -878,7 +897,9 @@ public static class ModExtractor
                     Color = now.Color != 0xFFFFFFFF ? now.Color : null,
                     ImageIndex = now.ImageIndex != 0 ? now.ImageIndex : null,
                     ImageSpeed = now.ImageSpeed != 0 ? now.ImageSpeed : null,
-                    Layer = layered ? RoomLayers.LayerOf(room, now)?.LayerName?.Content : null
+                    Layer = layered ? RoomLayers.LayerOf(room, now)?.LayerName?.Content : null,
+                    CreationCode = InstanceCodeName(name, now, false),
+                    PreCreateCode = InstanceCodeName(name, now, true)
                 });
             }
 
