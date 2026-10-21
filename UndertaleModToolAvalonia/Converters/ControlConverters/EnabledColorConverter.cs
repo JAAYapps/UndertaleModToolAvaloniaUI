@@ -16,11 +16,16 @@ public class EnabledColorConverter : IValueConverter
         {
             return Brushes.Gray;
         }
-            
-        // Default
-        return AvaloniaProperty.UnsetValue; 
+
+        if (Application.Current!.TryGetResource("TreeViewItemForeground", Application.Current.ActualThemeVariant, out var brush))
+            return brush;
+        if (Application.Current.ActualThemeVariant == ThemeVariant.Dark)
+        {
+            return Brushes.White;
+        }
+
+        return Brushes.Black;
     }
 
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) 
-        => throw new NotSupportedException();
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
