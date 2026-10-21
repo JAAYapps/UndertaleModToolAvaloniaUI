@@ -75,9 +75,12 @@ public static class ModExtractor
             return new ExtractResult(modDirectory, _written, _notConverted);
         }
 
+        private static bool IsUsableName(string name) =>
+            name.Length > 0 && name.Trim() == name && name.IndexOfAny(['/', '\\', ':', '*', '?', '"', '<', '>', '|', '\0']) < 0;
+
         private bool UsableName(string name, string kind)
         {
-            if (name.Length > 0 && name.Trim() == name && name.IndexOfAny(['/', '\\', ':', '*', '?', '"', '<', '>', '|', '\0']) < 0)
+            if (IsUsableName(name))
                 return true;
             _notConverted.Add(name.Length == 0
                 ? $"A {kind.ToLowerInvariant()} with no name can't be a file in a mod, so it wasn't converted."
@@ -192,6 +195,7 @@ public static class ModExtractor
                     }
                 }
             }
+            var unused = new List<string>();
             var eventOnly = _eventCode.Values.Select(v => v.Code).Concat(_instanceCode.Values.Select(v => v.Code)).ToHashSet();
 
             var scriptCodeNames = new Dictionary<UndertaleCode, (string Script, string CodeName)>();
@@ -217,7 +221,7 @@ public static class ModExtractor
                     continue;
                 if (!used.Contains(code))
                 {
-                    _notConverted.Add($"Code '{name}' isn't used by any object, script, room or timeline in the modded file, so it was skipped.");
+                    unused.Add(name);
                     continue;
                 }
 
@@ -239,6 +243,14 @@ public static class ModExtractor
                     DeclareNew("code", codeName);
                 if (codeName != name)
                     _notConverted.Add($"Note: script '{renamed.Script}' runs code named '{name}'. The mod names it '{codeName}', so calls to {renamed.Script}() find it.");
+            }
+            if (unused.Count > 0)
+            {
+                var names = unused.Distinct().ToList();
+                _notConverted.Add((unused.Count == 1
+                                      ? "1 code entry isn't used by any object, script, room or timeline in the modded file, so it was skipped: "
+                                      : $"{unused.Count} code entries aren't used by any object, script, room or timeline in the modded file, so they were skipped: ") +
+                                  string.Join(", ", names.Take(10).Select(n => $"'{n}'")) + (names.Count > 10 ? $" and {names.Count - 10} more" : "") + ".");
             }
             foreach (((string roomName, uint id, bool pre), (UndertaleCode code, string codeName)) in _instanceCode)
             {
@@ -421,8 +433,18 @@ public static class ModExtractor
             {
                 if (sprite?.Name?.Content is not string name)
                     continue;
-                if (!UsableName(name, "Sprite"))
-                    continue;
+                if (!IsUsableName(name))
+                {
+                    if (original.Sprites.ByName(name) is not null)
+                    {
+                        UsableName(name, "Sprite");
+                        continue;
+                    }
+                    int number = modded.Sprites.IndexOf(sprite);
+                    string placeholder = $"pjum_unnamed_sprite_{number}";
+                    _notConverted.Add($"Sprite #{number} has no usable name ('{name}'); it's written as '{placeholder}' so the sprites after it keep their numbers.");
+                    name = placeholder;
+                }
                 UndertaleSprite? before = original.Sprites.ByName(OriginalName("sprites", name));
                 bool resized = before is null || before.Width != sprite.Width || before.Height != sprite.Height;
 
@@ -719,6 +741,15 @@ public static class ModExtractor
         {
             string? file = sound.File?.Content;
             string? moddedFile = FindLooseFile(moddedFolder, file);
+            if (moddedFile is null && before is null)
+            {
+                var silent = new SoundJson { Type = ".ogg", Embedded = false, Volume = sound.Volume, Pitch = sound.Pitch, Effects = sound.Effects };
+                File.WriteAllText(FilePath("sounds", name + ".json"), JsonSerializer.Serialize(silent, JsonOptions));
+                Count("streamed sounds");
+                DeclareNew("sounds", name);
+                _notConverted.Add($"New streamed sound '{name}' plays '{file}', which isn't in the modded game's folder either; it's added without audio, so the sounds after it keep their numbers.");
+                return;
+            }
             if (moddedFile is null)
             {
                 bool changed = before is null || before.File?.Content != file || before.Volume != sound.Volume || before.Pitch != sound.Pitch;
@@ -1121,7 +1152,7 @@ public static class ModExtractor
                 foreach ((string category, var byName) in _newAssets.OrderBy(p => p.Key, StringComparer.Ordinal))
                 {
                     var entries = new JsonObject();
-                    foreach ((string name, JsonObject properties) in byName.OrderBy(p => p.Key, StringComparer.Ordinal))
+                    foreach ((string name, JsonObject properties) in byName)
                         entries[name] = properties;
                     newAssets[category] = entries;
                 }
