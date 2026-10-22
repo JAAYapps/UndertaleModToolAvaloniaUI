@@ -37,6 +37,15 @@ public sealed class RoomSettingsJson
     [JsonPropertyName("enableViews")] public bool? EnableViews { get; set; }
     [JsonPropertyName("clearViewBackground")] public bool? ClearViewBackground { get; set; }
     [JsonPropertyName("doNotClearDisplayBuffer")] public bool? DoNotClearDisplayBuffer { get; set; }
+    [JsonPropertyName("creationCode")] public string? CreationCode { get; set; }
+    [JsonPropertyName("physicsWorld")] public bool? PhysicsWorld { get; set; }
+    [JsonPropertyName("physicsTop")] public uint? PhysicsTop { get; set; }
+    [JsonPropertyName("physicsLeft")] public uint? PhysicsLeft { get; set; }
+    [JsonPropertyName("physicsRight")] public uint? PhysicsRight { get; set; }
+    [JsonPropertyName("physicsBottom")] public uint? PhysicsBottom { get; set; }
+    [JsonPropertyName("gravityX")] public float? GravityX { get; set; }
+    [JsonPropertyName("gravityY")] public float? GravityY { get; set; }
+    [JsonPropertyName("metersPerPixel")] public float? MetersPerPixel { get; set; }
 }
 
 public sealed class RoomBackgroundJson

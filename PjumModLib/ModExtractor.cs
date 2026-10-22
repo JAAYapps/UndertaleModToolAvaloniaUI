@@ -835,9 +835,7 @@ public static class ModExtractor
         {
             var parts = new List<string>
             {
-                $"flags {room.Flags & ~CarriedFlags}",
-                $"world {room.World} {room.Top},{room.Left},{room.Right},{room.Bottom} gravity {room.GravityX},{room.GravityY} {room.MetersPerPixel}",
-                $"code {NameOf(room.CreationCodeId)}"
+                $"flags {room.Flags & ~CarriedFlags}"
             };
             return string.Join("|", parts);
         }
@@ -860,7 +858,7 @@ public static class ModExtractor
                         _notConverted.Add($"New room '{name}' isn't in the modded game's room order; PJUM adds new rooms to the end of the room order.");
                 }
                 if (RoomFingerprint(before) != RoomFingerprint(room))
-                    _notConverted.Add($"Room '{name}' has changes PJUM can't carry yet (room creation code or physics settings); those weren't converted.");
+                    _notConverted.Add($"Room '{name}' has changes PJUM can't carry yet (room flags that only change with the GameMaker version); those weren't converted.");
 
                 RoomJson patch = RoomPatch(before, room, name);
                 if (!isNew && patch.Add.Count == 0 && patch.Change.Count == 0 && patch.Remove.Count == 0
@@ -1279,6 +1277,16 @@ public static class ModExtractor
             if (Flag(before, UndertaleRoom.RoomEntryFlags.EnableViews) != Flag(room, UndertaleRoom.RoomEntryFlags.EnableViews)) { settings.EnableViews = Flag(room, UndertaleRoom.RoomEntryFlags.EnableViews); anySetting = true; }
             if (Flag(before, UndertaleRoom.RoomEntryFlags.ClearViewBackground) != Flag(room, UndertaleRoom.RoomEntryFlags.ClearViewBackground)) { settings.ClearViewBackground = Flag(room, UndertaleRoom.RoomEntryFlags.ClearViewBackground); anySetting = true; }
             if (Flag(before, UndertaleRoom.RoomEntryFlags.DoNotClearDisplayBuffer) != Flag(room, UndertaleRoom.RoomEntryFlags.DoNotClearDisplayBuffer)) { settings.DoNotClearDisplayBuffer = Flag(room, UndertaleRoom.RoomEntryFlags.DoNotClearDisplayBuffer); anySetting = true; }
+            string? roomCode = NameOf(room.CreationCodeId);
+            if (NameOf(before.CreationCodeId) != (roomCode is null ? null : OriginalCodeName(roomCode))) { settings.CreationCode = roomCode ?? ""; anySetting = true; }
+            if (before.World != room.World) { settings.PhysicsWorld = room.World; anySetting = true; }
+            if (before.Top != room.Top) { settings.PhysicsTop = room.Top; anySetting = true; }
+            if (before.Left != room.Left) { settings.PhysicsLeft = room.Left; anySetting = true; }
+            if (before.Right != room.Right) { settings.PhysicsRight = room.Right; anySetting = true; }
+            if (before.Bottom != room.Bottom) { settings.PhysicsBottom = room.Bottom; anySetting = true; }
+            if (before.GravityX != room.GravityX) { settings.GravityX = room.GravityX; anySetting = true; }
+            if (before.GravityY != room.GravityY) { settings.GravityY = room.GravityY; anySetting = true; }
+            if (before.MetersPerPixel != room.MetersPerPixel) { settings.MetersPerPixel = room.MetersPerPixel; anySetting = true; }
             if (anySetting)
                 patch.Settings = settings;
 
