@@ -826,35 +826,19 @@ public static class ModExtractor
             return copy;
         }
 
-        private static UndertaleRoom EmptyRoom() => new() { Caption = new UndertaleString("") };
+        private UndertaleRoom EmptyRoom() => RoomLayers.EmptyRoom(modded, text => new UndertaleString(text));
+
+        private const UndertaleRoom.RoomEntryFlags CarriedFlags =
+            UndertaleRoom.RoomEntryFlags.EnableViews | UndertaleRoom.RoomEntryFlags.ClearViewBackground | UndertaleRoom.RoomEntryFlags.DoNotClearDisplayBuffer;
 
         private static string RoomFingerprint(UndertaleRoom room)
         {
             var parts = new List<string>
             {
-                $"flags {room.Flags}",
+                $"flags {room.Flags & ~CarriedFlags}",
                 $"world {room.World} {room.Top},{room.Left},{room.Right},{room.Bottom} gravity {room.GravityX},{room.GravityY} {room.MetersPerPixel}",
                 $"code {NameOf(room.CreationCodeId)}"
             };
-            foreach (var layer in room.Layers ?? [])
-            {
-                parts.Add($"layer {layer.LayerName?.Content} {layer.LayerId} {layer.LayerType} {layer.LayerDepth} {layer.XOffset},{layer.YOffset} {layer.HSpeed},{layer.VSpeed} {layer.IsVisible}");
-                switch (layer.Data)
-                {
-                    case UndertaleRoom.Layer.LayerBackgroundData bg:
-                        parts.Add($"  bg {NameOf(bg.Sprite)} {bg.Visible} {bg.Foreground} {bg.TiledHorizontally},{bg.TiledVertically} {bg.Stretch} {bg.Color} {bg.FirstFrame} {bg.AnimationSpeed}");
-                        break;
-                    case UndertaleRoom.Layer.LayerTilesData tiles:
-                        parts.Add($"  tiles {NameOf(tiles.Background)} {tiles.TilesX}x{tiles.TilesY} {string.Join(",", (tiles.TileData ?? []).SelectMany(row => row ?? []))}");
-                        break;
-                    case UndertaleRoom.Layer.LayerAssetsData assets:
-                        foreach (var tile in assets.LegacyTiles ?? [])
-                            parts.Add($"  tile {NameOf(tile.ObjectDefinition)} {tile.X},{tile.Y} {tile.SourceX},{tile.SourceY} {tile.Width}x{tile.Height} {tile.TileDepth}");
-                        foreach (var sprite in assets.Sprites ?? [])
-                            parts.Add($"  sprite {sprite.Name?.Content} {NameOf(sprite.Sprite)} {sprite.X},{sprite.Y} {sprite.ScaleX},{sprite.ScaleY} {sprite.Color} {sprite.Rotation}");
-                        break;
-                }
-            }
             return string.Join("|", parts);
         }
 
@@ -870,22 +854,18 @@ public static class ModExtractor
                 bool isNew = before is null;
                 if (isNew)
                 {
-                    if (room.Layers is { Count: > 0 })
-                    {
-                        _notConverted.Add($"Room '{name}' is new and uses layers; PJUM can only create rooms in GameMaker 1 games so far.");
-                        continue;
-                    }
                     before = EmptyRoom();
                     DeclareNew("rooms", name);
                     if (!modded.GeneralInfo.RoomOrder.Any(r => r.Resource == room))
                         _notConverted.Add($"New room '{name}' isn't in the modded game's room order; PJUM adds new rooms to the end of the room order.");
                 }
                 if (RoomFingerprint(before) != RoomFingerprint(room))
-                    _notConverted.Add($"Room '{name}' has changes PJUM can't carry yet (room creation code, physics settings or layers); those weren't converted.");
+                    _notConverted.Add($"Room '{name}' has changes PJUM can't carry yet (room creation code or physics settings); those weren't converted.");
 
                 RoomJson patch = RoomPatch(before, room, name);
                 if (!isNew && patch.Add.Count == 0 && patch.Change.Count == 0 && patch.Remove.Count == 0
-                    && patch.Settings is null && patch.Backgrounds is null && patch.Views is null && patch.Tiles is null)
+                    && patch.Settings is null && patch.Backgrounds is null && patch.Views is null && patch.Tiles is null
+                    && patch.Layers is null && patch.RemoveLayers is null)
                     continue;
                 File.WriteAllText(FilePath("rooms", name + ".json"), JsonSerializer.Serialize(patch, RoomJson.JsonOptions));
                 Count("rooms");
@@ -916,13 +896,13 @@ public static class ModExtractor
             return result;
         }
 
-        private static int ReorderedOverlappingTiles(UndertaleRoom before, UndertaleRoom room, Dictionary<uint, UndertaleRoom.Tile> beforeTiles, HashSet<uint> afterTileIds)
+        private static int ReorderedOverlappingTiles(IList<UndertaleRoom.Tile> before, IList<UndertaleRoom.Tile> after, Dictionary<uint, UndertaleRoom.Tile> beforeTiles, HashSet<uint> afterTileIds)
         {
             var oldPosition = new Dictionary<uint, int>();
-            foreach (UndertaleRoom.Tile tile in before.Tiles)
+            foreach (UndertaleRoom.Tile tile in before)
                 if (afterTileIds.Contains(tile.InstanceID))
                     oldPosition.TryAdd(tile.InstanceID, oldPosition.Count);
-            var kept = room.Tiles.Where(t => beforeTiles.ContainsKey(t.InstanceID)).ToList();
+            var kept = after.Where(t => beforeTiles.ContainsKey(t.InstanceID)).ToList();
             static bool Overlap(UndertaleRoom.Tile a, UndertaleRoom.Tile b) =>
                 a.X < b.X + b.Width * b.ScaleX && b.X < a.X + a.Width * a.ScaleX && a.Y < b.Y + b.Height * b.ScaleY && b.Y < a.Y + a.Height * a.ScaleY;
             int pairs = 0;
@@ -933,6 +913,295 @@ public static class ModExtractor
             return pairs;
         }
 
+        private static string?[] AfterNames(IReadOnlyList<string> names, Func<string, bool> kept)
+        {
+            var result = new string?[names.Count];
+            int lastKept = -1;
+            for (int i = 0; i < names.Count; i++)
+                if (kept(names[i]))
+                    lastKept = i;
+            string anchor = "";
+            for (int i = 0; i < names.Count; i++)
+            {
+                if (kept(names[i]))
+                    anchor = names[i];
+                else
+                    result[i] = i > lastKept ? null : anchor;
+            }
+            return result;
+        }
+
+        private string AssetName(UndertaleNamedResource? resource, string category, bool fromModded) =>
+            resource?.Name?.Content is string n ? (fromModded ? OriginalName(category, n) : n) : "";
+
+        private RoomTilesJson? TilesPatch(IList<UndertaleRoom.Tile> beforeList, IList<UndertaleRoom.Tile> afterList, string name, bool sprites)
+        {
+            string Asset(UndertaleRoom.Tile t, bool fromModded) =>
+                sprites ? AssetName(t.SpriteDefinition, "sprites", fromModded) : AssetName(t.BackgroundDefinition, "backgrounds", fromModded);
+            var tiles = new RoomTilesJson();
+            var beforeTiles = new Dictionary<uint, UndertaleRoom.Tile>();
+            foreach (UndertaleRoom.Tile tile in beforeList)
+                beforeTiles.TryAdd(tile.InstanceID, tile);
+            var afterTileIds = afterList.Select(t => t.InstanceID).ToHashSet();
+            uint?[] tileAfter = AfterAnchors(afterList.Select(t => t.InstanceID).ToList(), beforeTiles.ContainsKey);
+            int tilePosition = -1;
+            foreach (UndertaleRoom.Tile now in afterList)
+            {
+                tilePosition++;
+                if (beforeTiles.TryGetValue(now.InstanceID, out UndertaleRoom.Tile? was))
+                {
+                    var change = new RoomTileJson { Id = now.InstanceID };
+                    bool changed = false;
+                    if (Asset(was, false) != Asset(now, true))
+                    {
+                        if (sprites) change.Sprite = now.SpriteDefinition?.Name?.Content;
+                        else change.Background = now.BackgroundDefinition?.Name?.Content;
+                        changed = true;
+                    }
+                    if (was.X != now.X) { change.X = now.X; changed = true; }
+                    if (was.Y != now.Y) { change.Y = now.Y; changed = true; }
+                    if (was.SourceX != now.SourceX) { change.SourceX = now.SourceX; changed = true; }
+                    if (was.SourceY != now.SourceY) { change.SourceY = now.SourceY; changed = true; }
+                    if (was.Width != now.Width) { change.Width = now.Width; changed = true; }
+                    if (was.Height != now.Height) { change.Height = now.Height; changed = true; }
+                    if (was.TileDepth != now.TileDepth) { change.Depth = now.TileDepth; changed = true; }
+                    if (was.ScaleX != now.ScaleX) { change.ScaleX = now.ScaleX; changed = true; }
+                    if (was.ScaleY != now.ScaleY) { change.ScaleY = now.ScaleY; changed = true; }
+                    if (was.Color != now.Color) { change.Color = now.Color; changed = true; }
+                    if (changed)
+                        tiles.Change.Add(change);
+                    continue;
+                }
+                string? asset = sprites ? now.SpriteDefinition?.Name?.Content : now.BackgroundDefinition?.Name?.Content;
+                if (asset is null)
+                {
+                    _notConverted.Add($"Added tile {now.InstanceID} in room '{name}' has no {(sprites ? "sprite" : "background")}, so it wasn't converted.");
+                    continue;
+                }
+                tiles.Add.Add(new RoomTileJson
+                {
+                    Background = sprites ? null : asset, Sprite = sprites ? asset : null,
+                    X = now.X, Y = now.Y, SourceX = now.SourceX, SourceY = now.SourceY,
+                    Width = now.Width, Height = now.Height, Depth = now.TileDepth,
+                    ScaleX = now.ScaleX != 1 ? now.ScaleX : null, ScaleY = now.ScaleY != 1 ? now.ScaleY : null,
+                    Color = now.Color != 0xFFFFFFFF ? now.Color : null,
+                    After = tileAfter[tilePosition]
+                });
+            }
+            foreach (uint id in beforeTiles.Keys)
+                if (!afterTileIds.Contains(id))
+                    tiles.Remove.Add(id);
+            if (ReorderedOverlappingTiles(beforeList, afterList, beforeTiles, afterTileIds) is int pairs && pairs > 0)
+                _notConverted.Add($"Room '{name}' also reorders {pairs} pair(s) of existing tiles that overlap at the same depth; that order isn't carried, so they may overlap the other way round.");
+            return tiles.Add.Count > 0 || tiles.Change.Count > 0 || tiles.Remove.Count > 0 ? tiles : null;
+        }
+
+        private string UncarriedLayerParts(UndertaleRoom.Layer layer)
+        {
+            var parts = new List<string> { $"effect {layer.EffectEnabled} {layer.EffectType?.Content}" };
+            foreach (UndertaleRoom.EffectProperty property in layer.EffectProperties ?? [])
+                parts.Add($"property {property.Kind} {property.Name?.Content}={property.Value?.Content}");
+            if (layer.AssetsData is UndertaleRoom.Layer.LayerAssetsData assets)
+            {
+                foreach (UndertaleRoom.SequenceInstance sequence in assets.Sequences ?? [])
+                    parts.Add($"sequence {sequence.Name?.Content} {NameOf(sequence.Sequence)} {sequence.X},{sequence.Y} {sequence.ScaleX},{sequence.ScaleY} {sequence.Color} {sequence.AnimationSpeed} {sequence.FrameIndex} {sequence.Rotation}");
+                parts.Add($"nine slices {assets.NineSlices?.Count ?? 0} particle systems {assets.ParticleSystems?.Count ?? 0} text items {assets.TextItems?.Count ?? 0}");
+            }
+            return string.Join("|", parts);
+        }
+
+        private void LayerPatch(UndertaleRoom before, UndertaleRoom room, string name, RoomJson patch)
+        {
+            var beforeLayers = new Dictionary<string, UndertaleRoom.Layer>();
+            foreach (UndertaleRoom.Layer layer in before.Layers ?? [])
+                if (layer.LayerName?.Content is string layerName)
+                    beforeLayers.TryAdd(layerName, layer);
+            var afterNames = (room.Layers ?? []).Select(l => l.LayerName?.Content).OfType<string>().ToHashSet();
+            foreach (string layerName in beforeLayers.Keys)
+                if (!afterNames.Contains(layerName))
+                    (patch.RemoveLayers ??= new()).Add(layerName);
+
+            var blank = new UndertaleRoom.Layer
+            {
+                EffectEnabled = modded.IsVersionAtLeast(2022, 1),
+                Data = new UndertaleRoom.Layer.LayerAssetsData
+                {
+                    Sequences = modded.IsVersionAtLeast(2, 3) ? new() : null,
+                    NineSlices = modded.IsVersionAtLeast(2, 3) && !modded.IsVersionAtLeast(2, 3, 2) ? new() : null,
+                    ParticleSystems = modded.IsVersionAtLeast(2, 3) && modded.IsNonLTSVersionAtLeast(2023, 2) ? new() : null,
+                    TextItems = modded.IsVersionAtLeast(2024, 6) ? new() : null
+                }
+            };
+
+            foreach (UndertaleRoom.Layer now in room.Layers ?? [])
+            {
+                if (now.LayerName?.Content is not string layerName)
+                {
+                    _notConverted.Add($"Room '{name}' has a layer with no name; it wasn't converted.");
+                    continue;
+                }
+                beforeLayers.TryGetValue(layerName, out UndertaleRoom.Layer? was);
+                if (was is not null && was.LayerType != now.LayerType)
+                {
+                    (patch.RemoveLayers ??= new()).Add(layerName);
+                    was = null;
+                }
+                if (!RoomLayers.CarriedTypes.Contains(now.LayerType))
+                {
+                    if (was is null || UncarriedLayerParts(was) != UncarriedLayerParts(now) || was.LayerDepth != now.LayerDepth || was.IsVisible != now.IsVisible)
+                        _notConverted.Add($"Layer '{layerName}' in room '{name}' is an {now.LayerType} layer; PJUM can't carry those yet, so it wasn't converted.");
+                    continue;
+                }
+                string expected = was is null
+                    ? UncarriedLayerParts(new UndertaleRoom.Layer { EffectEnabled = blank.EffectEnabled, Data = now.LayerType == UndertaleRoom.LayerType.Assets ? blank.Data : null })
+                    : UncarriedLayerParts(was);
+                if (UncarriedLayerParts(now) != expected)
+                    _notConverted.Add($"Layer '{layerName}' in room '{name}' has effect or sequence settings PJUM can't carry yet; those weren't converted.");
+
+                var json = new RoomLayerJson { Name = layerName };
+                bool changed = was is null;
+                if (was is null)
+                {
+                    json.New = true;
+                    json.Type = now.LayerType.ToString();
+                    json.Depth = now.LayerDepth;
+                    json.Visible = now.IsVisible ? null : false;
+                    json.X = now.XOffset != 0 ? now.XOffset : null;
+                    json.Y = now.YOffset != 0 ? now.YOffset : null;
+                    json.HSpeed = now.HSpeed != 0 ? now.HSpeed : null;
+                    json.VSpeed = now.VSpeed != 0 ? now.VSpeed : null;
+                }
+                else
+                {
+                    if (was.LayerDepth != now.LayerDepth) { json.Depth = now.LayerDepth; changed = true; }
+                    if (was.IsVisible != now.IsVisible) { json.Visible = now.IsVisible; changed = true; }
+                    if (was.XOffset != now.XOffset) { json.X = now.XOffset; changed = true; }
+                    if (was.YOffset != now.YOffset) { json.Y = now.YOffset; changed = true; }
+                    if (was.HSpeed != now.HSpeed) { json.HSpeed = now.HSpeed; changed = true; }
+                    if (was.VSpeed != now.VSpeed) { json.VSpeed = now.VSpeed; changed = true; }
+                }
+
+                if (now.TilesData is UndertaleRoom.Layer.LayerTilesData nowTiles)
+                {
+                    json.Grid = GridPatch(was?.TilesData, nowTiles);
+                    changed |= json.Grid is not null;
+                }
+                if (now.BackgroundData is UndertaleRoom.Layer.LayerBackgroundData nowBackground)
+                {
+                    json.Background = BackgroundLayerPatch(was?.BackgroundData, nowBackground);
+                    changed |= json.Background is not null;
+                }
+                if (now.AssetsData is UndertaleRoom.Layer.LayerAssetsData nowAssets)
+                {
+                    json.Tiles = TilesPatch(was?.AssetsData?.LegacyTiles ?? [], nowAssets.LegacyTiles ?? [], name, true);
+                    json.Sprites = SpritesPatch(was?.AssetsData?.Sprites ?? [], nowAssets.Sprites ?? [], layerName, name);
+                    changed |= json.Tiles is not null || json.Sprites is not null;
+                }
+                if (changed)
+                    (patch.Layers ??= new()).Add(json);
+            }
+        }
+
+        private RoomGridJson? GridPatch(UndertaleRoom.Layer.LayerTilesData? was, UndertaleRoom.Layer.LayerTilesData now)
+        {
+            var grid = new RoomGridJson();
+            bool changed = false;
+            if (was is null || AssetName(was.Background, "backgrounds", false) != AssetName(now.Background, "backgrounds", true))
+            {
+                grid.Tileset = now.Background?.Name?.Content ?? "";
+                changed = true;
+            }
+            uint[][] rows = now.TileData ?? [];
+            if (was is null || was.TilesX != now.TilesX || was.TilesY != now.TilesY)
+            {
+                grid.Rows = rows.Select(r => (uint[])r.Clone()).ToArray();
+                return grid;
+            }
+            var cells = new List<uint[]>();
+            for (uint y = 0; y < now.TilesY; y++)
+                for (uint x = 0; x < now.TilesX; x++)
+                    if (was.TileData[y][x] != rows[y][x])
+                        cells.Add([x, y, rows[y][x]]);
+            if (cells.Count > (long)now.TilesX * now.TilesY / 2)
+                grid.Rows = rows.Select(r => (uint[])r.Clone()).ToArray();
+            else if (cells.Count > 0)
+                grid.Cells = cells.ToArray();
+            return changed || cells.Count > 0 ? grid : null;
+        }
+
+        private RoomLayerBackgroundJson? BackgroundLayerPatch(UndertaleRoom.Layer.LayerBackgroundData? was, UndertaleRoom.Layer.LayerBackgroundData now)
+        {
+            var json = new RoomLayerBackgroundJson();
+            bool changed = false;
+            if (was is null || AssetName(was.Sprite, "sprites", false) != AssetName(now.Sprite, "sprites", true)) { json.Sprite = now.Sprite?.Name?.Content ?? ""; changed = true; }
+            if (was is null || was.Visible != now.Visible) { json.Visible = now.Visible; changed = true; }
+            if (was is null || was.Foreground != now.Foreground) { json.Foreground = now.Foreground; changed = true; }
+            if (was is null || was.TiledHorizontally != now.TiledHorizontally) { json.TileX = now.TiledHorizontally; changed = true; }
+            if (was is null || was.TiledVertically != now.TiledVertically) { json.TileY = now.TiledVertically; changed = true; }
+            if (was is null || was.Stretch != now.Stretch) { json.Stretch = now.Stretch; changed = true; }
+            if (was is null || was.Color != now.Color) { json.Color = now.Color; changed = true; }
+            if (was is null || was.FirstFrame != now.FirstFrame) { json.FirstFrame = now.FirstFrame; changed = true; }
+            if (was is null || was.AnimationSpeed != now.AnimationSpeed) { json.AnimationSpeed = now.AnimationSpeed; changed = true; }
+            if (was is null || was.AnimationSpeedType != now.AnimationSpeedType) { json.AnimationSpeedType = (uint)now.AnimationSpeedType; changed = true; }
+            return changed ? json : null;
+        }
+
+        private RoomSpritesJson? SpritesPatch(IList<UndertaleRoom.SpriteInstance> beforeList, IList<UndertaleRoom.SpriteInstance> afterList, string layer, string name)
+        {
+            var sprites = new RoomSpritesJson();
+            var beforeByName = new Dictionary<string, UndertaleRoom.SpriteInstance>();
+            foreach (UndertaleRoom.SpriteInstance sprite in beforeList)
+                if (sprite.Name?.Content is string spriteName)
+                    beforeByName.TryAdd(spriteName, sprite);
+            var named = afterList.Where(s => s.Name?.Content is not null).ToList();
+            foreach (UndertaleRoom.SpriteInstance sprite in afterList.Except(named))
+                _notConverted.Add($"A sprite in layer '{layer}' of room '{name}' has no name, so it wasn't converted.");
+            var afterNames = named.Select(s => s.Name.Content).ToList();
+            string?[] after = AfterNames(afterNames, beforeByName.ContainsKey);
+            for (int i = 0; i < named.Count; i++)
+            {
+                UndertaleRoom.SpriteInstance now = named[i];
+                if (beforeByName.TryGetValue(afterNames[i], out UndertaleRoom.SpriteInstance? was))
+                {
+                    var change = new RoomSpriteJson { Name = afterNames[i] };
+                    bool changed = false;
+                    if (AssetName(was.Sprite, "sprites", false) != AssetName(now.Sprite, "sprites", true)) { change.Sprite = now.Sprite?.Name?.Content ?? ""; changed = true; }
+                    if (was.X != now.X) { change.X = now.X; changed = true; }
+                    if (was.Y != now.Y) { change.Y = now.Y; changed = true; }
+                    if (was.ScaleX != now.ScaleX) { change.ScaleX = now.ScaleX; changed = true; }
+                    if (was.ScaleY != now.ScaleY) { change.ScaleY = now.ScaleY; changed = true; }
+                    if (was.Color != now.Color) { change.Color = now.Color; changed = true; }
+                    if (was.AnimationSpeed != now.AnimationSpeed) { change.AnimationSpeed = now.AnimationSpeed; changed = true; }
+                    if (was.AnimationSpeedType != now.AnimationSpeedType) { change.AnimationSpeedType = (uint)now.AnimationSpeedType; changed = true; }
+                    if (was.FrameIndex != now.FrameIndex) { change.FrameIndex = now.FrameIndex; changed = true; }
+                    if (was.Rotation != now.Rotation) { change.Rotation = now.Rotation; changed = true; }
+                    if (changed)
+                        sprites.Change.Add(change);
+                    continue;
+                }
+                sprites.Add.Add(new RoomSpriteJson
+                {
+                    Name = afterNames[i],
+                    Sprite = now.Sprite?.Name?.Content,
+                    X = now.X,
+                    Y = now.Y,
+                    ScaleX = now.ScaleX != 1 ? now.ScaleX : null,
+                    ScaleY = now.ScaleY != 1 ? now.ScaleY : null,
+                    Color = now.Color != 0xFFFFFFFF ? now.Color : null,
+                    AnimationSpeed = now.AnimationSpeed != 1 ? now.AnimationSpeed : null,
+                    AnimationSpeedType = now.AnimationSpeedType != 0 ? (uint)now.AnimationSpeedType : null,
+                    FrameIndex = now.FrameIndex != 0 ? now.FrameIndex : null,
+                    Rotation = now.Rotation != 0 ? now.Rotation : null,
+                    After = after[i]
+                });
+            }
+            var afterSet = afterNames.ToHashSet();
+            foreach (string spriteName in beforeByName.Keys)
+                if (!afterSet.Contains(spriteName))
+                    sprites.Remove.Add(spriteName);
+            return sprites.Add.Count > 0 || sprites.Change.Count > 0 || sprites.Remove.Count > 0 ? sprites : null;
+        }
+
         private RoomJson RoomPatch(UndertaleRoom before, UndertaleRoom room, string name)
         {
             var patch = new RoomJson();
@@ -940,7 +1209,7 @@ public static class ModExtractor
             foreach (UndertaleRoom.GameObject instance in before.GameObjects)
                 beforeById.TryAdd(instance.InstanceID, instance);
             var afterIds = room.GameObjects.Select(g => g.InstanceID).ToHashSet();
-            bool layered = room.Layers is { Count: > 0 };
+            bool layered = modded.IsGameMaker2() || room.Layers is { Count: > 0 };
 
             uint?[] instanceAfter = AfterAnchors(room.GameObjects.Select(g => g.InstanceID).ToList(), beforeById.ContainsKey);
             int instancePosition = -1;
@@ -1006,6 +1275,10 @@ public static class ModExtractor
             if (before.BackgroundColor != room.BackgroundColor) { settings.BackgroundColor = room.BackgroundColor; anySetting = true; }
             if (before.DrawBackgroundColor != room.DrawBackgroundColor) { settings.DrawBackgroundColor = room.DrawBackgroundColor; anySetting = true; }
             if (before.Caption?.Content != room.Caption?.Content) { settings.Caption = room.Caption?.Content ?? ""; anySetting = true; }
+            bool Flag(UndertaleRoom r, UndertaleRoom.RoomEntryFlags flag) => r.Flags.HasFlag(flag);
+            if (Flag(before, UndertaleRoom.RoomEntryFlags.EnableViews) != Flag(room, UndertaleRoom.RoomEntryFlags.EnableViews)) { settings.EnableViews = Flag(room, UndertaleRoom.RoomEntryFlags.EnableViews); anySetting = true; }
+            if (Flag(before, UndertaleRoom.RoomEntryFlags.ClearViewBackground) != Flag(room, UndertaleRoom.RoomEntryFlags.ClearViewBackground)) { settings.ClearViewBackground = Flag(room, UndertaleRoom.RoomEntryFlags.ClearViewBackground); anySetting = true; }
+            if (Flag(before, UndertaleRoom.RoomEntryFlags.DoNotClearDisplayBuffer) != Flag(room, UndertaleRoom.RoomEntryFlags.DoNotClearDisplayBuffer)) { settings.DoNotClearDisplayBuffer = Flag(room, UndertaleRoom.RoomEntryFlags.DoNotClearDisplayBuffer); anySetting = true; }
             if (anySetting)
                 patch.Settings = settings;
 
@@ -1041,58 +1314,9 @@ public static class ModExtractor
             if (!layered && room.Tiles.Any(t => t.spriteMode))
                 _notConverted.Add($"Room '{name}' has tiles made from sprites; PJUM only carries tiles made from backgrounds, so its tiles weren't converted.");
             else if (!layered)
-            {
-                var tiles = new RoomTilesJson();
-                var beforeTiles = new Dictionary<uint, UndertaleRoom.Tile>();
-                foreach (UndertaleRoom.Tile tile in before.Tiles)
-                    beforeTiles.TryAdd(tile.InstanceID, tile);
-                var afterTileIds = room.Tiles.Select(t => t.InstanceID).ToHashSet();
-                uint?[] tileAfter = AfterAnchors(room.Tiles.Select(t => t.InstanceID).ToList(), beforeTiles.ContainsKey);
-                int tilePosition = -1;
-                foreach (UndertaleRoom.Tile now in room.Tiles)
-                {
-                    tilePosition++;
-                    if (beforeTiles.TryGetValue(now.InstanceID, out UndertaleRoom.Tile? was))
-                    {
-                        var change = new RoomTileJson { Id = now.InstanceID };
-                        bool changed = false;
-                        if (Bg(was.BackgroundDefinition, false) != Bg(now.BackgroundDefinition, true)) { change.Background = now.BackgroundDefinition?.Name?.Content; changed = true; }
-                        if (was.X != now.X) { change.X = now.X; changed = true; }
-                        if (was.Y != now.Y) { change.Y = now.Y; changed = true; }
-                        if (was.SourceX != now.SourceX) { change.SourceX = now.SourceX; changed = true; }
-                        if (was.SourceY != now.SourceY) { change.SourceY = now.SourceY; changed = true; }
-                        if (was.Width != now.Width) { change.Width = now.Width; changed = true; }
-                        if (was.Height != now.Height) { change.Height = now.Height; changed = true; }
-                        if (was.TileDepth != now.TileDepth) { change.Depth = now.TileDepth; changed = true; }
-                        if (was.ScaleX != now.ScaleX) { change.ScaleX = now.ScaleX; changed = true; }
-                        if (was.ScaleY != now.ScaleY) { change.ScaleY = now.ScaleY; changed = true; }
-                        if (was.Color != now.Color) { change.Color = now.Color; changed = true; }
-                        if (changed)
-                            tiles.Change.Add(change);
-                        continue;
-                    }
-                    if (now.BackgroundDefinition?.Name?.Content is not string tileBackground)
-                    {
-                        _notConverted.Add($"Added tile {now.InstanceID} in room '{name}' has no background, so it wasn't converted.");
-                        continue;
-                    }
-                    tiles.Add.Add(new RoomTileJson
-                    {
-                        Background = tileBackground, X = now.X, Y = now.Y, SourceX = now.SourceX, SourceY = now.SourceY,
-                        Width = now.Width, Height = now.Height, Depth = now.TileDepth,
-                        ScaleX = now.ScaleX != 1 ? now.ScaleX : null, ScaleY = now.ScaleY != 1 ? now.ScaleY : null,
-                        Color = now.Color != 0xFFFFFFFF ? now.Color : null,
-                        After = tileAfter[tilePosition]
-                    });
-                }
-                foreach (uint id in beforeTiles.Keys)
-                    if (!afterTileIds.Contains(id))
-                        tiles.Remove.Add(id);
-                if (tiles.Add.Count > 0 || tiles.Change.Count > 0 || tiles.Remove.Count > 0)
-                    patch.Tiles = tiles;
-                if (ReorderedOverlappingTiles(before, room, beforeTiles, afterTileIds) is int pairs && pairs > 0)
-                    _notConverted.Add($"Room '{name}' also reorders {pairs} pair(s) of existing tiles that overlap at the same depth; that order isn't carried, so they may overlap the other way round.");
-            }
+                patch.Tiles = TilesPatch(before.Tiles, room.Tiles, name, false);
+            if (layered)
+                LayerPatch(before, room, name, patch);
             return patch;
         }
 
