@@ -139,13 +139,16 @@ public sealed class OneLineRows : JsonConverter<uint[][]>
     public override void Write(Utf8JsonWriter writer, uint[][] value, JsonSerializerOptions options)
     {
         writer.WriteStartArray();
-        string indent = writer.Options.Indented
-            ? writer.Options.NewLine + new string(writer.Options.IndentCharacter, writer.CurrentDepth * writer.Options.IndentSize)
-            : "";
+        string indent = LineStart(writer);
         foreach (uint[]? row in value)
             writer.WriteRawValue(indent + (row is null ? "null" : "[" + string.Join(", ", row) + "]"), true);
         writer.WriteEndArray();
     }
+
+    internal static string LineStart(Utf8JsonWriter writer) =>
+        writer.Options.Indented
+            ? writer.Options.NewLine + new string(writer.Options.IndentCharacter, writer.CurrentDepth * writer.Options.IndentSize)
+            : "";
 }
 
 public sealed class RoomLayerBackgroundJson

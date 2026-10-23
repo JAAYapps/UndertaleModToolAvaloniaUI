@@ -547,23 +547,51 @@ public static class ModExtractor
                 if (!UsableName(name, "Font"))
                     continue;
                 UndertaleFont? before = original.Fonts.ByName(OriginalName("fonts", name));
-                if (before is null)
-                {
-                    _notConverted.Add($"Font '{name}' is new; PJUM can't create fonts yet.");
-                    continue;
-                }
-                if (!SamePixels(Pixels(originalTextures, before.Texture), Pixels(moddedTextures, font.Texture)))
-                {
+                bool picture = before is null || !SamePixels(Pixels(originalTextures, before.Texture), Pixels(moddedTextures, font.Texture));
+                if (picture)
                     moddedTextures.ExportAsPNG(font.Texture, FilePath("fonts", name + ".png"));
+                FontJson? json = FontChanges(before, font);
+                if (json is not null)
+                    File.WriteAllText(FilePath("fonts", name + ".json"), JsonSerializer.Serialize(json, JsonOptions));
+                if (picture || json is not null)
                     Count("fonts");
-                }
-                bool sameGlyphs = font.Glyphs.Count == before.Glyphs.Count && font.Glyphs.Zip(before.Glyphs).All(g =>
-                    g.First.Character == g.Second.Character && g.First.SourceX == g.Second.SourceX && g.First.SourceY == g.Second.SourceY
-                    && g.First.SourceWidth == g.Second.SourceWidth && g.First.SourceHeight == g.Second.SourceHeight
-                    && g.First.Shift == g.Second.Shift && g.First.Offset == g.Second.Offset);
-                if (!sameGlyphs)
-                    _notConverted.Add($"Font '{name}' has changed letters (glyphs); PJUM mods only carry the font picture.");
+                if (before is null)
+                    DeclareNew("fonts", name);
             }
+        }
+
+        private static string Glyph(UndertaleFont.Glyph g) =>
+            $"{g.Character} {g.SourceX},{g.SourceY} {g.SourceWidth}x{g.SourceHeight} {g.Shift} {g.Offset} {string.Join(",", g.Kerning.Select(k => $"{k.Character}:{k.ShiftModifier}"))}";
+
+        private static FontJson? FontChanges(UndertaleFont? before, UndertaleFont now)
+        {
+            var json = new FontJson();
+            bool changed = false;
+            if (before is null || before.DisplayName?.Content != now.DisplayName?.Content) { json.DisplayName = now.DisplayName?.Content ?? ""; changed = true; }
+            if (before is null || before.EmSize != now.EmSize) { json.EmSize = now.EmSize; changed = true; }
+            if (before is null || before.EmSizeIsFloat != now.EmSizeIsFloat) { json.EmSizeIsFloat = now.EmSizeIsFloat; changed = true; }
+            if (before is null || before.Bold != now.Bold) { json.Bold = now.Bold; changed = true; }
+            if (before is null || before.Italic != now.Italic) { json.Italic = now.Italic; changed = true; }
+            if (before is null || before.RangeStart != now.RangeStart) { json.RangeStart = now.RangeStart; changed = true; }
+            if (before is null || before.RangeEnd != now.RangeEnd) { json.RangeEnd = now.RangeEnd; changed = true; }
+            if (before is null || before.Charset != now.Charset) { json.Charset = now.Charset; changed = true; }
+            if (before is null || before.AntiAliasing != now.AntiAliasing) { json.AntiAliasing = now.AntiAliasing; changed = true; }
+            if (before is null || before.ScaleX != now.ScaleX) { json.ScaleX = now.ScaleX; changed = true; }
+            if (before is null || before.ScaleY != now.ScaleY) { json.ScaleY = now.ScaleY; changed = true; }
+            if (before is null || before.AscenderOffset != now.AscenderOffset) { json.AscenderOffset = now.AscenderOffset; changed = true; }
+            if (before is null || before.Ascender != now.Ascender) { json.Ascender = now.Ascender; changed = true; }
+            if (before is null || before.SDFSpread != now.SDFSpread) { json.SdfSpread = now.SDFSpread; changed = true; }
+            if (before is null || before.LineHeight != now.LineHeight) { json.LineHeight = now.LineHeight; changed = true; }
+            if (before is null || !before.Glyphs.Select(Glyph).SequenceEqual(now.Glyphs.Select(Glyph)))
+            {
+                json.Glyphs = now.Glyphs.Select(g => new FontGlyphJson
+                {
+                    Char = g.Character, X = g.SourceX, Y = g.SourceY, Width = g.SourceWidth, Height = g.SourceHeight, Shift = g.Shift, Offset = g.Offset,
+                    Kerning = g.Kerning.Count == 0 ? null : g.Kerning.Select(k => new[] { k.Character, k.ShiftModifier }).ToList()
+                }).ToList();
+                changed = true;
+            }
+            return changed ? json : null;
         }
 
         private static string? NameOf(UndertaleNamedResource? resource) => resource?.Name?.Content;

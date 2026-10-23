@@ -41,6 +41,7 @@ public enum AssetCategory
     Game,
     SpriteMasks,
     SpriteInfo,
+    FontInfo,
     Files   // raw copy-as-is (shared/ music, lang json, etc.)
 }
 
@@ -194,6 +195,8 @@ public static class ModAddressParser
         string name = Path.GetFileNameWithoutExtension(assetSegments[0]);
         if (string.IsNullOrEmpty(name))
             throw new ModAddressFormatException($"Missing asset name in '{original}'.");
+        if (category == AssetCategory.Fonts && Path.GetExtension(assetSegments[0]).Equals(".json", StringComparison.OrdinalIgnoreCase))
+            category = AssetCategory.FontInfo;
 
         return new ModAddress(game, route, category, name, null, original);
     }
@@ -216,5 +219,5 @@ public static class ModAddressParser
     }
 
     private static string KnownCategoryList() =>
-        string.Join(", ", Enum.GetNames(typeof(AssetCategory)).Where(s => s is not (nameof(AssetCategory.Game) or nameof(AssetCategory.SpriteMasks) or nameof(AssetCategory.SpriteInfo))).Select(s => s.ToLowerInvariant()));
+        string.Join(", ", Enum.GetNames(typeof(AssetCategory)).Where(s => s is not (nameof(AssetCategory.Game) or nameof(AssetCategory.SpriteMasks) or nameof(AssetCategory.SpriteInfo) or nameof(AssetCategory.FontInfo))).Select(s => s.ToLowerInvariant()));
 }
