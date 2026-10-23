@@ -46,6 +46,7 @@ public static class ModExtractor
         private readonly Dictionary<string, Dictionary<string, string>> _renamedFrom = new();
         private readonly Dictionary<(string Object, int Type, uint Subtype), (UndertaleCode Code, string Name)> _eventCode = new();
         private readonly Dictionary<(string Room, uint Id, bool PreCreate), (UndertaleCode Code, string Name)> _instanceCode = new();
+        private readonly Dictionary<long, string> _addedInstances = new();
 
         public ExtractResult Run()
         {
@@ -187,6 +188,8 @@ public static class ModExtractor
                 foreach (UndertaleRoom.GameObject instance in room.GameObjects)
                 {
                     UndertaleRoom.GameObject? was = beforeRoom.GameObjects.FirstOrDefault(g => g.InstanceID == instance.InstanceID);
+                    if (was is null)
+                        _addedInstances.TryAdd(instance.InstanceID, roomName);
                     foreach ((UndertaleCode? code, UndertaleCode? wasCode, bool pre) in new[] { (instance.CreationCode, was?.CreationCode, false), (instance.PreCreateCode, was?.PreCreateCode, true) })
                     {
                         string standard = $"gml_RoomCC_{roomName}_{instance.InstanceID}_{(pre ? "PreCreate" : "Create")}";
@@ -294,7 +297,7 @@ public static class ModExtractor
 
         private string NameObjectNumbers(string codeName, string gml, Dictionary<int, string> movedObjects)
         {
-            if (movedObjects.Count == 0)
+            if (movedObjects.Count == 0 && _addedInstances.Count == 0)
                 return gml;
             string[] lines = gml.Split('\n');
             for (int n = 0; n < lines.Length; n++)
@@ -315,8 +318,12 @@ public static class ModExtractor
                 }
 
                 foreach (int value in NumbersOutsideStrings(line))
+                {
                     if (movedObjects.TryGetValue(value, out string? maybe))
                         _notConverted.Add($"Code '{codeName}' line {n + 1}: {value} may mean object '{maybe}', whose number is different in the modded file; check it.");
+                    if (_addedInstances.TryGetValue(value, out string? room))
+                        _notConverted.Add($"Code '{codeName}' line {n + 1}: {value} may mean instance {value} that the mod adds in room '{room}'; added instances get new numbers when merged, so check it.");
+                }
             }
             return string.Join('\n', lines);
         }
