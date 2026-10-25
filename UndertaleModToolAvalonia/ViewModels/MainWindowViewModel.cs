@@ -780,6 +780,106 @@ result in loss of work.");
             }
         }
 
+        [RelayCommand(CanExecute = nameof(CanFindUnreferencedAssets))]
+        private async Task ExportModToolProject(Visual visual)
+        {
+            var storageProvider = TopLevel.GetTopLevel(visual)?.StorageProvider;
+            if (storageProvider is null)
+            {
+                await App.Current!.ShowError("The dialog could not be opened.");
+                return;
+            }
+            if (!MenuEnabled || AppConstants.Data is not UndertaleData modded)
+                return;
+            if (string.IsNullOrEmpty(AppConstants.FilePath))
+            {
+                await App.Current!.ShowError("Save the data file first. The project's music is read from the folder the data file is in.");
+                return;
+            }
+
+            MenuEnabled = false;
+            try
+            {
+                var compiled = await WeakReferenceMessenger.Default.Send(new SaveCodeChangesMessage()).GetResponsesAsync();
+                if (!compiled.All(ok => ok))
+                {
+                    await App.Current!.ShowError("The code in the code editor did not compile, so nothing was exported.\nFix the error or undo the change, then export again.", "Export error");
+                    return;
+                }
+
+                var originals = await fileService.LoadFilteredFileAsync(storageProvider, MainDataFileFilter, "", "Choose the original, unmodded data file");
+                string? originalPath = originals.FirstOrDefault()?.TryGetLocalPath();
+                if (originalPath is null)
+                {
+                    editorViewModel.CommandBoxText = "Cancelled project export.";
+                    return;
+                }
+                if (Path.GetFullPath(originalPath) == Path.GetFullPath(AppConstants.FilePath))
+                {
+                    await App.Current!.ShowError("That is the data file you have open. Choose the game's original, unmodded data file.");
+                    return;
+                }
+
+                string? projectName = await dialogService.ShowDialogAsync<TextInputViewModel, TextInputParameters, string>(
+                    new TextInputParameters("Project name", "Choose a name for the project", $"{modded.GeneralInfo?.DisplayName?.Content ?? "New"} Project"));
+                if (string.IsNullOrWhiteSpace(projectName))
+                {
+                    editorViewModel.CommandBoxText = "Cancelled project export.";
+                    return;
+                }
+                projectName = projectName.Trim();
+
+                var folders = await fileService.LoadFolderAsync(storageProvider, AppConstants.FilePath, "Choose where to put the project folder");
+                string? parent = folders.FirstOrDefault()?.TryGetLocalPath();
+                if (parent is null)
+                {
+                    editorViewModel.CommandBoxText = "Cancelled project export.";
+                    return;
+                }
+                string projectDirectory = Path.Combine(parent, string.Concat(projectName.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c)));
+                if (Directory.Exists(projectDirectory) && Directory.EnumerateFileSystemEntries(projectDirectory).Any())
+                {
+                    await App.Current!.ShowError($"The folder \"{projectDirectory}\" already exists and isn't empty. Choose another name or place.");
+                    return;
+                }
+
+                ProjectConvertResult result;
+                loadingDialogService.Show("Exporting", "Exporting the mod tool project, please wait...");
+                try
+                {
+                    string moddedPath = Path.GetFullPath(AppConstants.FilePath);
+                    result = await Task.Run(() =>
+                    {
+                        UndertaleData original;
+                        using (var stream = File.OpenRead(originalPath))
+                            original = UndertaleIO.Read(stream);
+                        return ProjectConverter.Convert(original, Path.GetFullPath(originalPath), modded, moddedPath, projectDirectory, projectName);
+                    });
+                }
+                catch (Exception ex)
+                {
+                    loadingDialogService.Hide();
+                    await App.Current!.ShowError($"Exporting the mod tool project failed:\n{ex}", "Export error");
+                    return;
+                }
+                loadingDialogService.Hide();
+
+                string written = result.WrittenByFolder.Count == 0
+                    ? "No differences from the original data file were found."
+                    : "Wrote " + string.Join(", ", result.WrittenByFolder.Select(p => $"{p.Value} {p.Key}")) + ".";
+                string notes = result.Notes.Count == 0
+                    ? "Everything that changed was converted."
+                    : $"{result.Notes.Count} note(s):\n- " + string.Join("\n- ", result.Notes);
+                editorViewModel.CommandBoxText = $"Exported mod tool project to {projectDirectory}.";
+                await dialogService.ShowAsync<TextOutputViewModel, TextOutputParameters>(
+                    new TextOutputParameters("Mod tool project exported", $"Saved to {projectDirectory}", $"{written}\n\n{notes}", true, true));
+            }
+            finally
+            {
+                MenuEnabled = true;
+            }
+        }
+
         [RelayCommand]
         private async Task OffsetMap(Visual visual)
         {
