@@ -57,8 +57,6 @@ public static class ProjectConverter
                     File.Copy(Path.Combine(after, file), destination);
                 }
                 written[folder] = written.GetValueOrDefault(folder) + 1;
-                if (folder == "sounds")
-                    NameMusicAfterSound(projectDirectory, unit);
             }
 
             WriteGameInfo(original, modded, projectDirectory, written);
@@ -246,17 +244,6 @@ public static class ProjectConverter
             return null;
         string? file = node["Filename"]?.GetValue<string>();
         return file is null ? null : file.Contains('.') ? file : file + ".ogg";
-    }
-
-    private static void NameMusicAfterSound(string projectDirectory, string unit)
-    {
-        if (StreamedFile(projectDirectory, unit) is not string streamed)
-            return;
-        string directory = Path.Combine(projectDirectory, "sounds", unit);
-        string copied = Path.Combine(directory, Path.GetFileName(streamed));
-        string expected = Path.Combine(directory, unit + Path.GetExtension(streamed));
-        if (copied != expected && File.Exists(copied) && !File.Exists(expected))
-            File.Move(copied, expected);
     }
 
     private static bool SameFiles(string beforeRoot, List<string> beforeFiles, string afterRoot, List<string> afterFiles)

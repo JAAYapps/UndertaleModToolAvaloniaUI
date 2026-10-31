@@ -112,7 +112,7 @@ partial class ProjectContext
             char c = text[i];
             if (!char.IsAsciiLetterOrDigit(c) && c != '_')
             {
-                text = text[1..i] + "_" + text[(i + 1)..];
+                text = text[..i] + "_" + text[(i + 1)..];
             }
         }
 

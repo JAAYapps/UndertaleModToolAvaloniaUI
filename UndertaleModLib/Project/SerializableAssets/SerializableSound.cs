@@ -120,7 +120,7 @@ internal sealed class SerializableSound : ISerializableProjectAsset
             {
                 throw new ProjectException($"Failed to find external sound to export with name \"{externalFilename}\"");
             }
-            string destFileName = Paths.JoinVerifyWithinDirectory(directory, Path.GetFileName(externalFilename));
+            string destFileName = Paths.JoinVerifyWithinDirectory(directory, $"{friendlyName}{Path.GetExtension(externalFilename)}");
             File.Copy(externalPath, destFileName, true);
         }
         else if (_dataAsset.AudioFile is not null && (_dataAsset.AudioGroup is null || _dataAsset.GroupID == projectContext.Data.GetBuiltinSoundGroupID()))
@@ -206,6 +206,15 @@ internal sealed class SerializableSound : ISerializableProjectAsset
             {
                 filename = attemptFilename;
                 break;
+            }
+        }
+        if (filename is null && Streamed)
+        {
+            string externalFilename = Filename.Contains('.') ? Filename : $"{Filename}.ogg";
+            string attemptFilename = Path.Join(Path.GetDirectoryName(jsonFilename), Path.GetFileName(externalFilename));
+            if (File.Exists(attemptFilename))
+            {
+                filename = attemptFilename;
             }
         }
         if (filename is null)
