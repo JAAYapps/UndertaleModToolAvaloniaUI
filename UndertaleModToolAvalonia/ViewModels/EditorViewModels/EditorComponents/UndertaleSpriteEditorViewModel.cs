@@ -100,7 +100,7 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
         [RelayCommand]
         private void AddMaskEntry()
         {
-            UndertaleSprite.NewMaskEntry(AppConstants.Data);
+            UndertaleSprite.CollisionMasks.Add(UndertaleSprite.NewMaskEntry(AppConstants.Data));
         }
 
         [RelayCommand]
