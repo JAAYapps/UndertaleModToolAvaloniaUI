@@ -11,8 +11,8 @@
     <VsWherePath Condition="'$(VsWherePath)' == ''">$(MSBuildProgramFiles32)\Microsoft Visual Studio\Installer\vswhere.exe</VsWherePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <PublishAot>true</PublishAot>
-    <PublishTrimmed>true</PublishTrimmed>
+    <PublishAot>false</PublishAot>
+    <PublishTrimmed>false</PublishTrimmed>
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
   <ItemGroup>
@@ -42,9 +42,6 @@
            Text="[AudioLib] Couldn't find the Visual Studio C compiler (cl.exe). Install Visual Studio or the Visual Studio Build Tools with the 'Desktop development with C++' workload, or build from a Developer PowerShell." />
     <Exec Command="$(VcVarsCall)cl.exe /c &quot;$(NativeSrc)&quot; /Fo&quot;$(NativeLibPath)/miniaudio.obj&quot; /O2 &amp;&amp; lib.exe /OUT:&quot;$(NativeLibPath)/miniaudio.lib&quot; &quot;$(NativeLibPath)/miniaudio.obj&quot; &amp;&amp; cl.exe /LD &quot;$(NativeSrc)&quot; /Fe&quot;$(NativeLibPath)/AudioLib.dll&quot; /O2"
           WorkingDirectory="$(MSBuildProjectDirectory)" />
-    <Copy SourceFiles="$(NativeLibPath)/AudioLib.dll"
-          DestinationFolder="$(OutputPath)"
-          Condition="'$(PublishAot)' != 'true' And Exists('$(NativeLibPath)/AudioLib.dll')" />
   </Target>
   <Target Name="CompileNativeLinux" BeforeTargets="BeforeBuild;Build;Publish" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">
     <Message Text="[AudioLib] Compiling for Linux (GCC)..." Importance="high" />
@@ -53,9 +50,6 @@
           WorkingDirectory="$(MSBuildProjectDirectory)" />
     <Exec Command="gcc -shared -o &quot;$(NativeLibPath)/libAudioLib.so&quot; &quot;$(NativeLibPath)/miniaudio.o&quot;"
           WorkingDirectory="$(MSBuildProjectDirectory)" />
-    <Copy SourceFiles="$(NativeLibPath)/libAudioLib.so"
-          DestinationFolder="$(OutputPath)"
-          Condition="'$(PublishAot)' != 'true' And Exists('$(NativeLibPath)/libAudioLib.so')" />
   </Target>
   <Target Name="CompileNativeMacOS" BeforeTargets="BeforeBuild;Build;Publish" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">
     <Message Text="[AudioLib] Compiling for macOS (Clang)..." Importance="high" />
@@ -64,20 +58,24 @@
           WorkingDirectory="$(MSBuildProjectDirectory)" />
     <Exec Command="clang -dynamiclib -o &quot;$(NativeLibPath)/libAudioLib.dylib&quot; &quot;$(NativeLibPath)/miniaudio.o&quot; -arch arm64 -arch x86_64 -mmacosx-version-min=12.0 -lpthread -lm"
           WorkingDirectory="$(MSBuildProjectDirectory)" />
-    <Copy SourceFiles="$(NativeLibPath)/libAudioLib.dylib"
-          DestinationFolder="$(OutputPath)"
-          Condition="'$(PublishAot)' != 'true' And Exists('$(NativeLibPath)/libAudioLib.dylib')" />
   </Target>
   <ItemGroup>
     <NativeLibrary Include="libs/miniaudio.obj" Condition="'$(PublishAot)' == 'true' And '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'" />
     <NativeLibrary Include="libs/miniaudio.o" Condition="'$(PublishAot)' == 'true' And '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' != 'true'" />
     <DirectPInvoke Include="AudioLib" Condition="'$(PublishAot)' == 'true'" />
   </ItemGroup>
+  <ItemGroup Condition="'$(PublishAot)' != 'true'">
+    <None Include="$(NativeLibPath)/AudioLib.dll" Link="AudioLib.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'" />
+    <None Include="$(NativeLibPath)/libAudioLib.so" Link="libAudioLib.so" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'" />
+    <None Include="$(NativeLibPath)/libAudioLib.dylib" Link="libAudioLib.dylib" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="12.1.2" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Include="Avalonia.LinuxFramebuffer" Version="12.1.2" />
+    <PackageReference Include="Basic.Reference.Assemblies" Version="1.8.13" />
+    <PackageReference Include="Basic.Reference.Assemblies.Net100" Version="1.8.13" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\UndertaleModToolAvalonia\UndertaleModToolAvalonia.csproj" />
@@ -85,6 +83,7 @@
   <ItemGroup>
     <Content Include="..\UndertaleModTool\Scripts\**" Link="Scripts\%(RecursiveDir)%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </Content>
   </ItemGroup>
 </Project>
