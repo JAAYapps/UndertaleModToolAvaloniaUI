@@ -4,6 +4,10 @@
     {
       "ConditionKind": "DisplayName.Regex",
       "Value": "(?i)^undertale"
+    },
+    {
+      "ConditionKind": "CodeEntry.Exists",
+      "Value": "gml_Script_SCR_GAMESTART"
     }
   ],
   "UnderanalyzerFilename": "undertale.json"

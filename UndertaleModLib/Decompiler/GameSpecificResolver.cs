@@ -64,6 +64,16 @@ public class GameSpecificResolver
 
             return ConditionResult.Ignore;
         },
+
+        ["CodeEntry.Exists"] = (UndertaleData data, string value) =>
+        {
+            if (data?.Code?.ByName(value) is null)
+            {
+                return ConditionResult.Ignore;
+            }
+
+            return ConditionResult.Accept;
+        },
     };
     private static readonly object _lock = new();
     private static readonly List<GameSpecificDefinition> _definitions = new();
