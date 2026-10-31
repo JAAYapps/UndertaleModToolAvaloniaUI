@@ -113,10 +113,7 @@ namespace UndertaleModToolAvalonia.Services.ScriptService
             SetUMTConsoleText("Running " + Path.GetFileName(path) + " ...");
             try
             {
-                if (!scriptSetupTask.IsCompleted)
-                {
-                    await scriptSetupTask;
-                }
+                await scriptSetupTask;
 
                 AppConstants.ScriptPath = path;
 
