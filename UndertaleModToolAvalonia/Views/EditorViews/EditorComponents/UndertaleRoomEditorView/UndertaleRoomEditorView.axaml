@@ -137,6 +137,19 @@
                             </TextBlock.ContextFlyout>
                         </TextBlock>
                     </DataTemplate>
+                    <TreeDataTemplate DataType="{x:Type vm:TileDepthGroup}" ItemsSource="{Binding Tiles, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal" Background="Transparent">
+                            <CheckBox IsChecked="{Binding IsShown}" Margin="0,0,4,0" ToolTip.Tip="Show these tiles in the room view (editor only, not saved)"/>
+                            <TextBlock VerticalAlignment="Center">
+                                <TextBlock.Text>
+                                    <MultiBinding Mode="OneWay" StringFormat="{}Depth {0} ({1})">
+                                        <Binding Path="Depth" Mode="OneWay"/>
+                                        <Binding Path="Tiles.Count" Mode="OneWay"/>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </StackPanel>
+                    </TreeDataTemplate>
                 </TreeView.DataTemplates>
                 
                 <TreeViewItem Header="{Binding Room.Name.Content}" Name="RoomRootItem" IsExpanded="True" Background="Transparent">
@@ -174,7 +187,7 @@
                     </TreeViewItem>
                     <TreeViewItem Name="GameObjItems" Header="{Binding GameObjectsHeader}" ItemsSource="{Binding Room.GameObjects, Mode=OneWay}" Background="Transparent"
                                   Foreground="{Binding IsNotGMS2Room, Converter={StaticResource EnabledColorConverter}}"/>
-                    <TreeViewItem Name="TileItems" Header="Tiles" ItemsSource="{Binding Room.Tiles, Mode=OneWay}" IsVisible="{Binding Room.Flags, Mode=OneTime, Converter={StaticResource IsGMS2Converter}}" Background="Transparent">
+                    <TreeViewItem Name="TileItems" Header="Tiles" ItemsSource="{Binding TileDepthGroups, Mode=OneWay}" IsVisible="{Binding Room.Flags, Mode=OneTime, Converter={StaticResource IsGMS2Converter}}" Background="Transparent">
                         <TreeViewItem.ContextFlyout>
                             <MenuFlyout>
                                 <MenuItem Header="New tile" Click="MenuItem_NewGMS1Tile_Click"/>

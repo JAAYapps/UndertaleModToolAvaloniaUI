@@ -50,6 +50,7 @@ public partial class UndertaleRoomEditorView : UserControl
         RoomObjectsTree.AddHandler(GotFocusEvent, RoomObjectsTree_GotFocus, RoutingStrategies.Bubble, handledEventsToo: true);
         AddHandler(KeyDownEvent, UndertaleRoomEditorView_KeyDown, RoutingStrategies.Bubble);
         ZoomBorder.ZoomChanged += ZoomBorder_ZoomChanged;
+        TileGraphics.ContainerPrepared += TileGraphics_ContainerPrepared;
         ZoomBorder.AddHandler(DragDrop.DragOverEvent, RoomGraphics_DragOver);
         ZoomBorder.AddHandler(DragDrop.DropEvent, RoomGraphics_Drop);
     }
@@ -61,6 +62,7 @@ public partial class UndertaleRoomEditorView : UserControl
         if (currentViewModel is not null)
         {
             currentViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+            currentViewModel.TileVisibilityChanged -= ApplyTileVisibility;
             SaveTabContentState(currentViewModel);
         }
         currentViewModel = DataContext as UndertaleRoomEditorViewModel;
@@ -77,10 +79,27 @@ public partial class UndertaleRoomEditorView : UserControl
         currentViewModel.SetupRoom();
         GameObjItems.ContextFlyout = currentViewModel.IsGMS2Room ? null : Resources["GameObjectsFlyout"] as MenuFlyout;
         currentViewModel.PropertyChanged += ViewModel_PropertyChanged;
+        currentViewModel.TileVisibilityChanged += ApplyTileVisibility;
+        ApplyTileVisibility();
 
         tabContentStateRestored = false;
         UndertaleRoomEditorViewModel vm = currentViewModel;
         Dispatcher.UIThread.Post(() => RestoreTabContentState(vm), DispatcherPriority.Background);
+    }
+
+    private void TileGraphics_ContainerPrepared(object? sender, ContainerPreparedEventArgs e)
+    {
+        if (currentViewModel is not null && TileGraphics.ItemFromContainer(e.Container) is Tile tile)
+            e.Container.IsVisible = currentViewModel.IsTileDepthShown(tile.TileDepth);
+    }
+
+    private void ApplyTileVisibility()
+    {
+        if (currentViewModel is null)
+            return;
+        foreach (object? item in TileGraphics.Items)
+            if (item is Tile tile && TileGraphics.ContainerFromItem(tile) is Control container)
+                container.IsVisible = currentViewModel.IsTileDepthShown(tile.TileDepth);
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -353,8 +372,12 @@ public partial class UndertaleRoomEditorView : UserControl
                                                                       && (l.AssetsData.LegacyTiles?.Contains(tile) ?? false));
                     resListView = resLayer is null ? null : LayerItems.ContainerFromItem(resLayer) as TreeViewItem;
                 }
-                else
-                    resListView = TileItems;
+                else if (vm.TileDepthGroupOf(tile) is TileDepthGroup group)
+                {
+                    TileItems.IsExpanded = true;
+                    TileItems.UpdateLayout();
+                    resListView = TileItems.ContainerFromItem(group) as TreeViewItem;
+                }
                 break;
 
             case Layer:
