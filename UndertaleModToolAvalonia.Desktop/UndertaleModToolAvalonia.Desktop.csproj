@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <RootNamespace>UndertaleModToolAvalonia.Desktop</RootNamespace>
+    <AssemblyName>UndertaleModToolAvaloniaDesktop</AssemblyName>
     <BuiltInComInteropSupport>false</BuiltInComInteropSupport>
     <NativeLibPath>$(MSBuildProjectDirectory)/libs</NativeLibPath>
     <NativeSrc>miniaudio.c</NativeSrc>
