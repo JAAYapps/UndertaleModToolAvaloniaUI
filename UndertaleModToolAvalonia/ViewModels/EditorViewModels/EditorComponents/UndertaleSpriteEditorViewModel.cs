@@ -98,9 +98,16 @@ namespace UndertaleModToolAvalonia.ViewModels.EditorViewModels.EditorComponents
         }
 
         [RelayCommand]
-        private void AddMaskEntry()
+        private async Task AddMaskEntry()
         {
-            UndertaleSprite.CollisionMasks.Add(UndertaleSprite.NewMaskEntry(AppConstants.Data));
+            MaskEntry mask = UndertaleSprite.NewMaskEntry(AppConstants.Data);
+            if (mask.Width <= 0 || mask.Height <= 0)
+            {
+                await App.Current!.ShowError($"A new collision mask would be {mask.Width}x{mask.Height}, which can't hold anything.\n" +
+                                             "Set the sprite's Width and Height first (in GameMaker 2024.6 and later, its bounding box margins), then add the mask.");
+                return;
+            }
+            UndertaleSprite.CollisionMasks.Add(mask);
         }
 
         [RelayCommand]
