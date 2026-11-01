@@ -35,6 +35,41 @@ public static class ModExtractor
         return new Extraction(original, modded, target, modDirectory, modName, originalFolder, moddedFolder).Run();
     }
 
+    internal static HashSet<UndertaleCode> UsedCode(UndertaleData data)
+    {
+        var used = new HashSet<UndertaleCode>();
+        void Add(UndertaleCode? code)
+        {
+            if (code is not null)
+                used.Add(code.ParentEntry ?? code);
+        }
+        foreach (UndertaleGameObject obj in data.GameObjects)
+            foreach (var events in obj?.Events ?? [])
+                foreach (UndertaleGameObject.Event ev in events)
+                    foreach (UndertaleGameObject.EventAction action in ev.Actions)
+                        Add(action.CodeId);
+        foreach (UndertaleScript script in data.Scripts)
+            Add(script?.Code);
+        foreach (UndertaleRoom room in data.Rooms)
+        {
+            Add(room?.CreationCodeId);
+            foreach (UndertaleRoom.GameObject instance in room?.GameObjects ?? [])
+            {
+                Add(instance.CreationCode);
+                Add(instance.PreCreateCode);
+            }
+        }
+        foreach (UndertaleGlobalInit init in data.GlobalInitScripts ?? [])
+            Add(init?.Code);
+        foreach (UndertaleGlobalInit end in data.GameEndScripts ?? [])
+            Add(end?.Code);
+        foreach (UndertaleTimeline timeline in data.Timelines ?? [])
+            foreach (UndertaleTimeline.UndertaleTimelineMoment moment in timeline?.Moments ?? [])
+                foreach (UndertaleGameObject.EventAction action in moment.Event)
+                    Add(action.CodeId);
+        return used;
+    }
+
     private sealed class Extraction(UndertaleData original, UndertaleData modded, ModTarget target, string modDirectory, string modName, string originalFolder, string moddedFolder)
     {
         private readonly string _root = target.Chapter is null
@@ -355,41 +390,6 @@ public static class ModExtractor
                 }
                 i++;
             }
-        }
-
-        private static HashSet<UndertaleCode> UsedCode(UndertaleData data)
-        {
-            var used = new HashSet<UndertaleCode>();
-            void Add(UndertaleCode? code)
-            {
-                if (code is not null)
-                    used.Add(code.ParentEntry ?? code);
-            }
-            foreach (UndertaleGameObject obj in data.GameObjects)
-                foreach (var events in obj?.Events ?? [])
-                    foreach (UndertaleGameObject.Event ev in events)
-                        foreach (UndertaleGameObject.EventAction action in ev.Actions)
-                            Add(action.CodeId);
-            foreach (UndertaleScript script in data.Scripts)
-                Add(script?.Code);
-            foreach (UndertaleRoom room in data.Rooms)
-            {
-                Add(room?.CreationCodeId);
-                foreach (UndertaleRoom.GameObject instance in room?.GameObjects ?? [])
-                {
-                    Add(instance.CreationCode);
-                    Add(instance.PreCreateCode);
-                }
-            }
-            foreach (UndertaleGlobalInit init in data.GlobalInitScripts ?? [])
-                Add(init?.Code);
-            foreach (UndertaleGlobalInit end in data.GameEndScripts ?? [])
-                Add(end?.Code);
-            foreach (UndertaleTimeline timeline in data.Timelines ?? [])
-                foreach (UndertaleTimeline.UndertaleTimelineMoment moment in timeline?.Moments ?? [])
-                    foreach (UndertaleGameObject.EventAction action in moment.Event)
-                        Add(action.CodeId);
-            return used;
         }
 
         private static string Disassemble(UndertaleData data, UndertaleCode code)

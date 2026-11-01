@@ -28,7 +28,17 @@ public static class ProjectConverter
         {
             string before = ExportAll(original, originalPath, Path.Combine(temp, "original"), mainThreadAction, []);
             var unsaveable = new List<string>();
-            string after = ExportAll(modded, moddedPath, Path.Combine(temp, "modded"), mainThreadAction, unsaveable);
+            var renamedCode = NameSharedEventCode(modded, unsaveable);
+            string after;
+            try
+            {
+                after = ExportAll(modded, moddedPath, Path.Combine(temp, "modded"), mainThreadAction, unsaveable);
+            }
+            finally
+            {
+                foreach ((UndertaleCode code, UndertaleString name) in renamedCode)
+                    code.Name = name;
+            }
             Dictionary<(string Folder, string Unit), List<string>> beforeUnits = Units(before), afterUnits = Units(after);
 
             _ = new ProjectContext(modded, moddedPath, moddedPath, Path.Combine(projectDirectory, "project.json"), projectName, mainThreadAction);
@@ -74,9 +84,14 @@ public static class ProjectConverter
     private static string ExportAll(UndertaleData data, string dataPath, string directory, Action<Action>? mainThreadAction, List<string> unsaveable)
     {
         var context = new ProjectContext(data, dataPath, dataPath, Path.Combine(directory, "project.json"), "export", mainThreadAction);
+        HashSet<UndertaleCode> used = ModExtractor.UsedCode(data);
+        var sharedCodeNames = data.Code.Where(c => c?.ParentEntry is null && c.Name?.Content is not null)
+                                       .GroupBy(c => c.Name.Content).Where(g => g.Count() > 1).Select(g => g.Key).ToHashSet();
         foreach (IList<UndertaleNamedResource> list in Lists(data).Select(l => l.List))
             foreach (UndertaleNamedResource asset in list)
             {
+                if (asset is UndertaleCode sharedCode && sharedCodeNames.Contains(sharedCode.Name.Content) && !used.Contains(sharedCode))
+                    continue;
                 if (asset is UndertaleSprite sprite && sprite.CollisionMasks.Count > 0 && sprite.CalculateMaskDimensions(data) is var (width, height) && (width <= 0 || height <= 0))
                 {
                     var frame = sprite.Textures.FirstOrDefault()?.Texture;
@@ -117,6 +132,37 @@ public static class ProjectConverter
         }
         File.Delete(Path.Combine(directory, "project.json"));
         return directory;
+    }
+
+    private static List<(UndertaleCode Code, UndertaleString Name)> NameSharedEventCode(UndertaleData data, List<string> notes)
+    {
+        var renamed = new List<(UndertaleCode, UndertaleString)>();
+        HashSet<string> Duplicates() => data.Code.Where(c => c?.ParentEntry is null && c.Name?.Content is not null)
+                                                 .GroupBy(c => c.Name.Content).Where(g => g.Count() > 1).Select(g => g.Key).ToHashSet();
+        HashSet<string> shared = Duplicates();
+        if (shared.Count == 0)
+            return renamed;
+        var taken = data.Code.Select(c => c?.Name?.Content).OfType<string>().ToHashSet();
+        var done = new HashSet<UndertaleCode>();
+        foreach (UndertaleGameObject obj in data.GameObjects)
+        {
+            if (obj?.Name?.Content is not string objectName)
+                continue;
+            for (int type = 0; type < obj.Events.Count; type++)
+                foreach (UndertaleGameObject.Event ev in obj.Events[type])
+                    foreach (UndertaleGameObject.EventAction action in ev.Actions)
+                        if (action.CodeId is UndertaleCode code && shared.Contains(code.Name.Content) && done.Add(code)
+                            && ObjectEvents.DefaultCodeName(data, objectName, (EventType)type, ev.EventSubtype) is string standard && taken.Add(standard))
+                        {
+                            renamed.Add((code, code.Name));
+                            code.Name = new UndertaleString(standard);
+                        }
+        }
+        HashSet<UndertaleCode> used = ModExtractor.UsedCode(data);
+        foreach (string name in Duplicates())
+            if (data.Code.Count(c => c?.ParentEntry is null && c.Name?.Content == name && used.Contains(c)) > 1)
+                notes.Add($"{data.Code.Count(c => c?.ParentEntry is null && c.Name?.Content == name && used.Contains(c))} different code entries in use are all named '{name}'; a project keeps code by name, so only one of them was converted.");
+        return renamed;
     }
 
     private static IEnumerable<(string Folder, string Property, string Type, IList<UndertaleNamedResource> List)> Lists(UndertaleData data)
